@@ -1,11 +1,40 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
-  const { gameName, history, getTotals, resetBoard } = useGameStore()
-  const totals = getTotals()
+  const [selectedGameName, setSelectedGameName] = useState('')
+  const { history, resetBoard } = useGameStore()
+  const gameOptions = useMemo(
+    () => [...new Set(history.map((entry) => entry.gameName).filter(Boolean))],
+    [history]
+  )
+  const filteredHistory = useMemo(
+    () => selectedGameName
+      ? history.filter((entry) => entry.gameName === selectedGameName)
+      : history,
+    [history, selectedGameName]
+  )
+  const totals = useMemo(() => {
+    const playerTotals = new Map()
+
+    filteredHistory.forEach((entry) => {
+      entry.players.forEach((player) => {
+        const key = player.name.trim().toLowerCase()
+        const previous = playerTotals.get(key)
+
+        playerTotals.set(key, {
+          id: previous?.id || player.id,
+          name: player.name,
+          color: previous?.color || player.color,
+          total: (previous?.total || 0) + player.total,
+        })
+      })
+    })
+
+    return [...playerTotals.values()].sort((a, b) => b.total - a.total)
+  }, [filteredHistory])
   const winner = totals[0]
 
   async function handleNewGame() {
@@ -36,10 +65,26 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       </div>
 
       <div className="screen-inner demo-layout">
+        <section className="paper-card compact-card">
+          <div className="card-heading">🎲 Loc theo tua game</div>
+          <select
+            className="demo-input"
+            value={selectedGameName}
+            onChange={(event) => setSelectedGameName(event.target.value)}
+          >
+            <option value="">Tat ca tua game</option>
+            {gameOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </section>
+
         {winner ? (
           <section className="paper-card result-card">
             <div className="result-title">🏆 Ket qua</div>
-            <div className="result-subtitle">{gameName || 'Khong ten'}</div>
+            <div className="result-subtitle">{selectedGameName || 'Tat ca tua game'}</div>
 
             <div className="podium-grid">
               {totals.slice(0, 3).map((player, index) => (
@@ -69,9 +114,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           </section>
         ) : null}
 
-        <div className="history-headline">{history.length} van da choi</div>
+        <div className="history-headline">
+          {filteredHistory.length} van da choi
+          {selectedGameName ? ` - ${selectedGameName}` : ''}
+        </div>
         <div className="history-list">
-          {history.map((entry) => (
+          {filteredHistory.map((entry) => (
             <article key={entry.id} className="paper-card history-card">
               <div className="history-title-row">
                 <div className="history-title">🎲 {entry.gameName}</div>

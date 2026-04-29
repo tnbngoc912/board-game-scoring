@@ -2,6 +2,12 @@ import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { PlayerDot } from './PlayerDot'
+import { GAME_LIST } from '../constants/constants'
+
+function capitalizeFirstLetter(value) {
+  if (!value) return ''
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
 
 export function SetupScreen({ onStart, onShowHistory, toast }) {
   const [playerName, setPlayerName] = useState('')
@@ -10,7 +16,7 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
     gameName,
     players,
     categories,
-    setGameName,
+    selectGame,
     addPlayer,
     removePlayer,
     addCategory,
@@ -18,7 +24,10 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
   } = useGameStore()
 
   const canStart = players.length >= 2 && categories.length >= 1
-  const placeholder = useMemo(() => 'VD: Wingspan, Terraforming Mars', [])
+  const selectedGame = useMemo(
+    () => GAME_LIST.find((game) => game.name === gameName) || null,
+    [gameName]
+  )
 
   function handleAddPlayer(name = playerName) {
     if (!addPlayer(name)) return
@@ -27,6 +36,12 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
 
   function handleAddCategory(name = categoryName) {
     if (!addCategory(name)) return
+    setCategoryName('')
+  }
+
+  function handleGameChange(value) {
+    const nextGame = GAME_LIST.find((game) => game.name === value)
+    selectGame(nextGame)
     setCategoryName('')
   }
 
@@ -58,12 +73,19 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
       <div className="screen-inner demo-layout">
         <section className="paper-card">
           <div className="card-heading">🎮 Ten tro choi</div>
-          <input
+          <select
             className="demo-input"
-            value={gameName}
-            onChange={(e) => setGameName(e.target.value)}
-            placeholder={placeholder}
-          />
+            name="games"
+            value={selectedGame?.name || ''}
+            onChange={(e) => handleGameChange(e.target.value)}
+          >
+            <option value="">Chon tro choi</option>
+            {GAME_LIST.map((game) => (
+              <option key={game.name} value={game.name}>
+                {game.name}
+              </option>
+            ))}
+          </select>
         </section>
 
         <section className="paper-card">
@@ -110,7 +132,7 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                 >
-                  <div className="stack-row-label">{category.name}</div>
+                  <div className="stack-row-label">{capitalizeFirstLetter(category.name)}</div>
                   <button className="remove-chip" onClick={() => removeCategory(category.id)}>×</button>
                 </motion.div>
               ))}

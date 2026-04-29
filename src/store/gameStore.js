@@ -103,6 +103,25 @@ export const useGameStore = create(
         get()._syncBoard({ gameName })
       },
 
+      selectGame(game) {
+        if (!game) {
+          const nextScores = ensureScoreRows([], get().players, [])
+          set({ gameName: '', categories: [], publishedScores: nextScores })
+          get()._syncBoard({ gameName: '', categories: [], publishedScores: nextScores })
+          return
+        }
+
+        const gameName = game.name
+        const categories = game.categories.map((name) => ({
+          id: crypto.randomUUID(),
+          name,
+        }))
+        const publishedScores = ensureScoreRows(categories, get().players, [])
+
+        set({ gameName, categories, publishedScores })
+        get()._syncBoard({ gameName, categories, publishedScores })
+      },
+
       addPlayer(name) {
         const trimmed = normalizeLabel(name)
         if (!trimmed) return false
