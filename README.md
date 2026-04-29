@@ -36,6 +36,8 @@ npm run preview
 
 ```
 src/
+├── api/
+│   └── backendService.js  # REST API client
 ├── components/
 │   ├── PlayerDot.jsx      # Colored avatar circle
 │   ├── SetupScreen.jsx    # Player setup UI
@@ -54,12 +56,21 @@ src/
 └── index.css              # Global styles + design tokens
 ```
 
-## Add Firebase for Cross-Device Sync (Optional)
+## API Backend
 
-1. Create a free Firebase project at https://console.firebase.google.com
-2. Enable Firestore database
-3. Install: `npm install firebase`
-4. Add to `src/store/gameStore.js` — sync on `addRound` and `saveGame`
+The app saves completed matches through the backend API.
+
+Default API base:
+
+```bash
+https://boardgame-scorer-backend.onrender.com/api/v1
+```
+
+Override it locally with:
+
+```bash
+VITE_API_BASE_URL=https://your-api.example.com/api/v1
+```
 
 ## Tech Stack
 

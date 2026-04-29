@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import {
-  createRoomDocument,
-  getRoom,
-  publishScores as publishScoresToRoom,
-  subscribeToRoom,
-  updateBoard,
-} from '../firebase/firestoreService'
+  completeMatch,
+  createMatch,
+  ensureBoardGame,
+  getId,
+  getMatch,
+  syncUserByName,
+  updateMatchScores,
+} from '../api/backendService'
 
 const PLAYER_COLORS = ['#ea6556', '#5a98e6', '#6fbe78', '#e3af47', '#b57be7', '#ef8e45']
 const DEFAULT_CATEGORIES = [
@@ -15,33 +17,57 @@ const DEFAULT_CATEGORIES = [
   'Diem bonus',
   'Diem cuoi game',
 ]
-const PUBLIC_ROOM_ID = 'PUBLIC'
 
 function pickColor(index) { return PLAYER_COLORS[index % PLAYER_COLORS.length] }
 function initials(name) { return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2) }
 function normalizeLabel(value) { return value.trim() }
 
-let roomUnsubscribe = null
+function slugify(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
-function stopRoomSync() {
-  roomUnsubscribe?.()
-  roomUnsubscribe = null
+function normalizeCategory(category) {
+  if (typeof category === 'string') {
+    return { name: category, type: 'number' }
+  }
+
+  return {
+    name: category.name,
+    type: category.type === 'text' ? 'text' : 'number',
+  }
+}
+
+function defaultScoreValue(category) {
+  return category.type === 'text' ? '' : 0
+}
+
+function getScoreColumnId(category, index = 0) {
+  return category.id || slugify(category.name) || `score-${index + 1}`
 }
 
 function ensureScoreRows(categories, players, publishedScores = []) {
   const scoreMap = new Map(publishedScores.map((entry) => [entry.id, entry]))
 
-  return categories.map((category) => {
-    const previous = scoreMap.get(category.id)
+  return categories.map((category, index) => {
+    const normalizedCategory = normalizeCategory(category)
+    const id = getScoreColumnId(category, index)
+    const previous = scoreMap.get(id)
     const scores = {}
 
     players.forEach((player) => {
-      scores[player.id] = previous?.scores?.[player.id] ?? 0
+      scores[player.id] = previous?.scores?.[player.id] ?? defaultScoreValue(normalizedCategory)
     })
 
     return {
-      id: category.id,
-      name: category.name,
+      id,
+      name: normalizedCategory.name,
+      type: normalizedCategory.type,
       scores,
     }
   })
@@ -51,9 +77,42 @@ function calculateTotals(players, publishedScores) {
   return [...players]
     .map((player) => ({
       ...player,
-      total: publishedScores.reduce((sum, row) => sum + (row.scores?.[player.id] ?? 0), 0),
+      total: publishedScores.reduce((sum, row) => {
+        if (row.type === 'text') return sum
+
+        const score = Number(row.scores?.[player.id] ?? 0)
+        return sum + (Number.isNaN(score) ? 0 : score)
+      }, 0),
     }))
     .sort((a, b) => b.total - a.total)
+}
+
+function getMatchPlayers(match) {
+  return match?.players || match?.match_players || match?.matchPlayers || []
+}
+
+function getMatchPlayerId(matchPlayer) {
+  return getId(matchPlayer) || matchPlayer?.match_player_id
+}
+
+function getMatchPlayerUserId(matchPlayer) {
+  return (
+    matchPlayer?.user_id ||
+    getId(matchPlayer?.user) ||
+    getId(matchPlayer?.player) ||
+    getId(matchPlayer?.userId) ||
+    getId(matchPlayer?.playerId)
+  )
+}
+
+function buildApiScoresForPlayer(playerId, scoreRows) {
+  return scoreRows.reduce((scores, row) => {
+    if (row.type === 'text') return scores
+
+    const score = Number(row.scores?.[playerId] ?? 0)
+    scores[row.id] = Number.isNaN(score) ? 0 : score
+    return scores
+  }, {})
 }
 
 export const useGameStore = create(
@@ -65,61 +124,32 @@ export const useGameStore = create(
       publishedScores: [],
       history: [],
       darkMode: false,
-      uid: null,
       syncStatus: 'idle',
 
       getTotals() {
         return calculateTotals(get().players, get().publishedScores)
       },
 
-      setUser(firebaseUser) {
-        const uid = firebaseUser?.uid ?? null
-        set({ uid })
-
-        if (uid) {
-          get().initializePublicBoard().catch(() => set({ syncStatus: 'offline' }))
-        }
-      },
-
-      async initializePublicBoard() {
-        const uid = get().uid
-        if (!uid) return false
-
-        const existing = await getRoom(PUBLIC_ROOM_ID)
-        if (!existing) {
-          await createRoomDocument(PUBLIC_ROOM_ID, uid)
-          await updateBoard(PUBLIC_ROOM_ID, {
-            categories: DEFAULT_CATEGORIES.map((name) => ({ id: crypto.randomUUID(), name })),
-          })
-        }
-
-        get()._attachRoom()
-        return true
-      },
-
       setGameName(name) {
         const gameName = name
         set({ gameName })
-        get()._syncBoard({ gameName })
       },
 
       selectGame(game) {
         if (!game) {
           const nextScores = ensureScoreRows([], get().players, [])
           set({ gameName: '', categories: [], publishedScores: nextScores })
-          get()._syncBoard({ gameName: '', categories: [], publishedScores: nextScores })
           return
         }
 
         const gameName = game.name
-        const categories = game.categories.map((name) => ({
-          id: crypto.randomUUID(),
-          name,
+        const categories = game.categories.map((category, index) => ({
+          id: getScoreColumnId(category, index),
+          ...normalizeCategory(category),
         }))
         const publishedScores = ensureScoreRows(categories, get().players, [])
 
         set({ gameName, categories, publishedScores })
-        get()._syncBoard({ gameName, categories, publishedScores })
       },
 
       addPlayer(name) {
@@ -138,7 +168,6 @@ export const useGameStore = create(
 
         const nextScores = ensureScoreRows(get().categories, nextPlayers, get().publishedScores)
         set({ players: nextPlayers, publishedScores: nextScores })
-        get()._syncBoard({ players: nextPlayers, publishedScores: nextScores })
         return true
       },
 
@@ -146,17 +175,28 @@ export const useGameStore = create(
         const nextPlayers = get().players.filter((player) => player.id !== id)
         const nextScores = ensureScoreRows(get().categories, nextPlayers, get().publishedScores)
         set({ players: nextPlayers, publishedScores: nextScores })
-        get()._syncBoard({ players: nextPlayers, publishedScores: nextScores })
+      },
+
+      updatePlayerName(id, name) {
+        const trimmed = normalizeLabel(name)
+
+        const nextPlayers = get().players.map((player) => (
+          player.id === id
+            ? { ...player, name: trimmed, initials: trimmed ? initials(trimmed) : '' }
+            : player
+        ))
+
+        set({ players: nextPlayers })
+        return true
       },
 
       addCategory(name) {
         const trimmed = normalizeLabel(name)
         if (!trimmed) return false
 
-        const nextCategories = [...get().categories, { id: crypto.randomUUID(), name: trimmed }]
+        const nextCategories = [...get().categories, { id: crypto.randomUUID(), name: trimmed, type: 'number' }]
         const nextScores = ensureScoreRows(nextCategories, get().players, get().publishedScores)
         set({ categories: nextCategories, publishedScores: nextScores })
-        get()._syncBoard({ categories: nextCategories, publishedScores: nextScores })
         return true
       },
 
@@ -164,7 +204,6 @@ export const useGameStore = create(
         const nextCategories = get().categories.filter((category) => category.id !== id)
         const nextScores = ensureScoreRows(nextCategories, get().players, get().publishedScores)
         set({ categories: nextCategories, publishedScores: nextScores })
-        get()._syncBoard({ categories: nextCategories, publishedScores: nextScores })
       },
 
       async publishScores(scoreRows) {
@@ -185,16 +224,38 @@ export const useGameStore = create(
             color: player.color,
             total: player.total,
           })),
+          scoreRows: publishedScores.map((row) => ({
+            id: row.id,
+            name: row.name,
+            type: row.type,
+            scores: row.scores,
+          })),
         }
 
         set({ syncStatus: 'syncing' })
         try {
-          await publishScoresToRoom(PUBLIC_ROOM_ID, {
-            gameName,
-            players,
-            categories,
+          const syncedUsers = await Promise.all(players.map((player) => syncUserByName(player.name)))
+          const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
+          const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id))
+          const matchDetails = await getMatch(match.id)
+          const matchPlayers = getMatchPlayers(matchDetails)
+
+          const playerScores = syncedUsers.map((user, index) => {
+            const player = players[index]
+            const matchPlayer = matchPlayers.find((entry) => getMatchPlayerUserId(entry) === user.id) || matchPlayers[index]
+
+            return {
+              match_player_id: getMatchPlayerId(matchPlayer),
+              scores: buildApiScoresForPlayer(player.id, publishedScores),
+            }
+          }).filter((entry) => entry.match_player_id)
+
+          await updateMatchScores(match.id, playerScores)
+          await completeMatch(match.id)
+
+          set({
             publishedScores,
-            historyEntry,
+            history: [historyEntry, ...get().history].slice(0, 20),
           })
           set({ syncStatus: 'synced' })
           return true
@@ -206,66 +267,31 @@ export const useGameStore = create(
 
       async resetBoard() {
         const categories = DEFAULT_CATEGORIES.map((name) => ({ id: crypto.randomUUID(), name }))
-        set({ syncStatus: 'syncing' })
-        try {
-          await updateBoard(PUBLIC_ROOM_ID, {
-            gameName: '',
-            players: [],
-            categories,
-            publishedScores: [],
-          })
-          set({ syncStatus: 'synced' })
-          return true
-        } catch {
-          set({ syncStatus: 'offline' })
-          return false
-        }
+        set({
+          gameName: '',
+          players: [],
+          categories,
+          publishedScores: [],
+          syncStatus: 'idle',
+        })
+        return true
       },
 
       toggleDarkMode() {
         set((state) => ({ darkMode: !state.darkMode }))
       },
 
-      _attachRoom() {
-        stopRoomSync()
-        set({ syncStatus: 'syncing' })
-
-        roomUnsubscribe = subscribeToRoom(PUBLIC_ROOM_ID, (room) => {
-          if (!room) {
-            stopRoomSync()
-            set({ syncStatus: 'idle' })
-            return
-          }
-
-          const categories = Array.isArray(room.categories) && room.categories.length
-            ? room.categories
-            : DEFAULT_CATEGORIES.map((name) => ({ id: crypto.randomUUID(), name }))
-          const players = room.players || []
-          const publishedScores = ensureScoreRows(categories, players, room.publishedScores || [])
-
-          set({
-            gameName: room.gameName || '',
-            players,
-            categories,
-            publishedScores,
-            history: room.history || [],
-            syncStatus: 'synced',
-          })
-        })
-      },
-
-      _syncBoard(payload) {
-        set({ syncStatus: 'syncing' })
-        updateBoard(PUBLIC_ROOM_ID, payload)
-          .then(() => set({ syncStatus: 'synced' }))
-          .catch(() => set({ syncStatus: 'offline' }))
-      },
     }),
     {
       name: 'scorekeeper-v4',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         darkMode: state.darkMode,
+        gameName: state.gameName,
+        players: state.players,
+        categories: state.categories,
+        publishedScores: state.publishedScores,
+        history: state.history,
       }),
     }
   )

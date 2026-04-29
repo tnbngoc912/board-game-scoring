@@ -4,39 +4,42 @@ import { useGameStore } from '../store/gameStore'
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
     const existing = publishedScores.find((entry) => entry.id === category.id)
+    const type = category.type === 'text' ? 'text' : 'number'
     const scores = {}
 
     players.forEach((player) => {
-      scores[player.id] = existing?.scores?.[player.id] ?? 0
+      scores[player.id] = existing?.scores?.[player.id] ?? (type === 'text' ? '' : 0)
     })
 
     return {
       id: category.id,
       name: category.name,
+      type,
       scores,
     }
   })
 }
 
 export function GameScreen({ toast, onShowSetup, onShowHistory }) {
-  const { gameName, players, categories, publishedScores, publishScores, getTotals } = useGameStore()
+  const { gameName, players, categories, publishedScores, publishScores } = useGameStore()
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
 
   useEffect(() => {
     setDraftScores(buildDraft(categories, players, publishedScores))
   }, [categories, players, publishedScores])
 
-  const totals = getTotals()
+  function updateCell(categoryId, playerId, value, type) {
+    const nextValue = type === 'text'
+      ? value
+      : Number.parseInt(value, 10)
 
-  function updateCell(categoryId, playerId, value) {
-    const numeric = Number.parseInt(value, 10)
     setDraftScores((current) => current.map((row) => (
       row.id === categoryId
         ? {
             ...row,
             scores: {
               ...row.scores,
-              [playerId]: Number.isNaN(numeric) ? 0 : numeric,
+              [playerId]: type === 'text' || !Number.isNaN(nextValue) ? nextValue : 0,
             },
           }
         : row
@@ -44,7 +47,12 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   function getDraftTotal(playerId) {
-    return draftScores.reduce((sum, row) => sum + (row.scores[playerId] ?? 0), 0)
+    return draftScores.reduce((sum, row) => {
+      if (row.type === 'text') return sum
+
+      const score = Number(row.scores[playerId] ?? 0)
+      return sum + (Number.isNaN(score) ? 0 : score)
+    }, 0)
   }
 
   async function handleSave() {
@@ -74,8 +82,15 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
         <section className="paper-card">
           <div className="card-heading">📝 Nhap diem — {gameName || 'Khong ten'}</div>
-          <div className="score-grid">
-            <div className="score-grid-header">Hang muc</div>
+          <div className="score-grid-wrap">
+            <div
+              className="score-grid"
+              style={{
+                gridTemplateColumns: `minmax(120px, 140px) repeat(${players.length}, minmax(96px, 1fr))`,
+                minWidth: `${140 + players.length * 108}px`,
+              }}
+            >
+            <div className="score-grid-header score-grid-sticky score-grid-sticky-header">Hang muc</div>
             {players.map((player) => (
               <div key={player.id} className="score-grid-header player-header">
                 <PlayerBadge player={player} />
@@ -85,49 +100,34 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
             {draftScores.map((row) => (
               <React.Fragment key={row.id}>
-                <div className="score-grid-label">{row.name}</div>
+                <div className="score-grid-label score-grid-sticky">{row.name}</div>
                 {players.map((player) => (
                   <div key={player.id} className="score-grid-cell">
                     <input
-                      className="score-box"
-                      type="number"
-                      value={row.scores[player.id] ?? 0}
-                      onChange={(e) => updateCell(row.id, player.id, e.target.value)}
+                      className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
+                      type={row.type === 'text' ? 'text' : 'number'}
+                      value={row.scores[player.id] ?? (row.type === 'text' ? '' : 0)}
+                      onChange={(e) => updateCell(row.id, player.id, e.target.value, row.type)}
                     />
                   </div>
                 ))}
               </React.Fragment>
             ))}
 
-            <div className="score-grid-total">Tong diem</div>
+            <div className="score-grid-total score-grid-sticky">Tong diem</div>
             {players.map((player) => (
               <div key={player.id} className="score-grid-winner">
                 <span className="winner-cup">🏆</span>
                 <strong>{getDraftTotal(player.id)}</strong>
               </div>
             ))}
+            </div>
           </div>
         </section>
 
         <button className="btn-primary demo-save" onClick={handleSave}>
           ✅ Luu ket qua
         </button>
-
-        {totals.length > 0 ? (
-          <section className="paper-card compact-card">
-            <div className="card-heading">🏆 Bang xep hang hien tai</div>
-            <div className="ranking-list">
-              {totals.map((player, index) => (
-                <div key={player.id} className="ranking-row">
-                  <span className="rank-badge">{index + 1}</span>
-                  <PlayerBadge player={player} />
-                  <span className="ranking-name">{player.name}</span>
-                  <strong>{player.total} pts</strong>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
     </div>
   )

@@ -136,6 +136,29 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   </div>
                 ))}
               </div>
+              {Array.isArray(entry.scoreRows) && entry.scoreRows.length > 0 ? (
+                <div className="history-score-table-wrap">
+                  <div className="history-score-table">
+                    <div className="history-score-header">Hang muc</div>
+                    {entry.players.map((player) => (
+                      <div key={player.id} className="history-score-header">
+                        {player.name}
+                      </div>
+                    ))}
+
+                    {entry.scoreRows.map((row) => (
+                      <React.Fragment key={row.id}>
+                        <div className="history-score-label">{row.name}</div>
+                        {entry.players.map((player) => (
+                          <div key={player.id} className="history-score-cell">
+                            {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                          </div>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { onAuthStateChanged } from 'firebase/auth'
-import { auth, ensureAnonymousAuth } from './firebase/firebase'
 import { useGameStore } from './store/gameStore'
 import { SetupScreen } from './components/SetupScreen'
 import { GameScreen } from './components/GameScreen'
@@ -11,14 +9,8 @@ import { useToast } from './hooks/useToast'
 
 export default function App() {
   const [screen, setScreen] = useState('setup')
-  const { darkMode, setUser } = useGameStore()
+  const { darkMode } = useGameStore()
   const { message, visible, show: showToast } = useToast()
-
-  useEffect(() => {
-    ensureAnonymousAuth().catch(console.error)
-    const unsub = onAuthStateChanged(auth, (user) => setUser(user))
-    return () => unsub()
-  }, [setUser])
 
   useEffect(() => {
     document.documentElement.className = darkMode ? '' : 'theme-light'
