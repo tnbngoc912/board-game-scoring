@@ -1,11 +1,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import {
-  completeMatch,
   createMatch,
   ensureBoardGame,
-  getId,
-  getMatch,
   syncUserByName,
   updateMatchScores,
 } from '../api/backendService'
@@ -87,24 +84,6 @@ function calculateTotals(players, publishedScores) {
     .sort((a, b) => b.total - a.total)
 }
 
-function getMatchPlayers(match) {
-  return match?.players || match?.match_players || match?.matchPlayers || []
-}
-
-function getMatchPlayerId(matchPlayer) {
-  return getId(matchPlayer) || matchPlayer?.match_player_id
-}
-
-function getMatchPlayerUserId(matchPlayer) {
-  return (
-    matchPlayer?.user_id ||
-    getId(matchPlayer?.user) ||
-    getId(matchPlayer?.player) ||
-    getId(matchPlayer?.userId) ||
-    getId(matchPlayer?.playerId)
-  )
-}
-
 function buildApiScoresForPlayer(playerId, scoreRows) {
   return scoreRows.reduce((scores, row) => {
     if (row.type === 'text') return scores
@@ -122,7 +101,6 @@ export const useGameStore = create(
       players: [],
       categories: [],
       publishedScores: [],
-      history: [],
       darkMode: false,
       syncStatus: 'idle',
 
@@ -152,7 +130,7 @@ export const useGameStore = create(
         set({ gameName, categories, publishedScores })
       },
 
-      addPlayer(name) {
+      addPlayer(name, apiUserId = null) {
         const trimmed = normalizeLabel(name)
         if (!trimmed) return false
 
@@ -160,6 +138,7 @@ export const useGameStore = create(
           ...get().players,
           {
             id: crypto.randomUUID(),
+            apiUserId,
             name: trimmed,
             initials: initials(trimmed),
             color: pickColor(get().players.length),
@@ -177,12 +156,12 @@ export const useGameStore = create(
         set({ players: nextPlayers, publishedScores: nextScores })
       },
 
-      updatePlayerName(id, name) {
+      updatePlayerName(id, name, apiUserId = null) {
         const trimmed = normalizeLabel(name)
 
         const nextPlayers = get().players.map((player) => (
           player.id === id
-            ? { ...player, name: trimmed, initials: trimmed ? initials(trimmed) : '' }
+            ? { ...player, apiUserId, name: trimmed, initials: trimmed ? initials(trimmed) : '' }
             : player
         ))
 
@@ -209,53 +188,32 @@ export const useGameStore = create(
       async publishScores(scoreRows) {
         const { gameName, players, categories } = get()
         const publishedScores = ensureScoreRows(categories, players, scoreRows)
-        const totals = calculateTotals(players, publishedScores)
-        const winner = totals[0] ?? null
-
-        const historyEntry = {
-          id: crypto.randomUUID(),
-          gameName: gameName || 'Khong ten',
-          playedAt: new Date().toLocaleString('vi-VN'),
-          playerCount: players.length,
-          winner: winner ? { id: winner.id, name: winner.name, total: winner.total } : null,
-          players: totals.map((player) => ({
-            id: player.id,
-            name: player.name,
-            color: player.color,
-            total: player.total,
-          })),
-          scoreRows: publishedScores.map((row) => ({
-            id: row.id,
-            name: row.name,
-            type: row.type,
-            scores: row.scores,
-          })),
-        }
 
         set({ syncStatus: 'syncing' })
         try {
-          const syncedUsers = await Promise.all(players.map((player) => syncUserByName(player.name)))
+          const syncedUsers = await Promise.all(players.map(async (player) => {
+            if (player.apiUserId) return { id: player.apiUserId, name: player.name }
+            return syncUserByName(player.name)
+          }))
           const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
           const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id))
-          const matchDetails = await getMatch(match.id)
-          const matchPlayers = getMatchPlayers(matchDetails)
 
           const playerScores = syncedUsers.map((user, index) => {
             const player = players[index]
-            const matchPlayer = matchPlayers.find((entry) => getMatchPlayerUserId(entry) === user.id) || matchPlayers[index]
 
             return {
-              match_player_id: getMatchPlayerId(matchPlayer),
+              user_id: user.id,
               scores: buildApiScoresForPlayer(player.id, publishedScores),
             }
-          }).filter((entry) => entry.match_player_id)
+          })
 
-          await updateMatchScores(match.id, playerScores)
-          await completeMatch(match.id)
+          await updateMatchScores(match.id, {
+            description: `${gameName || 'Van choi'} - ${new Date().toLocaleString('vi-VN')}`,
+            playerScores,
+          })
 
           set({
             publishedScores,
-            history: [historyEntry, ...get().history].slice(0, 20),
           })
           set({ syncStatus: 'synced' })
           return true
@@ -285,13 +243,12 @@ export const useGameStore = create(
     {
       name: 'scorekeeper-v4',
       storage: createJSONStorage(() => localStorage),
+      version: 5,
+      migrate: (persistedState) => ({
+        darkMode: persistedState?.darkMode ?? false,
+      }),
       partialize: (state) => ({
         darkMode: state.darkMode,
-        gameName: state.gameName,
-        players: state.players,
-        categories: state.categories,
-        publishedScores: state.publishedScores,
-        history: state.history,
       }),
     }
   )

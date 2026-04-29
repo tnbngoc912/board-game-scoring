@@ -69,6 +69,135 @@ body {
   gap: 18px;
 }
 
+.game-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-note {
+  margin-top: -8px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.game-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.game-card {
+  width: 100%;
+  overflow: hidden;
+  background: rgba(255, 252, 244, 0.96);
+  border: 1px solid rgba(167, 125, 79, 0.16);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.game-card.selected {
+  border-color: rgba(47, 125, 76, 0.74);
+  box-shadow: 0 0 0 3px rgba(47, 125, 76, 0.14), var(--shadow);
+}
+
+.game-card.selected .game-card-image {
+  background:
+    linear-gradient(135deg, rgba(47, 125, 76, 0.95), rgba(220, 174, 58, 0.86)),
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.56), transparent 30%);
+}
+
+.game-card-image {
+  min-height: 138px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(47, 125, 76, 0.82), rgba(220, 174, 58, 0.78)),
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.56), transparent 30%);
+}
+
+.game-card-image span {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.9);
+  box-shadow: 0 14px 28px rgba(93, 65, 40, 0.18);
+  font-size: 42px;
+}
+
+.game-card-body {
+  padding: 16px;
+}
+
+.game-card-title {
+  min-height: 44px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.16;
+  font-weight: 700;
+}
+
+.game-card-meta {
+  margin-top: 14px;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.game-list-action {
+  margin-top: 2px;
+}
+
+.game-list-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.empty-state {
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.setup-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.summary-label {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.summary-title {
+  margin-top: 4px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
 .hero-header {
   background: linear-gradient(180deg, var(--header), var(--header-dark));
   color: #f8df8f;

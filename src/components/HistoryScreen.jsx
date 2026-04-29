@@ -1,11 +1,45 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { getMatch, getMatches } from '../api/backendService'
 
 const MEDALS = ['🥇', '🥈', '🥉']
+const PLAYER_COLORS = ['#ea6556', '#5a98e6', '#6fbe78', '#e3af47', '#b57be7', '#ef8e45']
 
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [selectedGameName, setSelectedGameName] = useState('')
-  const { history, resetBoard } = useGameStore()
+  const [history, setHistory] = useState([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const { resetBoard } = useGameStore()
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadHistory() {
+      setIsLoadingHistory(true)
+      try {
+        const matches = await getMatches()
+        const detailedMatches = await Promise.all(matches.map(async (match) => {
+          try {
+            return await getMatch(match.id)
+          } catch {
+            return match
+          }
+        }))
+        if (isMounted) setHistory(detailedMatches)
+      } catch {
+        toast('Khong tai duoc lich su')
+      } finally {
+        if (isMounted) setIsLoadingHistory(false)
+      }
+    }
+
+    loadHistory()
+
+    return () => {
+      isMounted = false
+    }
+  }, [toast])
+
   const gameOptions = useMemo(
     () => [...new Set(history.map((entry) => entry.gameName).filter(Boolean))],
     [history]
@@ -105,7 +139,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               {totals.map((player, index) => (
                 <div key={player.id} className="ranking-row">
                   <span className="rank-badge">{index + 1}</span>
-                  <span className="player-dot-inline" style={{ background: player.color }} />
+                  <span className="player-dot-inline" style={{ background: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length] }} />
                   <span className="ranking-name">{player.name}</span>
                   <strong>{player.total} pts</strong>
                 </div>
@@ -115,7 +149,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         ) : null}
 
         <div className="history-headline">
-          {filteredHistory.length} van da choi
+          {isLoadingHistory ? 'Dang tai lich su...' : `${filteredHistory.length} van da choi`}
           {selectedGameName ? ` - ${selectedGameName}` : ''}
         </div>
         <div className="history-list">
@@ -129,9 +163,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </div>
               <div className="history-meta">{entry.playedAt} · {entry.playerCount} nguoi choi</div>
               <div className="history-player-grid">
-                {entry.players.map((player) => (
+                {entry.players.map((player, index) => (
                   <div key={player.id} className="history-player-pill">
-                    <span className="player-dot-inline" style={{ background: player.color }} />
+                    <span className="player-dot-inline" style={{ background: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length] }} />
                     <span>{player.name}: {player.total}</span>
                   </div>
                 ))}

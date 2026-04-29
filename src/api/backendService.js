@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://boardgame-scorer-backend.onrender.com/api/v1'
 
 function getEntityId(entity) {
-  return entity?._id || entity?.id
+  return entity?._id || entity?.id || entity?.match_id
 }
 
 function unwrapList(payload) {
@@ -22,6 +22,13 @@ function normalizeScoreColumn(column, index = 0) {
   }
 }
 
+function normalizeUser(user) {
+  return {
+    ...user,
+    id: getEntityId(user),
+  }
+}
+
 export function normalizeBoardGame(game) {
   const scoreColumns = game.score_columns || game.scoreColumns || game.categories || []
 
@@ -29,6 +36,71 @@ export function normalizeBoardGame(game) {
     ...game,
     id: getEntityId(game),
     categories: scoreColumns.map(normalizeScoreColumn),
+  }
+}
+
+export function normalizeMatch(match) {
+  const players = match.players || []
+  const winner = players.find((player) => player.is_winner)
+
+  return {
+    id: match.match_id || getEntityId(match),
+    gameName: match.board_game_name || match.gameName || 'Khong ten',
+    gameId: match.board_game_id,
+    playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
+    playerCount: match.player_count || players.length,
+    description: match.description || '',
+    winner: winner ? {
+      id: winner.user_id,
+      name: winner.name,
+      total: winner.total_score ?? 0,
+    } : null,
+    players: players
+      .map((player, index) => ({
+        id: player.user_id || player.id || player._id || player.name,
+        name: player.name,
+        color: undefined,
+        total: player.total_score ?? player.total ?? 0,
+        rank: player.rank ?? index + 1,
+      }))
+      .sort((a, b) => a.rank - b.rank),
+    scoreRows: match.score_rows || match.scoreRows || [],
+  }
+}
+
+export function normalizeMatchDetail(payload) {
+  const match = payload.match || payload
+  const boardGame = match.board_game_id || match.boardGame || {}
+  const scoreColumns = boardGame.score_columns || boardGame.scoreColumns || []
+  const players = payload.players || match.players || []
+  const normalizedPlayers = players
+    .map((player, index) => ({
+      id: getEntityId(player.user_id) || player.user_id || getEntityId(player),
+      name: player.user_id?.name || player.name,
+      total: player.total_score ?? 0,
+      rank: player.rank ?? index + 1,
+      isWinner: Boolean(player.is_winner),
+      scores: player.scores || {},
+    }))
+    .sort((a, b) => a.rank - b.rank)
+  const winner = normalizedPlayers.find((player) => player.isWinner)
+
+  return {
+    id: getEntityId(match),
+    gameName: boardGame.name || match.board_game_name || match.gameName || 'Khong ten',
+    gameId: getEntityId(boardGame) || match.board_game_id,
+    playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
+    playerCount: match.player_count || normalizedPlayers.length,
+    description: match.description || '',
+    winner: winner ? { id: winner.id, name: winner.name, total: winner.total } : null,
+    players: normalizedPlayers,
+    scoreRows: scoreColumns.map((column, index) => ({
+      ...normalizeScoreColumn(column, index),
+      scores: normalizedPlayers.reduce((scores, player) => {
+        scores[player.id] = player.scores?.[column.id] ?? 0
+        return scores
+      }, {}),
+    })),
   }
 }
 
@@ -81,7 +153,7 @@ export async function syncUserByName(name) {
     body: JSON.stringify({
       email: emailForPlayer(name),
       name,
-      avatar_url: '',
+      avatar_drive_id: '',
     }),
   })
   const user = unwrapEntity(payload, ['user'])
@@ -92,9 +164,25 @@ export async function syncUserByName(name) {
   }
 }
 
+export async function getUsers() {
+  const payload = await request('/users')
+  return unwrapList(payload).map(normalizeUser)
+}
+
 export async function getBoardGames() {
   const payload = await request('/board-games')
   return unwrapList(payload).map(normalizeBoardGame)
+}
+
+export async function getMatches(params = {}) {
+  const searchParams = new URLSearchParams()
+
+  if (params.boardGameId) searchParams.set('board_game_id', params.boardGameId)
+  if (params.search) searchParams.set('search', params.search)
+
+  const query = searchParams.toString()
+  const payload = await request(`/matches${query ? `?${query}` : ''}`)
+  return unwrapList(payload).map(normalizeMatch)
 }
 
 export async function ensureBoardGame(gameName, categories) {
@@ -142,25 +230,16 @@ export async function createMatch(boardGameId, playerIds) {
 
 export async function getMatch(matchId) {
   const payload = await request(`/matches/${matchId}`)
-  const match = unwrapEntity(payload, ['match'])
-  return {
-    ...match,
-    id: getEntityId(match),
-  }
+  return normalizeMatchDetail(payload)
 }
 
-export async function updateMatchScores(matchId, playerScores) {
+export async function updateMatchScores(matchId, { description, playerScores }) {
   return request(`/matches/${matchId}/scores`, {
     method: 'PUT',
     body: JSON.stringify({
+      description,
       player_scores: playerScores,
     }),
-  })
-}
-
-export async function completeMatch(matchId) {
-  return request(`/matches/${matchId}/complete`, {
-    method: 'POST',
   })
 }
 
