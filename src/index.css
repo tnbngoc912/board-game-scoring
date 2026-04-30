@@ -90,14 +90,17 @@ body {
 }
 
 .game-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
 }
 
 .game-card {
   width: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 252, 244, 0.96);
   border: 1px solid rgba(167, 125, 79, 0.16);
   border-radius: var(--r);
@@ -108,19 +111,10 @@ body {
   text-align: left;
 }
 
-.game-card.selected {
-  border-color: rgba(47, 125, 76, 0.74);
-  box-shadow: 0 0 0 3px rgba(47, 125, 76, 0.14), var(--shadow);
-}
-
-.game-card.selected .game-card-image {
-  background:
-    linear-gradient(135deg, rgba(47, 125, 76, 0.95), rgba(220, 174, 58, 0.86)),
-    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.56), transparent 30%);
-}
-
 .game-card-image {
-  min-height: 138px;
+  height: 104px;
+  min-height: 104px;
+  flex: 0 0 104px;
   display: grid;
   place-items: center;
   background:
@@ -131,44 +125,28 @@ body {
 .game-card-image span {
   display: grid;
   place-items: center;
-  width: 76px;
-  height: 76px;
-  border-radius: 18px;
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
   background: rgba(255, 250, 240, 0.9);
   box-shadow: 0 14px 28px rgba(93, 65, 40, 0.18);
-  font-size: 42px;
+  font-size: 32px;
 }
 
 .game-card-body {
-  padding: 16px;
+  padding: 12px;
 }
 
 .game-card-title {
-  min-height: 44px;
+  min-height: 40px;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.16;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
-.game-card-meta {
-  margin-top: 14px;
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.game-list-action {
-  margin-top: 2px;
-}
-
-.game-list-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  box-shadow: none;
-}
 
 .empty-state {
   color: var(--ink-soft);
@@ -642,6 +620,7 @@ body {
   border-radius: 10px;
   padding: 9px 10px;
   font-size: 14px;
+  text-align: center;
 }
 
 .history-score-header,

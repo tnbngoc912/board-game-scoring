@@ -179,12 +179,6 @@ export const useGameStore = create(
         return true
       },
 
-      removeCategory(id) {
-        const nextCategories = get().categories.filter((category) => category.id !== id)
-        const nextScores = ensureScoreRows(nextCategories, get().players, get().publishedScores)
-        set({ categories: nextCategories, publishedScores: nextScores })
-      },
-
       async publishScores(scoreRows) {
         const { gameName, players, categories } = get()
         const publishedScores = ensureScoreRows(categories, players, scoreRows)

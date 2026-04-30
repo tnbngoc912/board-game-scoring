@@ -20,6 +20,7 @@ export function ScoreInput({
 }) {
   const { players } = useGameStore()
   const [scores, setScores] = useState({})
+  const [focusedPlayerId, setFocusedPlayerId] = useState(null)
 
   // Reset when players change
   useEffect(() => {
@@ -57,6 +58,12 @@ export function ScoreInput({
   function handleConfirm() {
     onConfirm(scores)
     clearAll()
+  }
+
+  function getInputValue(playerId) {
+    const value = scores[playerId] ?? 0
+    if (focusedPlayerId === playerId && value === 0) return ''
+    return value
   }
 
   const hasAnyScore = Object.values(scores).some(v => v !== 0)
@@ -149,8 +156,10 @@ export function ScoreInput({
 
               <input
                 type="number"
-                value={scores[player.id] ?? 0}
+                value={getInputValue(player.id)}
                 onChange={e => setScore(player.id, e.target.value)}
+                onFocus={() => setFocusedPlayerId(player.id)}
+                onBlur={() => setFocusedPlayerId(null)}
                 inputMode="numeric"
                 style={{
                   width: 58,

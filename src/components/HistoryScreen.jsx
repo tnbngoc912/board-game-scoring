@@ -115,7 +115,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           </select>
         </section>
 
-        {winner ? (
+        {/* {winner ? (
           <section className="paper-card result-card">
             <div className="result-title">🏆 Ket qua</div>
             <div className="result-subtitle">{selectedGameName || 'Tat ca tua game'}</div>
@@ -130,9 +130,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               ))}
             </div>
           </section>
-        ) : null}
+        ) : null} */}
 
-        {totals.length > 0 ? (
+        {/* {totals.length > 0 ? (
           <section className="paper-card compact-card">
             <div className="card-heading">📋 Bang xep hang</div>
             <div className="ranking-list">
@@ -146,7 +146,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               ))}
             </div>
           </section>
-        ) : null}
+        ) : null} */}
 
         <div className="history-headline">
           {isLoadingHistory ? 'Dang tai lich su...' : `${filteredHistory.length} van da choi`}

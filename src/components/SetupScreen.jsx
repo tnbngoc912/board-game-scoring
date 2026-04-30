@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
-import { PlayerDot } from './PlayerDot'
 import { getBoardGames, getUsers } from '../api/backendService'
 
 const CUSTOM_PLAYER_VALUE = '__custom__'
@@ -13,7 +12,6 @@ function capitalizeFirstLetter(value) {
 
 export function SetupScreen({ onStart, onShowHistory, toast }) {
   const [setupStep, setSetupStep] = useState('games')
-  const [pendingGame, setPendingGame] = useState(null)
   const [newPlayerChoice, setNewPlayerChoice] = useState('')
   const [customPlayerName, setCustomPlayerName] = useState('')
   const [customPlayerIds, setCustomPlayerIds] = useState(() => new Set())
@@ -27,7 +25,6 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
     removePlayer,
     updatePlayerName,
     addCategory,
-    removeCategory,
   } = useGameStore()
 
   const [gameList, setGameList] = useState([])
@@ -104,21 +101,10 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
     setCategoryName('')
   }
 
-  function handleChooseGame() {
-    if (!pendingGame) {
-      toast('Vui long chon tro choi')
-      return
-    }
-
-    const game = pendingGame
+  function handleChooseGame(game) {
     selectGame(game)
     setCategoryName('')
     setSetupStep('config')
-  }
-
-  function handleBackToGames() {
-    setPendingGame(selectedGame)
-    setSetupStep('games')
   }
 
   function handlePlayerChoice(playerId, value) {
@@ -182,45 +168,32 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
 
             <div className="game-card-list">
               {isLoadingGames ? (
-                <div className="paper-card empty-state">Dang tai danh sach game...</div>
+                <div className="paper-card empty-state">Dang tai...</div>
               ) : null}
 
               {!isLoadingGames && gameList.length === 0 ? (
                 <div className="paper-card empty-state">Chua co game nao.</div>
               ) : null}
 
-              {!isLoadingGames && gameList.map((game, index) => {
-                const isSelected = pendingGame?.id === game.id || pendingGame?.name === game.name
-
-                return (
-                  <motion.button
-                    type="button"
-                    key={game.id || game.name}
-                    className={`game-card${isSelected ? ' selected' : ''}`}
-                    onClick={() => setPendingGame(game)}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <div className="game-card-image" aria-hidden="true">
-                      <span>🎲</span>
-                    </div>
-                    <div className="game-card-body">
-                      <h2 className="game-card-title">{game.name}</h2>
-                      <div className="game-card-meta">{isSelected ? 'Da chon' : 'Cham de chon'}</div>
-                    </div>
-                  </motion.button>
-                )
-              })}
+              {!isLoadingGames && gameList.map((game, index) => (
+                <motion.button
+                  type="button"
+                  key={game.id || game.name}
+                  className="game-card"
+                  onClick={() => handleChooseGame(game)}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <div className="game-card-image" aria-hidden="true">
+                    <span>🎲</span>
+                  </div>
+                  <div className="game-card-body">
+                    <h2 className="game-card-title">{game.name}</h2>
+                  </div>
+                </motion.button>
+              ))}
             </div>
-
-            <button
-              className="btn-primary game-list-action"
-              onClick={handleChooseGame}
-              disabled={!pendingGame}
-            >
-              Di tiep
-            </button>
           </section>
         ) : (
           <>
@@ -229,7 +202,6 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
                 <div className="summary-label">Tro choi da chon</div>
                 <div className="summary-title">{selectedGame?.name || gameName || 'Chua chon tro choi'}</div>
               </div>
-              <button className="secondary-mini" onClick={handleBackToGames}>Doi game</button>
             </section>
 
             <section className="paper-card">
@@ -244,7 +216,7 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                     >
-                      <PlayerDot player={player} size={34} />
+                      {/* <PlayerDot player={player} size={34} /> */}
                       <div className="player-select-group">
                         <select
                           className="demo-input"
@@ -318,7 +290,6 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
                       exit={{ opacity: 0, y: -8 }}
                     >
                       <div className="stack-row-label">{capitalizeFirstLetter(category.name)}</div>
-                      <button className="remove-chip" onClick={() => removeCategory(category.id)}>×</button>
                     </motion.div>
                   ))}
                 </AnimatePresence>
