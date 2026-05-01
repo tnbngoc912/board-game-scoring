@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { getBoardGames, getUsers } from '../api/backendService'
 
-const CUSTOM_PLAYER_VALUE = '__custom__'
 const DEFAULT_GENRES = ['Party', 'Chien Thuat', 'Deck Building', 'An Vai', 'Family', 'Euro']
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -20,11 +19,6 @@ const GENRE_FALLBACKS = {
   arnak: ['Chien Thuat', 'Deck Building'],
   istanbul: ['Family', 'Chien Thuat'],
   dune: ['Chien Thuat'],
-}
-
-function capitalizeFirstLetter(value) {
-  if (!value) return ''
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function getMinPlayers(game) {
@@ -67,10 +61,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [playerCountFilter, setPlayerCountFilter] = useState('')
   const [selectedGenres, setSelectedGenres] = useState([])
-  const [newPlayerChoice, setNewPlayerChoice] = useState('')
-  const [customPlayerName, setCustomPlayerName] = useState('')
-  const [customPlayerIds, setCustomPlayerIds] = useState(() => new Set())
-  const [categoryName, setCategoryName] = useState('')
+  const [selectedUserIds, setSelectedUserIds] = useState([])
+  const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
   const {
     gameName,
     players,
@@ -78,8 +70,6 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     selectGame,
     addPlayer,
     removePlayer,
-    updatePlayerName,
-    addCategory,
   } = useGameStore()
 
   const [gameList, setGameList] = useState([])
@@ -153,37 +143,9 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     ))
   }
 
-  function handleAddPlayer(name = customPlayerName, apiUserId = null) {
-    if (isPlayerSelected(name)) {
-      toast('Nguoi choi da co trong danh sach')
-      return
-    }
-
-    if (!addPlayer(name, apiUserId)) return
-    setNewPlayerChoice('')
-    setCustomPlayerName('')
-  }
-
-  function handleNewPlayerChoice(value) {
-    if (value === CUSTOM_PLAYER_VALUE) {
-      setNewPlayerChoice(value)
-      setCustomPlayerName('')
-      return
-    }
-
-    setNewPlayerChoice('')
-    const user = userList.find((item) => item.id === value)
-    if (user) handleAddPlayer(user.name, user.id)
-  }
-
-  function handleAddCategory(name = categoryName) {
-    if (!addCategory(name)) return
-    setCategoryName('')
-  }
-
   function handleChooseGame(game) {
     selectGame(game)
-    setCategoryName('')
+    setSelectedUserIds([])
     setSetupStep('config')
   }
 
@@ -201,28 +163,11 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     setSelectedGenres([])
   }
 
-  function handlePlayerChoice(playerId, value) {
-    if (value === CUSTOM_PLAYER_VALUE) {
-      setCustomPlayerIds((current) => new Set(current).add(playerId))
-      updatePlayerName(playerId, '')
-      return
-    }
-
-    setCustomPlayerIds((current) => {
-      const next = new Set(current)
-      next.delete(playerId)
-      return next
-    })
-
-    const user = userList.find((item) => item.id === value)
-    if (!user) return
-
-    if (isPlayerSelected(user.name, playerId)) {
-      toast('Nguoi choi da co trong danh sach')
-      return
-    }
-
-    updatePlayerName(playerId, user.name, user.id)
+  function formatPlayDateTime(value) {
+    if (!value) return ''
+    const [datePart, timePart] = value.split('T')
+    const [year, month, day] = datePart.split('-')
+    return `${timePart}, ${day}/${month}/${year}`
   }
 
   function handleStart() {
@@ -231,6 +176,33 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
       return
     }
     onStart()
+  }
+
+  function toggleUserSelection(userId) {
+    setSelectedUserIds((current) => (
+      current.includes(userId)
+        ? current.filter((id) => id !== userId)
+        : [...current, userId]
+    ))
+  }
+
+  function handleAddSelectedPlayers() {
+    if (selectedUserIds.length === 0) {
+      toast('Vui long chon nguoi choi')
+      return
+    }
+
+    selectedUserIds.forEach((userId) => {
+      const user = userList.find((item) => item.id === userId)
+      if (user && !isPlayerSelected(user.name)) addPlayer(user.name, user.id)
+    })
+    setSelectedUserIds([])
+    setSetupStep('config')
+  }
+
+  function openPlayerPicker() {
+    setSelectedUserIds([])
+    setSetupStep('player-picker')
   }
 
   return (
@@ -352,133 +324,111 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
             </section>
           </div>
         </>
-      ) : (
+      ) : setupStep === 'player-picker' ? (
         <>
-          <div className="hero-header">
-            <div className="hero-brand">
-              <div className="hero-dice">🎲</div>
-              <div>
-                <h1 className="hero-title">Board Game Score Tracker</h1>
-                <p className="hero-subtitle">ghi diem euro games</p>
-              </div>
+          <header className="picker-topbar">
+            <h1>Chon Nguoi Choi</h1>
+            <button className="picker-close-btn" onClick={() => setSetupStep('config')} aria-label="Dong">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          </header>
+
+          <div className="screen-inner player-picker-content">
+            {isLoadingUsers ? (
+              <div className="paper-card empty-state">Dang tai nguoi choi...</div>
+            ) : null}
+
+            <div className="player-picker-list">
+              {userList.map((user) => {
+                const disabled = isPlayerSelected(user.name)
+                const checked = selectedUserIds.includes(user.id)
+
+                return (
+                  <label key={user.id} className={`player-picker-row${disabled ? ' disabled' : ''}`}>
+                    <span>{user.name}</span>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleUserSelection(user.id)}
+                    />
+                  </label>
+                )
+              })}
             </div>
           </div>
 
-          <div className="screen-inner demo-layout">
-            <button className="link-back" onClick={() => setSetupStep('games')}>← Doi game</button>
+          <div className="player-picker-footer">
+            <button className="player-picker-submit" onClick={handleAddSelectedPlayers}>
+              Them nguoi choi
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <header className="setup-topbar">
+            <button className="setup-back-btn" onClick={() => setSetupStep('games')} aria-label="Quay lai">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 6 9 12l6 6" />
+                <path d="M10 12h9" />
+              </svg>
+            </button>
+            <h1>{selectedGame?.name || gameName || 'Chua chon tro choi'}</h1>
+          </header>
 
-            <section className="paper-card setup-summary-card">
-              <div>
-                <div className="summary-label">Tro choi da chon</div>
-                <div className="summary-title">{selectedGame?.name || gameName || 'Chua chon tro choi'}</div>
-              </div>
-            </section>
-
-            <section className="paper-card">
-              <div className="card-heading">👥 Nguoi choi</div>
-              <div className="stack-list">
+          <div className="screen-inner setup-flow">
+            <section className="setup-section">
+              <h2>Nguoi choi</h2>
+              <div className="setup-row-list">
                 <AnimatePresence initial={false}>
                   {players.map((player) => (
                     <motion.div
                       key={player.id}
-                      className="stack-row"
+                      className="setup-player-row"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                     >
-                      {/* <PlayerDot player={player} size={34} /> */}
-                      <div className="player-select-group">
-                        <select
-                          className="demo-input"
-                          value={customPlayerIds.has(player.id) || !player.apiUserId ? CUSTOM_PLAYER_VALUE : player.apiUserId}
-                          onChange={(e) => handlePlayerChoice(player.id, e.target.value)}
-                        >
-                          <option value="">{isLoadingUsers ? 'Dang tai nguoi choi...' : 'Chon nguoi choi'}</option>
-                          {userList.map((user) => (
-                            <option key={user.id} value={user.id} disabled={isPlayerSelected(user.name, player.id)}>
-                              {user.name}
-                            </option>
-                          ))}
-                          <option value={CUSTOM_PLAYER_VALUE}>Nhap nguoi choi moi</option>
-                        </select>
-                        {(customPlayerIds.has(player.id) || !player.apiUserId) ? (
-                          <input
-                            className="demo-input"
-                            value={player.name}
-                            onChange={(e) => updatePlayerName(player.id, e.target.value)}
-                            placeholder="Ten nguoi choi"
-                          />
-                        ) : null}
-                      </div>
-                      <button className="remove-chip" onClick={() => removePlayer(player.id)}>×</button>
+                      <span>{player.name}</span>
+                      <button className="setup-circle-btn remove" onClick={() => removePlayer(player.id)} aria-label={`Xoa ${player.name}`}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10" /></svg>
+                      </button>
                     </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
 
-              <div className="inline-form">
-                <div className="player-select-group">
-                  <select
-                    className="demo-input"
-                    value={newPlayerChoice}
-                    onChange={(e) => handleNewPlayerChoice(e.target.value)}
-                  >
-                    <option value="">{isLoadingUsers ? 'Dang tai nguoi choi...' : 'Them nguoi choi'}</option>
-                    {userList.map((user) => (
-                      <option key={user.id} value={user.id} disabled={isPlayerSelected(user.name)}>
-                        {user.name}
-                      </option>
-                    ))}
-                    <option value={CUSTOM_PLAYER_VALUE}>Nhap nguoi choi moi</option>
-                  </select>
-                  {newPlayerChoice === CUSTOM_PLAYER_VALUE ? (
-                    <input
-                      className="demo-input"
-                      value={customPlayerName}
-                      onChange={(e) => setCustomPlayerName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()}
-                      placeholder="Ten nguoi choi moi"
-                    />
-                  ) : null}
-                </div>
-                {newPlayerChoice === CUSTOM_PLAYER_VALUE ? (
-                  <button className="secondary-mini" onClick={() => handleAddPlayer()}>+ Them</button>
-                ) : null}
+                <button className="setup-player-row add" onClick={openPlayerPicker}>
+                  <span>Them nguoi choi</span>
+                  <span className="setup-circle-btn add" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12" /></svg>
+                  </span>
+                </button>
               </div>
             </section>
 
-            <section className="paper-card">
-              <div className="card-heading">📊 Hang muc tinh diem</div>
-              <div className="stack-list">
-                <AnimatePresence initial={false}>
-                  {categories.map((category) => (
-                    <motion.div
-                      key={category.id}
-                      className="stack-row"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                    >
-                      <div className="stack-row-label">{capitalizeFirstLetter(category.name)}</div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-
-              <div className="inline-form">
-                <input
-                  className="demo-input"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                  placeholder="Them hang muc"
-                />
-                <button className="secondary-mini" onClick={() => handleAddCategory()}>+ Them</button>
+            <section className="setup-section">
+              <h2>Ngay gio</h2>
+              <div className="setup-date-row">
+                <span>{formatPlayDateTime(playDateTime)}</span>
+                <label className="setup-date-button" aria-label="Chon ngay gio">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 3v4M17 3v4M4.5 9h15M6 5h12a2 2 0 0 1 2 2v8" />
+                    <path d="M6 5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8" />
+                    <path d="m15 19 4-4 2 2-4 4h-2v-2z" />
+                  </svg>
+                  <input
+                    type="datetime-local"
+                    value={playDateTime}
+                    onChange={(event) => setPlayDateTime(event.target.value)}
+                  />
+                </label>
               </div>
             </section>
 
-            <button className="btn-primary demo-save" onClick={handleStart}>
-              🎲 Bat dau nhap diem
+            <button className="setup-start-btn" onClick={handleStart}>
+              Bat dau nhap diem
             </button>
           </div>
         </>

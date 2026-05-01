@@ -24,6 +24,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const { gameName, players, categories, publishedScores, publishScores } = useGameStore()
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
+  const [matchDescription, setMatchDescription] = useState('')
 
   useEffect(() => {
     setDraftScores(buildDraft(categories, players, publishedScores))
@@ -68,39 +69,29 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   return (
-    <div className="screen">
-      <div className="hero-header">
-        <div className="hero-brand">
-          <div className="hero-dice">🎲</div>
-          <div>
-            <h1 className="hero-title">Board Game Score Tracker</h1>
-            <p className="hero-subtitle">ghi diem euro games</p>
-          </div>
-        </div>
-      </div>
+    <div className="screen score-screen">
+      <header className="score-topbar">
+        <h1>Nhap Diem</h1>
+        <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </header>
 
-      <div className="demo-tabs">
-        <button className="demo-tab active" onClick={onShowSetup}>✏️ Van moi</button>
-        <button className="demo-tab" onClick={onShowHistory}>📜 Lich su</button>
-      </div>
-
-      <div className="screen-inner demo-layout">
-        <button className="link-back" onClick={onShowSetup}>← Quay lai setup</button>
-
-        <section className="paper-card">
-          <div className="card-heading">📝 Nhap diem — {gameName || 'Khong ten'}</div>
-          <div className="score-grid-wrap">
+      <div className="score-content">
+        <section className="score-board">
+          <div className="score-grid-wrap score-board-scroll">
             <div
-              className="score-grid"
+              className="score-grid score-entry-grid"
               style={{
-                gridTemplateColumns: `minmax(120px, 140px) repeat(${players.length}, minmax(96px, 1fr))`,
-                minWidth: `${140 + players.length * 108}px`,
+                gridTemplateColumns: `202px repeat(${players.length}, 164px)`,
+                minWidth: `${202 + players.length * 164}px`,
               }}
             >
-              <div className="score-grid-header score-grid-sticky score-grid-sticky-header">Hang muc</div>
+              <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
               {players.map((player) => (
                 <div key={player.id} className="score-grid-header player-header">
-                  <PlayerBadge player={player} />
                   <span>{player.name}</span>
                 </div>
               ))}
@@ -126,7 +117,6 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
               <div className="score-grid-total score-grid-sticky">Tong diem</div>
               {players.map((player) => (
                 <div key={player.id} className="score-grid-winner">
-                  <span className="winner-cup">🏆</span>
                   <strong>{getDraftTotal(player.id)}</strong>
                 </div>
               ))}
@@ -134,14 +124,21 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           </div>
         </section>
 
-        <button className="btn-primary demo-save" onClick={handleSave}>
-          ✅ Luu ket qua
+        <div className="score-scroll-indicator" aria-hidden="true">
+          <span />
+        </div>
+
+        <textarea
+          className="match-description"
+          value={matchDescription}
+          onChange={(event) => setMatchDescription(event.target.value)}
+          placeholder="Nhap mo ta van choi"
+        />
+
+        <button className="score-save-btn" onClick={handleSave}>
+          Luu ket qua
         </button>
       </div>
     </div>
   )
-}
-
-function PlayerBadge({ player }) {
-  return <span className="player-dot-inline" style={{ background: player.color }} />
 }
