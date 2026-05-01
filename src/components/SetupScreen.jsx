@@ -4,14 +4,69 @@ import { useGameStore } from '../store/gameStore'
 import { getBoardGames, getUsers } from '../api/backendService'
 
 const CUSTOM_PLAYER_VALUE = '__custom__'
+const DEFAULT_GENRES = ['Party', 'Chien Thuat', 'Deck Building', 'An Vai', 'Family', 'Euro']
+const GAME_IMAGE_THEMES = [
+  ['#b9d8d4', '#7fb0c8'],
+  ['#e2c290', '#a76642'],
+  ['#d7b08e', '#71472f'],
+  ['#bad2a1', '#54855a'],
+  ['#d7c2a4', '#8c613b'],
+]
+
+const GENRE_FALLBACKS = {
+  wingspan: ['Family', 'Chien Thuat'],
+  puerto: ['Chien Thuat', 'Euro'],
+  civilization: ['Chien Thuat'],
+  arnak: ['Chien Thuat', 'Deck Building'],
+  istanbul: ['Family', 'Chien Thuat'],
+  dune: ['Chien Thuat'],
+}
 
 function capitalizeFirstLetter(value) {
   if (!value) return ''
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-export function SetupScreen({ onStart, onShowHistory, toast }) {
+function getMinPlayers(game) {
+  return Number(game.min_players ?? game.minPlayers ?? game.player_min ?? game.minPlayer ?? 1)
+}
+
+function getMaxPlayers(game) {
+  return Number(game.max_players ?? game.maxPlayers ?? game.player_max ?? game.maxPlayer ?? 5)
+}
+
+function formatPlayerRange(game) {
+  return `${getMinPlayers(game)}-${getMaxPlayers(game)} nguoi choi`
+}
+
+function normalizeGenre(value) {
+  return String(value || '').trim()
+}
+
+function getGenreLabels(game) {
+  const rawGenres = game.genres || game.genre || game.tags || game.mechanics || game.types || game.type
+  const values = Array.isArray(rawGenres) ? rawGenres : rawGenres ? [rawGenres] : []
+  const labels = values
+    .map((item) => normalizeGenre(item?.name || item?.label || item))
+    .filter(Boolean)
+
+  if (labels.length > 0) return labels
+
+  const name = (game.name || '').toLowerCase()
+  const fallbackKey = Object.keys(GENRE_FALLBACKS).find((key) => name.includes(key))
+  return fallbackKey ? GENRE_FALLBACKS[fallbackKey] : ['Chien Thuat']
+}
+
+function getGameImageTheme(index) {
+  return GAME_IMAGE_THEMES[index % GAME_IMAGE_THEMES.length]
+}
+
+export function SetupScreen({ onStart, homeResetToken, toast }) {
   const [setupStep, setSetupStep] = useState('games')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [playerCountFilter, setPlayerCountFilter] = useState('')
+  const [selectedGenres, setSelectedGenres] = useState([])
   const [newPlayerChoice, setNewPlayerChoice] = useState('')
   const [customPlayerName, setCustomPlayerName] = useState('')
   const [customPlayerIds, setCustomPlayerIds] = useState(() => new Set())
@@ -61,11 +116,36 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
     }
   }, [toast])
 
+  useEffect(() => {
+    setSetupStep('games')
+  }, [homeResetToken])
+
   const canStart = players.length >= 2 && players.every((player) => player.name.trim()) && categories.length >= 1
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
     [gameList, gameName]
   )
+  const genreOptions = useMemo(() => {
+    const labels = gameList.flatMap(getGenreLabels)
+    return [...new Set([...DEFAULT_GENRES, ...labels])].filter(Boolean)
+  }, [gameList])
+  const filteredGames = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase()
+    const playerCount = Number(playerCountFilter)
+
+    return gameList.filter((game) => {
+      const gameGenres = getGenreLabels(game)
+      const matchesName = !keyword || game.name.toLowerCase().includes(keyword)
+      const matchesPlayers = !playerCountFilter || (
+        getMinPlayers(game) <= playerCount && getMaxPlayers(game) >= playerCount
+      )
+      const matchesGenres = selectedGenres.length === 0 || selectedGenres.some((genre) => (
+        gameGenres.includes(genre)
+      ))
+
+      return matchesName && matchesPlayers && matchesGenres
+    })
+  }, [gameList, playerCountFilter, searchTerm, selectedGenres])
 
   function isPlayerSelected(name, exceptPlayerId = null) {
     return players.some((player) => (
@@ -107,6 +187,20 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
     setSetupStep('config')
   }
 
+  function toggleGenre(genre) {
+    setSelectedGenres((current) => (
+      current.includes(genre)
+        ? current.filter((item) => item !== genre)
+        : [...current, genre]
+    ))
+  }
+
+  function resetFilters() {
+    setSearchTerm('')
+    setPlayerCountFilter('')
+    setSelectedGenres([])
+  }
+
   function handlePlayerChoice(playerId, value) {
     if (value === CUSTOM_PLAYER_VALUE) {
       setCustomPlayerIds((current) => new Set(current).add(playerId))
@@ -141,32 +235,72 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
 
   return (
     <div className="screen">
-      <div className="hero-header">
-        <div className="hero-brand">
-          <div className="hero-dice">🎲</div>
-          <div>
-            <h1 className="hero-title">Board Game Score Tracker</h1>
-            <p className="hero-subtitle">ghi diem euro games</p>
-          </div>
-        </div>
-      </div>
+      {setupStep === 'games' ? (
+        <>
+          <header className="home-header">
+            <div className="home-logo">BGSCORE</div>
+          </header>
 
-      <div className="demo-tabs">
-        <button className="demo-tab active">✏️ Van moi</button>
-        <button className="demo-tab" onClick={onShowHistory}>📜 Lich su</button>
-      </div>
-
-      <div className="screen-inner demo-layout">
-        {setupStep === 'games' ? (
-          <section className="game-list-section">
-            <div className="section-heading-row">
-              <div>
-                <div className="card-heading">🎮 Ten tro choi</div>
-                <p className="section-note">Chon game de thiet lap nguoi choi va hang muc tinh diem.</p>
+          <div className="screen-inner home-content">
+            <section className="home-search-panel" aria-label="Tim va loc game">
+              <div className="search-bar">
+                <span className="search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M16.5 16.5L21 21" />
+                  </svg>
+                </span>
+                <input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Tim tro choi"
+                  aria-label="Tim ten game"
+                />
+                <span className="search-divider" aria-hidden="true" />
+                <button
+                  className={`filter-button${isFilterOpen ? ' active' : ''}`}
+                  type="button"
+                  onClick={() => setIsFilterOpen((value) => !value)}
+                  aria-label="Bo loc"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 5h16l-6.4 7.4v5.2L10.4 19v-6.6L4 5z" />
+                  </svg>
+                </button>
               </div>
-            </div>
 
-            <div className="game-card-list">
+              {isFilterOpen ? (
+                <div className="filter-panel">
+                  <label className="filter-field">
+                    <span>So nguoi choi</span>
+                    <select value={playerCountFilter} onChange={(event) => setPlayerCountFilter(event.target.value)}>
+                      <option value="">Tat ca</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
+                        <option key={count} value={count}>{count} nguoi</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="genre-filter">
+                    <div className="filter-label">The loai</div>
+                    <div className="genre-chip-list">
+                      {genreOptions.map((genre) => (
+                        <button
+                          key={genre}
+                          type="button"
+                          className={`genre-chip${selectedGenres.includes(genre) ? ' active' : ''}`}
+                          onClick={() => toggleGenre(genre)}
+                        >
+                          {genre}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="home-game-section">
               {isLoadingGames ? (
                 <div className="paper-card empty-state">Dang tai...</div>
               ) : null}
@@ -175,28 +309,64 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
                 <div className="paper-card empty-state">Chua co game nao.</div>
               ) : null}
 
-              {!isLoadingGames && gameList.map((game, index) => (
-                <motion.button
-                  type="button"
-                  key={game.id || game.name}
-                  className="game-card"
-                  onClick={() => handleChooseGame(game)}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
-                  <div className="game-card-image" aria-hidden="true">
-                    <span>🎲</span>
-                  </div>
-                  <div className="game-card-body">
-                    <h2 className="game-card-title">{game.name}</h2>
-                  </div>
-                </motion.button>
-              ))}
+              {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
+                <div className="paper-card empty-state home-empty-state">
+                  <div>Khong tim thay game phu hop.</div>
+                  <button className="secondary-mini" onClick={resetFilters}>Xoa bo loc</button>
+                </div>
+              ) : null}
+
+              {!isLoadingGames && filteredGames.length > 0 ? (
+                <div className="home-game-list">
+                  {filteredGames.map((game, index) => {
+                    const [startColor, endColor] = getGameImageTheme(index)
+                    const genres = getGenreLabels(game)
+
+                    return (
+                      <motion.button
+                        type="button"
+                        key={game.id || game.name}
+                        className="home-game-card"
+                        onClick={() => handleChooseGame(game)}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                      >
+                        <div
+                          className="home-game-thumb"
+                          style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }}
+                          aria-hidden="true"
+                        >
+                          <span>{game.name?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                        </div>
+                        <div className="home-game-info">
+                          <h2>{game.name}</h2>
+                          <p>{formatPlayerRange(game)}</p>
+                          <p>{genres.join(', ')}</p>
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              ) : null}
+            </section>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="hero-header">
+            <div className="hero-brand">
+              <div className="hero-dice">🎲</div>
+              <div>
+                <h1 className="hero-title">Board Game Score Tracker</h1>
+                <p className="hero-subtitle">ghi diem euro games</p>
+              </div>
             </div>
-          </section>
-        ) : (
-          <>
+          </div>
+
+          <div className="screen-inner demo-layout">
+            <button className="link-back" onClick={() => setSetupStep('games')}>← Doi game</button>
+
             <section className="paper-card setup-summary-card">
               <div>
                 <div className="summary-label">Tro choi da chon</div>
@@ -310,9 +480,9 @@ export function SetupScreen({ onStart, onShowHistory, toast }) {
             <button className="btn-primary demo-save" onClick={handleStart}>
               🎲 Bat dau nhap diem
             </button>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

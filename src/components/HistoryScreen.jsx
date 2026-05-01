@@ -93,11 +93,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         </div>
       </div>
 
-      <div className="demo-tabs">
-        <button className="demo-tab" onClick={onShowSetup}>✏️ Van moi</button>
-        <button className="demo-tab active">📜 Lich su ({history.length})</button>
-      </div>
-
       <div className="screen-inner demo-layout">
         <section className="paper-card compact-card">
           <div className="card-heading">🎲 Loc theo tua game</div>
