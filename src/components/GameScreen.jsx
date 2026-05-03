@@ -64,8 +64,9 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   async function handleSave() {
-    const ok = await publishScores(draftScores)
+    const ok = await publishScores(draftScores, matchDescription)
     toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
+    if (ok) onShowHistory()
   }
 
   return (
@@ -85,8 +86,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
             <div
               className="score-grid score-entry-grid"
               style={{
-                gridTemplateColumns: `202px repeat(${players.length}, 164px)`,
-                minWidth: `${202 + players.length * 164}px`,
+                gridTemplateColumns: `202px repeat(${players.length}, 132px)`,
+                minWidth: `${202 + players.length * 132}px`,
               }}
             >
               <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />

@@ -179,7 +179,7 @@ export const useGameStore = create(
         return true
       },
 
-      async publishScores(scoreRows) {
+      async publishScores(scoreRows, description = '') {
         const { gameName, players, categories } = get()
         const publishedScores = ensureScoreRows(categories, players, scoreRows)
 
@@ -202,7 +202,7 @@ export const useGameStore = create(
           })
 
           await updateMatchScores(match.id, {
-            description: `${gameName || 'Van choi'} - ${new Date().toLocaleString('vi-VN')}`,
+            description: description.trim() || `${gameName || 'Van choi'} - ${new Date().toLocaleString('vi-VN')}`,
             playerScores,
           })
 

@@ -47,6 +47,7 @@ export function normalizeMatch(match) {
     id: match.match_id || getEntityId(match),
     gameName: match.board_game_name || match.gameName || 'Khong ten',
     gameId: match.board_game_id,
+    playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
     playerCount: match.player_count || players.length,
     description: match.description || '',
@@ -89,6 +90,7 @@ export function normalizeMatchDetail(payload) {
     id: getEntityId(match),
     gameName: boardGame.name || match.board_game_name || match.gameName || 'Khong ten',
     gameId: getEntityId(boardGame) || match.board_game_id,
+    playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
     playerCount: match.player_count || normalizedPlayers.length,
     description: match.description || '',
@@ -240,6 +242,12 @@ export async function updateMatchScores(matchId, { description, playerScores }) 
       description,
       player_scores: playerScores,
     }),
+  })
+}
+
+export async function deleteMatch(matchId) {
+  return request(`/matches/${matchId}`, {
+    method: 'DELETE',
   })
 }
 
