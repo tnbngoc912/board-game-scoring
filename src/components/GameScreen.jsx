@@ -86,8 +86,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
             <div
               className="score-grid score-entry-grid"
               style={{
-                gridTemplateColumns: `202px repeat(${players.length}, 132px)`,
-                minWidth: `${202 + players.length * 132}px`,
+                gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
+                minWidth: `${88 + players.length * 70}px`,
               }}
             >
               <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />

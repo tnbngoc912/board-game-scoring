@@ -188,8 +188,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               <div
                 className="score-grid score-entry-grid"
                 style={{
-                  gridTemplateColumns: `142px repeat(${players.length}, 115px)`,
-                  minWidth: `${142 + players.length * 115}px`,
+                  gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
+                  minWidth: `${88 + players.length * 70}px`,
                 }}
               >
                 <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
@@ -248,8 +248,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   return (
     <div className="screen history-screen">
-      <header className="home-header">
-        <div className="home-logo">BGSCORE</div>
+      <header className="history-phone-header" aria-label="BGScore">
+        <div className="history-brandbar">
+          <div className="home-logo">BGSCORE</div>
+        </div>
       </header>
 
       <div className="screen-inner history-content">
