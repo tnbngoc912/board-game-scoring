@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
-import { deleteMatch, getMatch, getMatches } from '../api/backendService'
+import { deleteMatch, getBoardGames, getMatch, getMatches } from '../api/backendService'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -31,6 +31,61 @@ function formatWinner(entry) {
   return `${winner.name} - ${winner.total} diem`
 }
 
+function formatHistoryDateOnly(entry) {
+  const raw = entry.playedAtRaw || entry.playedAt
+  const date = raw ? new Date(raw) : null
+  if (date && !Number.isNaN(date.getTime())) {
+    return date.toLocaleDateString('vi-VN')
+  }
+
+  const datePart = String(entry.playedAt || '').match(/(\d{1,2}\/\d{1,2}\/\d{4})/)
+  return datePart?.[1] || ''
+}
+
+function formatHistoryTitle(entry) {
+  const description = String(entry.description || '').trim()
+  if (description) return description
+
+  const date = formatHistoryDateOnly(entry)
+  return date ? entry.gameName + ' - ' + date : entry.gameName
+}
+
+function getComparableId(value) {
+  if (!value) return ''
+  if (typeof value === 'object') return String(value.id || value._id || value.match_id || '')
+  return String(value)
+}
+
+function findBoardGameForMatch(match, boardGames) {
+  const gameId = getComparableId(match.gameId)
+  if (gameId) {
+    const byId = boardGames.find((game) => getComparableId(game.id) === gameId)
+    if (byId) return byId
+  }
+
+  return boardGames.find((game) => game.name === match.gameName) || null
+}
+
+function alignScoreRowsWithBoardGame(match, boardGames) {
+  const boardGame = findBoardGameForMatch(match, boardGames)
+  const categories = boardGame?.categories || []
+  if (categories.length === 0) return match
+
+  const rowsById = new Map((match.scoreRows || []).map((row) => [String(row.id), row]))
+  const alignedRows = categories.map((category) => {
+    const existing = rowsById.get(String(category.id))
+    return {
+      ...category,
+      scores: existing?.scores || {},
+    }
+  })
+
+  return {
+    ...match,
+    scoreRows: alignedRows,
+  }
+}
+
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [selectedGameName, setSelectedGameName] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -49,12 +104,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     async function loadHistory() {
       setIsLoadingHistory(true)
       try {
-        const matches = await getMatches()
+        const [matches, boardGames] = await Promise.all([getMatches(), getBoardGames()])
         const detailedMatches = await Promise.all(matches.map(async (match) => {
           try {
-            return await getMatch(match.id)
+            const detail = await getMatch(match.id)
+            const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: match.scoreRows || [] }
+            return alignScoreRowsWithBoardGame(matchWithRows, boardGames)
           } catch {
-            return match
+            return alignScoreRowsWithBoardGame(match, boardGames)
           }
         }))
         const sortedMatches = detailedMatches.sort((a, b) => getSortableTime(b) - getSortableTime(a))
@@ -341,7 +398,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                     <span>{entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
                   </div>
                   <div className="history-card-main">
-                    <h2>{entry.description || entry.gameName}</h2>
+                    <h2>{formatHistoryTitle(entry)}</h2>
                     <p>{entry.playedAt}</p>
                     <div className="history-winner-line">
                       <span aria-hidden="true">♛</span>

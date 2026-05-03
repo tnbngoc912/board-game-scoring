@@ -29,6 +29,71 @@ function normalizeUser(user) {
   }
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getPopulatedBoardGame(match) {
+  const candidates = [match.board_game, match.boardGame, match.board_game_id]
+  return candidates.find(isPlainObject) || {}
+}
+
+function humanizeScoreId(value, index = 0) {
+  const label = String(value || '').trim()
+  if (!label) return `Score ${index + 1}`
+
+  return label
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^./, (char) => char.toUpperCase())
+}
+
+function getScoreValue(scores, columnId, fallbackId) {
+  if (!scores) return undefined
+  if (scores[columnId] !== undefined) return scores[columnId]
+  if (fallbackId && scores[fallbackId] !== undefined) return scores[fallbackId]
+  return undefined
+}
+
+function normalizeRawScoreRows(rawRows, players) {
+  if (!Array.isArray(rawRows)) return []
+
+  return rawRows.map((row, index) => {
+    const columnId = row.id || row._id || row.score_column_id || row.scoreColumnId || row.key || `score-${index + 1}`
+    const normalizedColumn = normalizeScoreColumn({
+      id: columnId,
+      name: row.name || row.label || humanizeScoreId(columnId, index),
+      type: row.type,
+      weight: row.weight,
+    }, index)
+    const rowScores = row.scores || row.values || {}
+
+    return {
+      ...normalizedColumn,
+      scores: players.reduce((scores, player) => {
+        scores[player.id] = getScoreValue(rowScores, player.id, player.userId) ?? 0
+        return scores
+      }, {}),
+    }
+  })
+}
+
+function buildScoreRowsFromPlayerScores(players) {
+  const scoreIds = [...new Set(players.flatMap((player) => Object.keys(player.scores || {})))]
+
+  return scoreIds.map((scoreId, index) => ({
+    id: scoreId,
+    name: humanizeScoreId(scoreId, index),
+    type: 'number',
+    weight: 1,
+    scores: players.reduce((scores, player) => {
+      scores[player.id] = player.scores?.[scoreId] ?? 0
+      return scores
+    }, {}),
+  }))
+}
+
 export function normalizeBoardGame(game) {
   const scoreColumns = game.score_columns || game.scoreColumns || game.categories || []
 
@@ -71,12 +136,14 @@ export function normalizeMatch(match) {
 
 export function normalizeMatchDetail(payload) {
   const match = payload.match || payload
-  const boardGame = match.board_game_id || match.boardGame || {}
-  const scoreColumns = boardGame.score_columns || boardGame.scoreColumns || []
+  const boardGame = getPopulatedBoardGame(match)
+  const scoreColumns = boardGame.score_columns || boardGame.scoreColumns || match.score_columns || match.scoreColumns || []
+  const rawScoreRows = match.score_rows || match.scoreRows || payload.score_rows || payload.scoreRows || []
   const players = payload.players || match.players || []
   const normalizedPlayers = players
     .map((player, index) => ({
       id: getEntityId(player.user_id) || player.user_id || getEntityId(player),
+      userId: getEntityId(player.user_id) || player.user_id || getEntityId(player),
       name: player.user_id?.name || player.name,
       total: player.total_score ?? 0,
       rank: player.rank ?? index + 1,
@@ -85,6 +152,16 @@ export function normalizeMatchDetail(payload) {
     }))
     .sort((a, b) => a.rank - b.rank)
   const winner = normalizedPlayers.find((player) => player.isWinner)
+  const scoreRowsFromColumns = scoreColumns.map((column, index) => ({
+    ...normalizeScoreColumn(column, index),
+    scores: normalizedPlayers.reduce((scores, player) => {
+      scores[player.id] = player.scores?.[column.id || column._id] ?? 0
+      return scores
+    }, {}),
+  }))
+  const scoreRows = scoreRowsFromColumns.length > 0
+    ? scoreRowsFromColumns
+    : normalizeRawScoreRows(rawScoreRows, normalizedPlayers)
 
   return {
     id: getEntityId(match),
@@ -96,13 +173,7 @@ export function normalizeMatchDetail(payload) {
     description: match.description || '',
     winner: winner ? { id: winner.id, name: winner.name, total: winner.total } : null,
     players: normalizedPlayers,
-    scoreRows: scoreColumns.map((column, index) => ({
-      ...normalizeScoreColumn(column, index),
-      scores: normalizedPlayers.reduce((scores, player) => {
-        scores[player.id] = player.scores?.[column.id] ?? 0
-        return scores
-      }, {}),
-    })),
+    scoreRows: scoreRows.length > 0 ? scoreRows : buildScoreRowsFromPlayerScores(normalizedPlayers),
   }
 }
 
