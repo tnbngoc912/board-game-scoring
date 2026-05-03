@@ -31,14 +31,14 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <AnimatePresence mode="wait">
+    <div className={`app-shell screen-${screen}`}>
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={screen}
-          initial={{ opacity: 0, x: 18 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -18 }}
-          transition={{ duration: 0.16, ease: 'easeOut' }}
+          initial={false}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: 0 }}
           style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         >
           {screen === 'setup' ? <SetupScreen onStart={() => setScreen('game')} homeResetToken={homeResetToken} {...screenProps} /> : null}

@@ -206,7 +206,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   }
 
   return (
-    <div className="screen">
+    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
       {setupStep === 'games' ? (
         <>
           <header className="home-header">
@@ -274,7 +274,18 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
             <section className="home-game-section">
               {isLoadingGames ? (
-                <div className="paper-card empty-state">Dang tai...</div>
+                <div className="home-game-list" aria-busy="true" aria-label="Dang tai game">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="home-game-card home-game-card-skeleton">
+                      <div className="home-game-thumb" aria-hidden="true" />
+                      <div className="home-game-info">
+                        <span className="home-skeleton-line title" />
+                        <span className="home-skeleton-line" />
+                        <span className="home-skeleton-line short" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : null}
 
               {!isLoadingGames && gameList.length === 0 ? (

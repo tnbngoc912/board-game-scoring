@@ -70,7 +70,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   return (
-    <div className="screen score-screen">
+    <div className="screen score-screen score-entry-screen">
       <header className="score-topbar">
         <h1>Nhap Diem</h1>
         <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">

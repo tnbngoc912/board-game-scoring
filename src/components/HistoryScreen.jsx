@@ -95,6 +95,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [matchToDelete, setMatchToDelete] = useState(null)
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { resetBoard } = useGameStore()
 
@@ -104,17 +105,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     async function loadHistory() {
       setIsLoadingHistory(true)
       try {
-        const [matches, boardGames] = await Promise.all([getMatches(), getBoardGames()])
-        const detailedMatches = await Promise.all(matches.map(async (match) => {
-          try {
-            const detail = await getMatch(match.id)
-            const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: match.scoreRows || [] }
-            return alignScoreRowsWithBoardGame(matchWithRows, boardGames)
-          } catch {
-            return alignScoreRowsWithBoardGame(match, boardGames)
-          }
-        }))
-        const sortedMatches = detailedMatches.sort((a, b) => getSortableTime(b) - getSortableTime(a))
+        const matches = await getMatches()
+        const sortedMatches = matches.sort((a, b) => getSortableTime(b) - getSortableTime(a))
         if (isMounted) setHistory(sortedMatches)
       } catch {
         toast('Khong tai duoc lich su')
@@ -152,6 +144,22 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       onNewGame()
     } else {
       toast('Khong the tao van moi')
+    }
+  }
+
+  async function openMatchDetail(entry) {
+    setSelectedMatch(entry)
+    setIsDetailMenuOpen(false)
+    setIsLoadingMatchDetail(true)
+
+    try {
+      const [detail, boardGames] = await Promise.all([getMatch(entry.id), getBoardGames()])
+      const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
+      setSelectedMatch(alignScoreRowsWithBoardGame(matchWithRows, boardGames))
+    } catch {
+      toast('Khong tai duoc chi tiet bang diem')
+    } finally {
+      setIsLoadingMatchDetail(false)
     }
   }
 
@@ -241,6 +249,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           </section>
 
           <section className="score-board history-score-board">
+            {isLoadingMatchDetail ? <div className="history-detail-loading">Dang tai chi tiet...</div> : null}
             <div className="score-grid-wrap score-board-scroll">
               <div
                 className="score-grid score-entry-grid"
@@ -385,9 +394,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   className="history-card-v2"
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedMatch(entry)}
+                  onClick={() => openMatchDetail(entry)}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') setSelectedMatch(entry)
+                    if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
                   }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}

@@ -1,0 +1,11 @@
+@media (max-width: 420px) {
+
+  .score-grid {
+    grid-template-columns: minmax(92px, 1fr) repeat(auto-fit, minmax(70px, 1fr));
+  }
+
+  .score-box {
+    max-width: 72px;
+    font-size: 20px;
+  }
+}

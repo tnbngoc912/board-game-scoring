@@ -1,0 +1,99 @@
+/* Figma home UI alignment */
+
+.home-screen .home-content {
+  gap: 12px;
+  padding: 12px 16px 16px;
+}
+
+.home-screen .home-game-section {
+  gap: 12px;
+}
+
+.home-screen .home-game-list {
+  gap: 12px;
+}
+
+.home-screen .home-game-card {
+  min-height: 104px;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  border-radius: 12px;
+  background: #fff9f5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 12px 16px 12px 12px;
+}
+
+.home-screen .home-game-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  justify-self: start;
+}
+
+.home-screen .home-game-thumb span {
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', Impact, sans-serif;
+  font-size: 18px;
+  line-height: 20px;
+  letter-spacing: 1px;
+}
+
+.home-screen .home-game-info {
+  align-self: center;
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', var(--font-ui);
+}
+
+.home-screen .home-game-info h2 {
+  display: -webkit-box;
+  max-height: 40px;
+  overflow: hidden;
+  color: #38322e;
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', var(--font-ui);
+  font-size: 18px;
+  line-height: 20px;
+  font-weight: 700;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.home-screen .home-game-info p {
+  margin-top: 4px;
+  color: #70655c;
+  font-family: 'Barlow Semi Condensed', 'Arial Narrow', var(--font-ui);
+  font-size: 14px;
+  line-height: 15px;
+  font-weight: 400;
+}
+
+.home-screen .home-game-card-skeleton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.home-screen .home-game-card-skeleton .home-game-thumb,
+.home-screen .home-skeleton-line {
+  background: linear-gradient(90deg, #fff9f5 0%, #f7ede5 45%, #fff9f5 90%);
+  background-size: 220% 100%;
+  animation: home-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.home-screen .home-skeleton-line {
+  display: block;
+  width: 72%;
+  height: 15px;
+  border-radius: 999px;
+}
+
+.home-screen .home-skeleton-line.title {
+  width: 84%;
+  height: 20px;
+}
+
+.home-screen .home-skeleton-line.short {
+  width: 48%;
+}
+
+@keyframes home-skeleton-pulse {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
