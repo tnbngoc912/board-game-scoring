@@ -1,0 +1,14 @@
+.card,
+.paper-card {
+  border: 1px solid rgba(167, 125, 79, 0.14);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+
+.empty-state {
+  color: var(--color-subtext);
+  font-size: 15px;
+  line-height: 1.4;
+}

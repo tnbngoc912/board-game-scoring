@@ -1,0 +1,124 @@
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 20;
+  width: min(430px, 100vw);
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  background: var(--color-white);
+  padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 28px rgba(93, 65, 40, 0.14);
+}
+
+.bottom-nav::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 33.333%;
+  height: 4px;
+  background: var(--color-brand);
+  transform: translateX(var(--bottom-nav-active, 0));
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 13px;
+  font-weight: 400;
+  padding: 6px 8px 0;
+  cursor: pointer;
+}
+
+.bottom-nav-item span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+
+.bottom-nav-item svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bottom-nav-item:first-child svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+.bottom-nav-item.active {
+  background: transparent;
+  color: var(--color-brand);
+}
+
+.app-shell.screen-setup .bottom-nav,
+.app-shell.screen-history .bottom-nav {
+  width: min(393px, 100vw);
+  height: calc(56px + env(safe-area-inset-bottom));
+  padding: 0 0 env(safe-area-inset-bottom);
+  background: var(--color-white);
+  box-shadow: var(--shadow-nav);
+}
+
+.app-shell.screen-setup .bottom-nav::before,
+.app-shell.screen-history .bottom-nav::before {
+  top: 0;
+  width: 33.333%;
+  height: 2px;
+  transform: none;
+  opacity: 0;
+}
+
+.app-shell.screen-setup .bottom-nav::before {
+  left: 0;
+}
+
+.app-shell.screen-history .bottom-nav::before {
+  left: 33.333%;
+}
+
+.app-shell.screen-setup .bottom-nav-item,
+.app-shell.screen-history .bottom-nav-item {
+  height: 56px;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  color: var(--color-subtext);
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.app-shell.screen-setup .bottom-nav-item span,
+.app-shell.screen-history .bottom-nav-item span {
+  width: 24px;
+  height: 24px;
+}
+
+.app-shell.screen-setup .bottom-nav-item svg,
+.app-shell.screen-history .bottom-nav-item svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.7;
+}
+
+.app-shell.screen-setup .bottom-nav-item.active,
+.app-shell.screen-history .bottom-nav-item.active {
+  color: var(--color-brand);
+  border-top: 2px solid var(--color-brand);
+  padding-top: 6px;
+}

@@ -1,0 +1,107 @@
+.scoreboard,
+.history-score-board {
+  --cell-h: 92px;
+  --header-h: 72px;
+  --total-h: 76px;
+
+  background: var(--color-bg-strong);
+}
+
+.history-score-board,
+.history-score-board .score-board-scroll,
+.history-score-board .score-grid-sticky {
+  background: var(--color-bg-strong);
+}
+
+.history-score-board .score-entry-grid {
+  gap: 0;
+}
+
+.scoreboard-cell,
+.history-score-board .score-grid-label,
+.history-score-board .score-grid-cell {
+  min-height: var(--cell-h);
+}
+
+.scoreboard-cell {
+  display: grid;
+  place-items: center;
+}
+
+.history-score-board .score-grid-header {
+  min-height: var(--header-h);
+  color: var(--color-text-strong);
+  font-size: 16px;
+  padding: 0 var(--space-2);
+}
+
+.history-score-board .score-grid-sticky {
+  box-shadow: var(--shadow-sticky);
+}
+
+.history-score-board .score-grid-label {
+  padding: 0 10px 0 var(--space-5);
+  font-size: 17px;
+}
+
+.history-score-board .score-grid-cell {
+  padding: 0 6px;
+}
+
+.score-box,
+.history-score-board .readonly-score-box {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  font-weight: 700;
+}
+
+.history-score-board .readonly-score-box {
+  width: 100%;
+  max-width: 102px;
+  min-height: 78px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: center;
+  padding: 10px;
+}
+
+.history-score-board .readonly-score-box.text {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.history-score-board .score-grid-total,
+.history-score-board .score-grid-winner {
+  min-height: var(--total-h);
+  border-top: 1.5px solid var(--color-border);
+  border-bottom: 1.5px solid var(--color-border);
+}
+
+.history-score-board .score-grid-total {
+  padding-left: var(--space-5);
+  font-size: 17px;
+}
+
+.history-score-board .score-grid-winner {
+  padding: 0 6px;
+}
+
+.history-score-board .winning-total {
+  position: relative;
+  width: 74px !important;
+  height: 48px;
+  display: grid !important;
+  place-items: center;
+  background: transparent;
+}
+
+.history-score-board .winning-total::before {
+  content: '';
+  position: absolute;
+  inset: 3px 0 0;
+  background: #f4b247;
+  clip-path: polygon(4% 100%, 96% 100%, 88% 34%, 70% 52%, 50% 12%, 30% 52%, 12% 34%);
+}

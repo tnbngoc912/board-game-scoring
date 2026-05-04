@@ -1,0 +1,140 @@
+.history-screen {
+  background: var(--color-bg);
+}
+
+.history-phone-header {
+  height: 56px;
+  background: var(--color-brand);
+  color: var(--color-white);
+}
+
+.history-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.history-card,
+.history-card-v2 {
+  width: 100%;
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) 32px;
+  gap: var(--space-4);
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-card-soft);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-game-thumb {
+  width: 80px;
+  height: 80px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.history-game-thumb span {
+  color: rgba(255, 252, 244, 0.95);
+  font-size: 18px;
+  line-height: 20px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.history-card-main {
+  min-width: 0;
+  align-self: center;
+}
+
+.history-card-main h2 {
+  display: -webkit-box;
+  max-height: 40px;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 20px;
+  font-weight: 700;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.history-card-main p,
+.history-winner-line {
+  color: var(--color-subtext);
+  font-size: 14px;
+  line-height: 15px;
+}
+
+.history-card-main p {
+  margin-top: 6px;
+}
+
+.history-winner-line {
+  margin-top: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.history-winner-line span:first-child {
+  width: 16px;
+  color: var(--color-accent);
+  font-size: 14px;
+  line-height: 14px;
+}
+
+.history-winner-line strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.history-game-name {
+  margin-top: var(--space-1);
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.history-empty-state h2 {
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.history-empty-state p {
+  color: var(--color-subtext);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.history-empty-btn,
+.history-clear-btn {
+  margin: 0;
+}

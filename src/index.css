@@ -1,10 +1,1 @@
-@import './styles/00-base-home.css';
-@import './styles/01-setup.css';
-@import './styles/02-score.css';
-@import './styles/03-history.css';
-@import './styles/04-responsive.css';
-@import './styles/04-figma-shared.css';
-@import './styles/05-history-figma.css';
-@import './styles/06-history-detail-figma.css';
-@import './styles/07-home-figma.css';
-@import './styles/08-score-entry-figma.css';
+@import './styles/main.css';

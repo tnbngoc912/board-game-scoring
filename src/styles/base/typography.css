@@ -1,0 +1,19 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+strong {
+  font-weight: 700;
+}

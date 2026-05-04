@@ -169,11 +169,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setIsFilterOpen(false)
   }
 
-  function openDeleteConfirm(entry, event) {
-    event.stopPropagation()
-    setMatchToDelete(entry)
-  }
-
   async function confirmDelete() {
     if (!matchToDelete) return
 
@@ -416,19 +411,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                     </div>
                     <div className="history-game-name">{entry.gameName}</div>
                   </div>
-                  <button
-                    className="history-delete-btn"
-                    type="button"
-                    onClick={(event) => openDeleteConfirm(entry, event)}
-                    aria-label={`Xoa bang diem ${entry.gameName}`}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 7h16" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M6 7l1 14h10l1-14" />
-                      <path d="M9 7V4h6v3" />
-                    </svg>
-                  </button>
                 </motion.article>
               )
             })}
