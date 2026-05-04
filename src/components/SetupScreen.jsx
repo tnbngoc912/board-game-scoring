@@ -320,7 +320,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                           style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }}
                           aria-hidden="true"
                         >
-                          <span>{game.name?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                          <img loading="lazy" alt="" width={50} height={50} src={game.thumbnail_url} />
                         </div>
                         <div className="home-game-info">
                           <h2>{game.name}</h2>
