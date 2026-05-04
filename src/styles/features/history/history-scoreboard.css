@@ -18,7 +18,7 @@
 }
 
 .scoreboard-cell,
-.history-score-board .score-grid-label,
+/* .history-score-board .score-grid-label, */
 .history-score-board .score-grid-cell {
   min-height: var(--cell-h);
 }
@@ -41,7 +41,7 @@
 
 .history-score-board .score-grid-label {
   padding: 0 10px 0 var(--space-5);
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .history-score-board .score-grid-cell {
@@ -57,15 +57,13 @@
 }
 
 .history-score-board .readonly-score-box {
-  width: 100%;
-  max-width: 102px;
-  min-height: 78px;
+  width: 62px;
+  height: 48px;
   display: grid;
   place-items: center;
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 16px;
+  font-weight:600;
   text-align: center;
-  padding: 10px;
 }
 
 .history-score-board .readonly-score-box.text {
@@ -96,12 +94,14 @@
   display: grid !important;
   place-items: center;
   background: transparent;
+  z-index: 0
 }
 
 .history-score-board .winning-total::before {
   content: '';
+  z-index: -1;
   position: absolute;
-  inset: 3px 0 0;
+  inset: -11px 1px 9px;
   background: #f4b247;
   clip-path: polygon(4% 100%, 96% 100%, 88% 34%, 70% 52%, 50% 12%, 30% 52%, 12% 34%);
 }

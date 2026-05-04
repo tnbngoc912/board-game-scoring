@@ -113,7 +113,25 @@ export function normalizeMatch(match) {
     gameName: match.board_game_name || match.gameName || 'Khong ten',
     gameId: match.board_game_id,
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
-    playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
+    playedAt: match.play_date
+      ? (() => {
+        const d = new Date(match.play_date);
+
+        const time = d.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+
+        const date = d.toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+
+        return `${time} - ${date}`;
+      })()
+      : '',
     playerCount: match.player_count || players.length,
     description: match.description || '',
     winner: winner ? {

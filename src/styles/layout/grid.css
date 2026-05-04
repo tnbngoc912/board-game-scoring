@@ -17,6 +17,10 @@
   box-shadow: 10px 0 12px -14px rgba(93, 65, 40, 0.65);
 }
 
+.grid-spacer {
+  width: 8px;
+}
+
 .score-grid-sticky-header {
   z-index: 3;
 }

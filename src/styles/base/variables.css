@@ -44,7 +44,7 @@
   /* effects */
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-nav: 0 -4px 8px rgba(0, 0, 0, 0.08);
-  --shadow-sticky: 7px 0 14px rgba(0, 0, 0, 0.11);
+  --shadow-sticky: 2px 0 2px rgba(0, 0, 0, 0.11);
 
   /* typography */
   --font-main: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;

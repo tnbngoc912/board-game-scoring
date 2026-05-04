@@ -249,20 +249,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               <div
                 className="score-grid score-entry-grid"
                 style={{
-                  gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
+                  gridTemplateColumns: `88px 8px repeat(${players.length}, 70px) 8px`,
                   minWidth: `${88 + players.length * 70}px`,
                 }}
               >
                 <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
+                <div class="grid-spacer"></div>
                 {players.map((player) => (
                   <div key={player.id} className="score-grid-header player-header">
                     <span>{player.name}</span>
                   </div>
                 ))}
+                <div class="grid-spacer"></div>
 
                 {scoreRows.map((row) => (
                   <React.Fragment key={row.id}>
                     <div className="score-grid-label score-grid-sticky">{row.name}</div>
+                    <div class="grid-spacer"></div>
                     {players.map((player) => (
                       <div key={player.id} className="score-grid-cell">
                         <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
@@ -270,10 +273,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                         </div>
                       </div>
                     ))}
+                    <div class="grid-spacer"></div>
                   </React.Fragment>
                 ))}
 
                 <div className="score-grid-total score-grid-sticky">Tong</div>
+                <div class="grid-spacer border"></div>
                 {players.map((player) => (
                   <div key={player.id} className="score-grid-winner">
                     <strong className={winner?.id === player.id ? 'winning-total' : ''}>{player.total}</strong>
@@ -405,9 +410,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                     <h2>{formatHistoryTitle(entry)}</h2>
                     <p>{entry.playedAt}</p>
                     <div className="history-winner-line">
-                      <span aria-hidden="true">♛</span>
+                      <span aria-hidden="true">💸</span>
                       <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
-                      {winner ? <strong>{winner.total}</strong> : null}
                     </div>
                     <div className="history-game-name">{entry.gameName}</div>
                   </div>

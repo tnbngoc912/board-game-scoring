@@ -128,7 +128,7 @@
   color: var(--color-heading);
   font-size: 25px;
   line-height: 1.15;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .match-summary-strip p {
@@ -139,11 +139,11 @@
 
 .history-detail-note {
   min-height: 132px;
-  margin: 26px var(--space-5) 0;
+  margin: 26px var(--space-5) 100px;
   border-radius: var(--radius-lg);
   background: var(--color-card);
   padding: var(--space-5) 28px;
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.35;
 }
 

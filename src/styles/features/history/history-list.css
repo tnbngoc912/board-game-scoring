@@ -53,7 +53,7 @@
   color: rgba(255, 252, 244, 0.95);
   font-size: 18px;
   line-height: 20px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 1px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
@@ -79,7 +79,7 @@
 .history-winner-line {
   color: var(--color-subtext);
   font-size: 14px;
-  line-height: 15px;
+  line-height: 20px;
 }
 
 .history-card-main p {
@@ -94,9 +94,9 @@
 }
 
 .history-winner-line span:first-child {
-  width: 16px;
+  width: 24px;
   color: var(--color-accent);
-  font-size: 14px;
+  font-size: 24px;
   line-height: 14px;
 }
 
