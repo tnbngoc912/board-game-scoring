@@ -1,15 +1,15 @@
 .setup-topbar,
 .picker-topbar {
-  min-height: 96px;
+  min-height: 56px;
   display: grid;
   align-items: center;
   background: var(--color-brand);
-  color: var(--color-card);
-  padding: 0 var(--space-5);
+  color: var(--color-white);
+  padding: 0 var(--space-2);
 }
 
 .setup-topbar {
-  grid-template-columns: 70px 1fr 70px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
 }
 
 .picker-topbar {
@@ -19,9 +19,9 @@
 .setup-topbar h1,
 .picker-topbar h1 {
   grid-column: 2;
-  color: var(--color-card);
-  font-size: 24px;
-  line-height: 1.16;
+  color: var(--color-white);
+  font-size: 18px;
+  line-height: 1.15;
   font-weight: 700;
   text-align: center;
 }
@@ -29,6 +29,21 @@
 .picker-topbar h1 {
   font-size: 26px;
   line-height: 1.1;
+}
+
+.setup-topbar .setup-back-btn {
+  width: 40px;
+  height: 40px;
+  justify-self: start;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-white);
+}
+
+.setup-topbar .setup-back-btn svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
 }
 
 .setup-flow {
@@ -68,13 +83,13 @@
 .setup-date-row,
 .player-picker-row {
   width: 100%;
-  min-height: 96px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   border: 0;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   background: var(--color-card);
   color: var(--color-text-strong);
   padding: 0 var(--space-6);
@@ -91,7 +106,11 @@
   color: var(--color-text-strong);
   font-size: 16px;
   line-height: 1.15;
-  font-weight: 850;
+  font-weight: 600;
+}
+
+.setup-circle-btn.add {
+  color: var(--color-white);
 }
 
 .setup-player-row.add,

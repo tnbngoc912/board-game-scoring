@@ -21,7 +21,7 @@
 }
 
 .screen-inner {
-  padding: var(--space-5) var(--space-5) var(--space-4);
+  padding: 16px;
 }
 
 .home-screen,

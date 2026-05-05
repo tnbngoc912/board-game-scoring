@@ -93,9 +93,9 @@
 }
 
 .setup-circle-btn {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   color: var(--color-white);
 }
 

@@ -71,8 +71,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
   return (
     <div className="screen score-screen score-entry-screen">
-      <header className="score-topbar score-entry-header" aria-label="BGScore">
-        <div className="score-entry-topbar">
+      <header className="history-phone-header score-entry-header" aria-label="BGScore">
+        <div className="history-detail-topbar score-entry-topbar">
           <div className="score-entry-spacer" aria-hidden="true" />
           <div className="home-logo">BGSCORE</div>
           <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">

@@ -7,23 +7,11 @@
 }
 
 .score-entry-header {
-  height: 56px;
-  min-height: 56px;
-  color: var(--color-white);
-  box-shadow: 0 2px 2px rgba(105, 105, 105, 0.08);
-}
-
-.score-entry-topbar {
-  height: 100%;
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: center;
-  padding: 0 var(--space-2);
+  background: var(--color-brand);
 }
 
 .score-entry-topbar .home-logo {
-  justify-self: center;
-  text-align: center;
+  grid-column: 2;
 }
 
 .score-entry-spacer {
@@ -194,14 +182,7 @@
 }
 
 .score-entry-screen .score-close-btn {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
   justify-self: end;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-white);
 }
 
 .score-entry-screen .score-close-btn svg {
