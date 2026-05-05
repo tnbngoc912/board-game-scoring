@@ -71,13 +71,16 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
   return (
     <div className="screen score-screen score-entry-screen">
-      <header className="score-topbar">
-        <h1>Nhap Diem</h1>
-        <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
-        </button>
+      <header className="score-topbar score-entry-header" aria-label="BGScore">
+        <div className="score-entry-topbar">
+          <div className="score-entry-spacer" aria-hidden="true" />
+          <div className="home-logo">BGSCORE</div>
+          <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <div className="score-content">

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { useAppDataStore } from './appDataStore'
 import {
   createMatch,
   ensureBoardGame,
@@ -209,6 +210,9 @@ export const useGameStore = create(
           set({
             publishedScores,
           })
+          useAppDataStore.getState().invalidateHistory()
+          useAppDataStore.getState().invalidateBoardGames()
+          useAppDataStore.getState().invalidateUsers()
           set({ syncStatus: 'synced' })
           return true
         } catch {

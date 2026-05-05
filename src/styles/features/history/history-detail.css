@@ -4,18 +4,15 @@
 }
 
 .history-detail-topbar {
+  height: 100%;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
 }
 
-.history-detail-topbar h1 {
-  grid-column: 2;
-  color: var(--color-white);
-  font-size: 20px;
-  line-height: 24px;
-  font-weight: 700;
+.history-detail-topbar .home-logo {
+  justify-self: center;
   text-align: center;
 }
 
@@ -24,9 +21,19 @@
 .score-entry-screen .score-close-btn {
   width: 40px;
   height: 40px;
+  display: grid;
+  place-items: center;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-white);
+}
+
+.history-detail-topbar .score-back-btn {
+  justify-self: start;
+}
+
+.history-detail-topbar .score-menu-btn {
+  justify-self: end;
 }
 
 .history-detail-topbar .score-back-btn svg,
@@ -51,7 +58,7 @@
   top: 56px;
   left: 50%;
   z-index: 75;
-  width: min(393px, 100vw);
+  width: min(600px, 100vw);
   transform: translateX(-50%);
   background: var(--color-card);
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
@@ -94,7 +101,7 @@
   top: 248px;
   left: 50%;
   z-index: 70;
-  width: min(393px, 100vw);
+  width: min(600px, 100vw);
   height: calc(100vh - 248px);
   transform: translateX(-50%);
   border: 0;
@@ -110,9 +117,8 @@
 }
 
 .match-summary-strip {
-  min-height: 118px;
   display: grid;
-  grid-template-columns: 104px 1fr;
+  grid-template-columns: 64px 1fr;
   align-items: center;
   border-bottom: 1.5px solid var(--color-border);
   background: var(--color-card);
@@ -120,13 +126,17 @@
 }
 
 .detail-thumb {
-  width: 78px;
-  height: 78px;
+  width: 48px;
+  height: 48px;
+}
+
+.detail-thumb img {
+  border-radius: 4px;
 }
 
 .match-summary-strip h2 {
   color: var(--color-heading);
-  font-size: 25px;
+  font-size: 18px;
   line-height: 1.15;
   font-weight: 700;
 }
@@ -134,7 +144,7 @@
 .match-summary-strip p {
   margin-top: var(--space-3);
   color: rgba(0, 0, 0, 0.58);
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .history-detail-note {

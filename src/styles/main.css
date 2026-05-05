@@ -10,6 +10,7 @@
 /* components */
 @import './components/button.css';
 @import './components/card.css';
+@import './components/loading.css';
 @import './components/modal.css';
 @import './components/navigation.css';
 @import './components/search.css';

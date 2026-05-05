@@ -68,7 +68,7 @@
 
 .app-shell.screen-setup .bottom-nav,
 .app-shell.screen-history .bottom-nav {
-  width: min(393px, 100vw);
+  width: min(600px, 100vw);
   height: calc(56px + env(safe-area-inset-bottom));
   padding: 0 0 env(safe-area-inset-bottom);
   background: var(--color-white);

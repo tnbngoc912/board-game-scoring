@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
-import { deleteMatch, getBoardGames, getMatch, getMatches } from '../api/backendService'
+import { useAppDataStore } from '../store/appDataStore'
+import { deleteMatch, getMatch } from '../api/backendService'
+import { LoadingOverlay } from './LoadingOverlay'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -46,8 +48,7 @@ function formatHistoryTitle(entry) {
   const description = String(entry.description || '').trim()
   if (description) return description
 
-  const date = formatHistoryDateOnly(entry)
-  return date ? entry.gameName + ' - ' + date : entry.gameName
+  return entry.gameName
 }
 
 function getComparableId(value) {
@@ -86,55 +87,72 @@ function alignScoreRowsWithBoardGame(match, boardGames) {
   }
 }
 
+function attachMatchThumbnail(match, boardGames) {
+  const boardGame = findBoardGameForMatch(match, boardGames)
+  return {
+    ...match,
+    thumbnailUrl: match.thumbnailUrl || boardGame?.thumbnail_url || '',
+  }
+}
+
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [selectedGameName, setSelectedGameName] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [history, setHistory] = useState([])
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [matchToDelete, setMatchToDelete] = useState(null)
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const detailGridRef = useRef(null)
   const { resetBoard } = useGameStore()
+  const history = useAppDataStore((state) => state.history)
+  const boardGames = useAppDataStore((state) => state.boardGames)
+  const isLoadingHistory = useAppDataStore((state) => state.isLoadingHistory)
+  const fetchHistory = useAppDataStore((state) => state.fetchHistory)
+  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
+  const removeHistoryMatch = useAppDataStore((state) => state.removeHistoryMatch)
 
   useEffect(() => {
-    let isMounted = true
+    if (!selectedMatch) return
 
+    requestAnimationFrame(() => {
+      if (detailGridRef.current) detailGridRef.current.scrollLeft = 0
+    })
+  }, [selectedMatch])
+
+  useEffect(() => {
     async function loadHistory() {
-      setIsLoadingHistory(true)
       try {
-        const matches = await getMatches()
-        const sortedMatches = matches.sort((a, b) => getSortableTime(b) - getSortableTime(a))
-        if (isMounted) setHistory(sortedMatches)
+        await Promise.all([fetchHistory(), fetchBoardGames()])
       } catch {
         toast('Khong tai duoc lich su')
-      } finally {
-        if (isMounted) setIsLoadingHistory(false)
       }
     }
 
     loadHistory()
+  }, [fetchBoardGames, fetchHistory, toast])
 
-    return () => {
-      isMounted = false
-    }
-  }, [toast])
+  const historyWithThumbnails = useMemo(
+    () => history
+      .map((entry) => attachMatchThumbnail(entry, boardGames))
+      .sort((a, b) => getSortableTime(b) - getSortableTime(a)),
+    [boardGames, history]
+  )
 
   const gameOptions = useMemo(
-    () => [...new Set(history.map((entry) => entry.gameName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
-    [history]
+    () => [...new Set(historyWithThumbnails.map((entry) => entry.gameName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
+    [historyWithThumbnails]
   )
   const filteredHistory = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase()
 
-    return history.filter((entry) => {
+    return historyWithThumbnails.filter((entry) => {
       const matchesGame = !selectedGameName || entry.gameName === selectedGameName
       const matchesSearch = !keyword || (entry.description || '').toLowerCase().includes(keyword)
       return matchesGame && matchesSearch
     })
-  }, [history, searchTerm, selectedGameName])
+  }, [historyWithThumbnails, searchTerm, selectedGameName])
   const hasFilters = Boolean(selectedGameName || searchTerm.trim())
 
   async function handleNewGame() {
@@ -153,9 +171,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setIsLoadingMatchDetail(true)
 
     try {
-      const [detail, boardGames] = await Promise.all([getMatch(entry.id), getBoardGames()])
+      const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
-      setSelectedMatch(alignScoreRowsWithBoardGame(matchWithRows, boardGames))
+      const alignedMatch = alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
+      setSelectedMatch(attachMatchThumbnail(alignedMatch, cachedBoardGames))
     } catch {
       toast('Khong tai duoc chi tiet bang diem')
     } finally {
@@ -175,7 +194,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setIsDeleting(true)
     try {
       await deleteMatch(matchToDelete.id)
-      setHistory((current) => current.filter((entry) => entry.id !== matchToDelete.id))
+      removeHistoryMatch(matchToDelete.id)
       if (selectedMatch?.id === matchToDelete.id) setSelectedMatch(null)
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)
@@ -187,36 +206,40 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }
 
+
   if (selectedMatch) {
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
     const scoreRows = selectedMatch.scoreRows || []
 
     return (
-      <div className="screen score-screen history-detail-screen">
-        <header className="score-topbar history-detail-topbar">
-          <button className="score-back-btn" onClick={() => {
-            setIsDetailMenuOpen(false)
-            setSelectedMatch(null)
-          }} aria-label="Quay lai">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 6 9 12l6 6" />
-              <path d="M10 12h9" />
-            </svg>
-          </button>
-          <h1>Bang Diem</h1>
-          <button
-            className="score-menu-btn"
-            onClick={() => setIsDetailMenuOpen((value) => !value)}
-            aria-label="Mo tuy chon"
-            aria-expanded={isDetailMenuOpen}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="5" r="1.8" />
-              <circle cx="12" cy="12" r="1.8" />
-              <circle cx="12" cy="19" r="1.8" />
-            </svg>
-          </button>
+      <div className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
+        {isLoadingMatchDetail ? <LoadingOverlay label="Dang tai chi tiet..." /> : null}
+        <header className="history-phone-header history-detail-header" aria-label="BGScore">
+          <div className="history-detail-topbar">
+            <button className="score-back-btn" onClick={() => {
+              setIsDetailMenuOpen(false)
+              setSelectedMatch(null)
+            }} aria-label="Quay lai">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 6 9 12l6 6" />
+                <path d="M10 12h9" />
+              </svg>
+            </button>
+            <div className="home-logo">BGSCORE</div>
+            <button
+              className="score-menu-btn"
+              onClick={() => setIsDetailMenuOpen((value) => !value)}
+              aria-label="Mo tuy chon"
+              aria-expanded={isDetailMenuOpen}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="5" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="12" cy="19" r="1.8" />
+              </svg>
+            </button>
+          </div>
         </header>
 
         <DetailActionMenu
@@ -235,7 +258,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
           <section className="match-summary-strip">
             <div className="history-game-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
-              <span>{selectedMatch.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+              {selectedMatch.thumbnailUrl ? (
+                <img loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
+              ) : (
+                <span>{selectedMatch.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+              )}
             </div>
             <div>
               <h2>{selectedMatch.gameName}</h2>
@@ -244,13 +271,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           </section>
 
           <section className="score-board history-score-board">
-            {isLoadingMatchDetail ? <div className="history-detail-loading">Dang tai chi tiet...</div> : null}
-            <div className="score-grid-wrap score-board-scroll">
+            <div ref={detailGridRef} className="score-grid-wrap score-board-scroll">
               <div
                 className="score-grid score-entry-grid"
                 style={{
-                  gridTemplateColumns: `88px 8px repeat(${players.length}, 70px) 8px`,
-                  minWidth: `${88 + players.length * 70}px`,
+                  gridTemplateColumns: `95px 8px repeat(${players.length}, 70px) 8px`,
+                  minWidth: `${104 + players.length * 70}px`,
                 }}
               >
                 <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
@@ -312,6 +338,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     )
   }
 
+
   return (
     <div className="screen history-screen">
       <header className="history-phone-header" aria-label="BGScore">
@@ -364,10 +391,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           ) : null}
         </section>
 
-        <div className="history-list">
-          {isLoadingHistory ? <div className="paper-card empty-state">Dang tai lich su...</div> : null}
+        <div className="history-list" aria-busy={isLoadingHistory}>
+          {isLoadingHistory ? (
+            <>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="history-card-v2 history-card-skeleton" aria-hidden="true">
+                  <div className="history-game-thumb" />
+                  <div className="history-card-main">
+                    <span className="home-skeleton-line title" />
+                    <span className="home-skeleton-line" />
+                    <span className="home-skeleton-line short" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : null}
 
-          {!isLoadingHistory && history.length === 0 ? (
+          {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
             <div className="paper-card history-empty-state">
               <h2>Chua co van dau nao duoc ghi lai</h2>
               <p>Luu ket qua van choi dau tien de xem lai bang diem tai day.</p>
@@ -375,7 +415,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </div>
           ) : null}
 
-          {!isLoadingHistory && history.length > 0 && filteredHistory.length === 0 ? (
+          {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
             <div className="paper-card history-empty-state">
               <h2>Khong tim thay van dau</h2>
               <p>Thu tu khoa khac hoac bo loc game khac.</p>
@@ -383,42 +423,42 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </div>
           ) : null}
 
-          <AnimatePresence initial={false}>
-            {filteredHistory.map((entry, index) => {
-              const [startColor, endColor] = getGameImageTheme(index)
-              const winner = getWinner(entry)
+          {filteredHistory.map((entry, index) => {
+            const [startColor, endColor] = getGameImageTheme(index)
+            const winner = getWinner(entry)
 
-              return (
-                <motion.article
-                  key={entry.id}
-                  className="history-card-v2"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openMatchDetail(entry)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
-                  }}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ delay: index * 0.015 }}
-                >
-                  <div className="history-game-thumb" style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }} aria-hidden="true">
+            return (
+              <motion.article
+                key={entry.id}
+                className="history-card-v2"
+                role="button"
+                tabIndex={0}
+                onClick={() => openMatchDetail(entry)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
+                }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.02 }}
+              >
+                <div className="history-game-thumb" style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }} aria-hidden="true">
+                  {entry.thumbnailUrl ? (
+                    <img loading="lazy" alt="" width={80} height={80} src={entry.thumbnailUrl} />
+                  ) : (
                     <span>{entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                  )}
+                </div>
+                <div className="history-card-main">
+                  <h2>{formatHistoryTitle(entry)}</h2>
+                  <p>{entry.playedAt}</p>
+                  <div className="history-winner-line">
+                    <img src="/crown.svg" width={16} height={14} />
+                    <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
                   </div>
-                  <div className="history-card-main">
-                    <h2>{formatHistoryTitle(entry)}</h2>
-                    <p>{entry.playedAt}</p>
-                    <div className="history-winner-line">
-                      <span aria-hidden="true">💸</span>
-                      <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
-                    </div>
-                    <div className="history-game-name">{entry.gameName}</div>
-                  </div>
-                </motion.article>
-              )
-            })}
-          </AnimatePresence>
+                </div>
+              </motion.article>
+            )
+          })}
         </div>
       </div>
 

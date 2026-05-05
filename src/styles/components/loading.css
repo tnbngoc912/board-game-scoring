@@ -1,0 +1,42 @@
+.loading-shell {
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background: rgba(245, 238, 223, 0.82);
+  backdrop-filter: blur(2px);
+}
+
+.loading-overlay.inline {
+  border-radius: var(--radius-lg);
+}
+
+.loading-overlay-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(140, 97, 59, 0.2);
+  border-top-color: var(--color-brand);
+  border-radius: 999px;
+  animation: loading-overlay-spin 0.7s linear infinite;
+}
+
+.loading-overlay-text {
+  color: var(--color-text-strong);
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+@keyframes loading-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

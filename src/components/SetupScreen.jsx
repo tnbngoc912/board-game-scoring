@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
-import { getBoardGames, getUsers } from '../api/backendService'
+import { useAppDataStore } from '../store/appDataStore'
+import { LoadingOverlay } from './LoadingOverlay'
 
 const DEFAULT_GENRES = ['Party', 'Chien Thuat', 'Deck Building', 'An Vai', 'Family', 'Euro']
 const GAME_IMAGE_THEMES = [
@@ -72,39 +73,24 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     removePlayer,
   } = useGameStore()
 
-  const [gameList, setGameList] = useState([])
-  const [userList, setUserList] = useState([])
-  const [isLoadingGames, setIsLoadingGames] = useState(false)
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const gameList = useAppDataStore((state) => state.boardGames)
+  const userList = useAppDataStore((state) => state.users)
+  const isLoadingGames = useAppDataStore((state) => state.isLoadingBoardGames)
+  const isLoadingUsers = useAppDataStore((state) => state.isLoadingUsers)
+  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
+  const fetchUsers = useAppDataStore((state) => state.fetchUsers)
 
   useEffect(() => {
-    let isMounted = true
-
     async function loadSetupData() {
-      setIsLoadingGames(true)
-      setIsLoadingUsers(true)
       try {
-        const [games, users] = await Promise.all([getBoardGames(), getUsers()])
-        if (isMounted) {
-          setGameList(games)
-          setUserList(users)
-        }
+        await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {
         toast('Khong tai duoc du lieu setup')
-      } finally {
-        if (isMounted) {
-          setIsLoadingGames(false)
-          setIsLoadingUsers(false)
-        }
       }
     }
 
     loadSetupData()
-
-    return () => {
-      isMounted = false
-    }
-  }, [toast])
+  }, [fetchBoardGames, fetchUsers, toast])
 
   useEffect(() => {
     setSetupStep('games')
@@ -346,11 +332,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
             </button>
           </header>
 
-          <div className="screen-inner player-picker-content">
-            {isLoadingUsers ? (
-              <div className="paper-card empty-state">Dang tai nguoi choi...</div>
-            ) : null}
-
+          <div className="screen-inner player-picker-content loading-shell" aria-busy={isLoadingUsers}>
+            {isLoadingUsers ? <LoadingOverlay label="Dang tai nguoi choi..." inline /> : null}
             <div className="player-picker-list">
               {userList.map((user) => {
                 const disabled = isPlayerSelected(user.name)
