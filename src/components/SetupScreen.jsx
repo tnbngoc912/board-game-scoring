@@ -407,11 +407,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               <div className="setup-date-row">
                 <span>{formatPlayDateTime(playDateTime)}</span>
                 <label className="setup-date-button" aria-label="Chon ngay gio">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 3v4M17 3v4M4.5 9h15M6 5h12a2 2 0 0 1 2 2v8" />
-                    <path d="M6 5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8" />
-                    <path d="m15 19 4-4 2 2-4 4h-2v-2z" />
-                  </svg>
+                  <img src="/datetime.svg" alt='' />
                   <input
                     type="datetime-local"
                     value={playDateTime}
