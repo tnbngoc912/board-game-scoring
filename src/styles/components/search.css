@@ -5,12 +5,12 @@
 }
 
 .search-bar {
-  height: 56px;
+  height: 48px;
   display: grid;
   grid-template-columns: 52px 1fr 1px 56px;
   align-items: center;
   background: var(--color-card);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -21,7 +21,7 @@
   background: transparent;
   color: var(--color-text);
   font-size: 20px;
-  font-weight: 650;
+  font-weight: 400;
 }
 
 .search-bar input::placeholder {
@@ -127,7 +127,7 @@
   color: var(--color-text);
   font-size: 18px;
   line-height: 20px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .home-screen .search-bar input::placeholder,

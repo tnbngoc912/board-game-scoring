@@ -1,6 +1,6 @@
 import React from 'react'
 
-export function LoadingOverlay({ label = 'Dang tai...', inline = false }) {
+export function LoadingOverlay({ label = 'Đang tải...', inline = false }) {
   return (
     <div
       className={`loading-overlay${inline ? ' inline' : ''}`}

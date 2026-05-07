@@ -131,7 +131,7 @@ export const useGameStore = create(
         set({ gameName, categories, publishedScores })
       },
 
-      addPlayer(name, apiUserId = null) {
+      addPlayer(name, apiUserId = null, avatar) {
         const trimmed = normalizeLabel(name)
         if (!trimmed) return false
 
@@ -143,6 +143,7 @@ export const useGameStore = create(
             name: trimmed,
             initials: initials(trimmed),
             color: pickColor(get().players.length),
+            avatar_url: avatar
           },
         ]
 

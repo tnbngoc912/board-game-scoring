@@ -59,8 +59,7 @@
 }
 
 .score-close-btn,
-.setup-back-btn,
-.picker-close-btn {
+.setup-back-btn{
   width: 48px;
   height: 48px;
   background: var(--color-card);
@@ -97,10 +96,7 @@
   height: 24px;
   flex: 0 0 24px;
   color: var(--color-white);
-}
-
-.setup-circle-btn.remove {
-  background: var(--color-danger-strong);
+  background-color: transparent;
 }
 
 .setup-circle-btn.add {
@@ -108,8 +104,8 @@
 }
 
 .setup-circle-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 19px;
+  height: 19px;
   fill: none;
   stroke: currentColor;
   stroke-width: 3;

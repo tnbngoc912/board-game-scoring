@@ -60,8 +60,7 @@ export default function App() {
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z" /></svg>
             </span>
-            Trang chu
-          </button>
+            Trang chủ          </button>
           <button
             className={`bottom-nav-item${screen === 'history' ? ' active' : ''}`}
             onClick={() => setScreen('history')}
@@ -69,13 +68,13 @@ export default function App() {
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 3.5" /></svg>
             </span>
-            Lich su
+            Lịch sử
           </button>
           <button className="bottom-nav-item" type="button">
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
             </span>
-            Khac
+            Khác
           </button>
         </nav>
       ) : null}

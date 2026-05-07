@@ -214,7 +214,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     return (
       <div className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
-        {isLoadingMatchDetail ? <LoadingOverlay label="Dang tai chi tiet..." /> : null}
+        {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         <header className="history-phone-header history-detail-header" aria-label="BGScore">
           <div className="history-detail-topbar">
             <button className="score-back-btn" onClick={() => {
@@ -359,7 +359,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Tim van choi"
+              placeholder="Tìm ván chơi"
               aria-label="Tim trong mo ta van choi"
             />
             <span className="search-divider" aria-hidden="true" />

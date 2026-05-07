@@ -27,7 +27,7 @@
 }
 
 .picker-topbar h1 {
-  font-size: 26px;
+  font-size: 20px;
   line-height: 1.1;
 }
 
@@ -49,8 +49,7 @@
 .setup-flow {
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
-  padding-top: 30px;
+  gap: var(--space-5);
 }
 
 .setup-section,
@@ -61,21 +60,20 @@
 }
 
 .setup-section {
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .setup-row-list,
 .player-picker-list {
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .setup-section h2 {
-  padding-left: var(--space-6);
+  padding-left: var(--space-4);
   color: #737882;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -92,12 +90,18 @@
   border-radius: var(--radius-md);
   background: var(--color-card);
   color: var(--color-text-strong);
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-4);
   text-align: left;
 }
 
-.setup-player-row {
-  padding-right: 36px;
+.setup-player-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px; 
+
+  img {
+    border-radius: 1000px
+  }
 }
 
 .setup-player-row span,
@@ -124,8 +128,8 @@
 
 .setup-date-button {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
   color: var(--color-text-strong);
@@ -153,7 +157,7 @@
   width: 100%;
   min-height: 50px;
   margin-top: 10px;
-  border-radius: 20px;
+  border-radius: 12px;
   background: var(--color-brand);
   color: var(--color-card);
   font-size: 18px;
@@ -161,21 +165,21 @@
 }
 
 .player-picker-content {
-  padding-top: 30px;
-  padding-bottom: 144px;
+  padding: 12px 16px;
+  display: grid;
+  gap: 12px;
 }
 
 .player-picker-row input {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
   accent-color: var(--color-brand);
   cursor: pointer;
 }
 
-.player-picker-row.disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
+.player-picker-row.selected {
+ display: none;
 }
 
 .player-picker-footer {
@@ -186,16 +190,17 @@
   width: min(430px, 100vw);
   transform: translateX(-50%);
   background: rgba(255, 250, 247, 0.94);
-  padding: var(--space-5) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--space-4);
   box-shadow: 0 -18px 24px rgba(240, 232, 223, 0.9);
 }
 
 .player-picker-submit {
   width: 100%;
-  min-height: 96px;
-  border-radius: 20px;
+  min-height: 48px;
+  border-radius: 12px;
   background: var(--color-brand);
   color: var(--color-card);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
 }
+

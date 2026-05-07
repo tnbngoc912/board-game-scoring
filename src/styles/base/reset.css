@@ -16,4 +16,10 @@ textarea {
 
 button {
   color: inherit;
+  background: transparent; /* Removes ButtonFace background */
+  border: none;             /* Removes default 3D borders */
+  padding: 0;              /* Removes default internal spacing */
+  appearance: none;        /* Standard: removes OS-level styling */
+  -webkit-appearance: none; /* Safari/Chrome specific reset */
+  -moz-appearance: none;    /* Firefox specific reset */
 }

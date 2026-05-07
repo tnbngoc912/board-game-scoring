@@ -4,7 +4,6 @@ import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
 
-const DEFAULT_GENRES = ['Party', 'Chien Thuat', 'Deck Building', 'An Vai', 'Family', 'Euro']
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
   ['#e2c290', '#a76642'],
@@ -12,15 +11,6 @@ const GAME_IMAGE_THEMES = [
   ['#bad2a1', '#54855a'],
   ['#d7c2a4', '#8c613b'],
 ]
-
-const GENRE_FALLBACKS = {
-  wingspan: ['Family', 'Chien Thuat'],
-  puerto: ['Chien Thuat', 'Euro'],
-  civilization: ['Chien Thuat'],
-  arnak: ['Chien Thuat', 'Deck Building'],
-  istanbul: ['Family', 'Chien Thuat'],
-  dune: ['Chien Thuat'],
-}
 
 function getMinPlayers(game) {
   return Number(game.min_players ?? game.minPlayers ?? game.player_min ?? game.minPlayer ?? 1)
@@ -31,7 +21,7 @@ function getMaxPlayers(game) {
 }
 
 function formatPlayerRange(game) {
-  return `${getMinPlayers(game)}-${getMaxPlayers(game)} nguoi choi`
+  return `${getMinPlayers(game)}-${getMaxPlayers(game)} người chơi`
 }
 
 function normalizeGenre(value) {
@@ -39,17 +29,20 @@ function normalizeGenre(value) {
 }
 
 function getGenreLabels(game) {
-  const rawGenres = game.genres || game.genre || game.tags || game.mechanics || game.types || game.type
+  const rawGenres = (
+    game.category_ids ||
+    game.categoryIds ||
+    game.genres ||
+    game.genre ||
+    game.tags ||
+    game.mechanics ||
+    game.types ||
+    game.type
+  )
   const values = Array.isArray(rawGenres) ? rawGenres : rawGenres ? [rawGenres] : []
-  const labels = values
+  return values
     .map((item) => normalizeGenre(item?.name || item?.label || item))
     .filter(Boolean)
-
-  if (labels.length > 0) return labels
-
-  const name = (game.name || '').toLowerCase()
-  const fallbackKey = Object.keys(GENRE_FALLBACKS).find((key) => name.includes(key))
-  return fallbackKey ? GENRE_FALLBACKS[fallbackKey] : ['Chien Thuat']
 }
 
 function getGameImageTheme(index) {
@@ -103,7 +96,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   )
   const genreOptions = useMemo(() => {
     const labels = gameList.flatMap(getGenreLabels)
-    return [...new Set([...DEFAULT_GENRES, ...labels])].filter(Boolean)
+    return [...new Set(labels)].filter(Boolean)
   }, [gameList])
   const filteredGames = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase()
@@ -158,7 +151,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
   function handleStart() {
     if (!canStart) {
-      toast('Can it nhat 2 nguoi choi va 1 hang muc')
+      toast('Can it nhat 2 người chơi va 1 hang muc')
       return
     }
     onStart()
@@ -174,13 +167,13 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
   function handleAddSelectedPlayers() {
     if (selectedUserIds.length === 0) {
-      toast('Vui long chon nguoi choi')
+      toast('Vui long chon người chơi')
       return
     }
 
     selectedUserIds.forEach((userId) => {
       const user = userList.find((item) => item.id === userId)
-      if (user && !isPlayerSelected(user.name)) addPlayer(user.name, user.id)
+      if (user && !isPlayerSelected(user.name)) addPlayer(user.name, user.id, user.avatar_url)
     })
     setSelectedUserIds([])
     setSetupStep('config')
@@ -211,8 +204,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                 <input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Tim tro choi"
-                  aria-label="Tim ten game"
+                  placeholder="Tìm trò chơi"
+                  aria-label="Tìm tên game"
                 />
                 <span className="search-divider" aria-hidden="true" />
                 <button
@@ -230,7 +223,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               {isFilterOpen ? (
                 <div className="filter-panel">
                   <label className="filter-field">
-                    <span>So nguoi choi</span>
+                    <span>So người chơi</span>
                     <select value={playerCountFilter} onChange={(event) => setPlayerCountFilter(event.target.value)}>
                       <option value="">Tat ca</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
@@ -260,7 +253,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
             <section className="home-game-section">
               {isLoadingGames ? (
-                <div className="home-game-list" aria-busy="true" aria-label="Dang tai game">
+                <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="home-game-card home-game-card-skeleton">
                       <div className="home-game-thumb" aria-hidden="true" />
@@ -311,7 +304,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                         <div className="home-game-info">
                           <h2>{game.name}</h2>
                           <p>{formatPlayerRange(game)}</p>
-                          <p>{genres.join(', ')}</p>
+                          {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
                         </div>
                       </motion.button>
                     )
@@ -324,31 +317,53 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
       ) : setupStep === 'player-picker' ? (
         <>
           <header className="picker-topbar">
-            <h1>Chon Nguoi Choi</h1>
+            <h1>Chọn Người Chơi</h1>
             <button className="picker-close-btn" onClick={() => setSetupStep('config')} aria-label="Dong">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
+              </svg> */}
+              <img src="/close-icon.svg" alt='' />
             </button>
           </header>
 
+
+
           <div className="screen-inner player-picker-content loading-shell" aria-busy={isLoadingUsers}>
-            {isLoadingUsers ? <LoadingOverlay label="Dang tai nguoi choi..." inline /> : null}
+            <section className="home-search-panel" >
+              <div className="search-bar">
+                <span className="search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M16.5 16.5L21 21" />
+                  </svg>
+                </span>
+                <input
+                  value={searchTerm}
+                  // onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Tìm người chơi"
+                  aria-label="Tìm người chơi"
+                />
+              </div>
+            </section>
+
+            {isLoadingUsers ? <LoadingOverlay label="Đang tải..." inline /> : null}
             <div className="player-picker-list">
               {userList.map((user) => {
-                const disabled = isPlayerSelected(user.name)
+                const selected = isPlayerSelected(user.name)
                 const checked = selectedUserIds.includes(user.id)
 
                 return (
-                  <label key={user.id} className={`player-picker-row${disabled ? ' disabled' : ''}`}>
-                    <span>{user.name}</span>
+                  <div key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}`}>
+                    <div className="setup-player-row-left">
+                      <img src={user.avatar_url ? user.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
+                      <span>{user.name}</span>
+                    </div>
                     <input
                       type="checkbox"
                       checked={checked}
-                      disabled={disabled}
                       onChange={() => toggleUserSelection(user.id)}
                     />
-                  </label>
+                  </div>
                 )
               })}
             </div>
@@ -356,7 +371,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
           <div className="player-picker-footer">
             <button className="player-picker-submit" onClick={handleAddSelectedPlayers}>
-              Them nguoi choi
+              Thêm người chơi
             </button>
           </div>
         </>
@@ -369,12 +384,12 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                 <path d="M10 12h9" />
               </svg>
             </button>
-            <h1>{selectedGame?.name || gameName || 'Chua chon tro choi'}</h1>
+            <h1>{selectedGame?.name || gameName || 'Chưa chọn trò chơi'}</h1>
           </header>
 
           <div className="screen-inner setup-flow">
             <section className="setup-section">
-              <h2>Nguoi choi</h2>
+              <h2>Người chơi</h2>
               <div className="setup-row-list">
                 <AnimatePresence initial={false}>
                   {players.map((player) => (
@@ -385,25 +400,28 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                     >
-                      <span>{player.name}</span>
+                      <div className="setup-player-row-left">
+                        <img src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
+                        <span>{player.name}</span>
+
+                      </div>
+
                       <button className="setup-circle-btn remove" onClick={() => removePlayer(player.id)} aria-label={`Xoa ${player.name}`}>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10" /></svg>
+                        <img src="/minus-icon.svg" alt="" />
                       </button>
                     </motion.div>
                   ))}
                 </AnimatePresence>
 
                 <button className="setup-player-row add" onClick={openPlayerPicker}>
-                  <span>Them nguoi choi</span>
-                  <span className="setup-circle-btn add" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12" /></svg>
-                  </span>
+                  <span>Thêm người chơi</span>
+                  <img src="/plus-icon.svg" alt="" />
                 </button>
               </div>
             </section>
 
             <section className="setup-section">
-              <h2>Ngay gio</h2>
+              <h2>Ngày giờ</h2>
               <div className="setup-date-row">
                 <span>{formatPlayDateTime(playDateTime)}</span>
                 <label className="setup-date-button" aria-label="Chon ngay gio">
@@ -418,11 +436,12 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
             </section>
 
             <button className="setup-start-btn" onClick={handleStart}>
-              Bat dau nhap diem
+              Tạo bảng điểm
             </button>
           </div>
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
