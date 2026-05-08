@@ -191,7 +191,7 @@
   transform: translateX(-50%);
   background: rgba(255, 250, 247, 0.94);
   padding: var(--space-3) var(--space-4);
-  box-shadow: 0 -18px 24px rgba(240, 232, 223, 0.9);
+  box-shadow: 0px -4px 8px 0px rgba(0, 0, 0, 0.08);
 }
 
 .player-picker-submit {

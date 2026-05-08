@@ -214,9 +214,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   onClick={() => setIsFilterOpen((value) => !value)}
                   aria-label="Bo loc"
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 5h16l-6.4 7.4v5.2L10.4 19v-6.6L4 5z" />
-                  </svg>
+                  <img src='/filter-icon.svg' />
                 </button>
               </div>
 
