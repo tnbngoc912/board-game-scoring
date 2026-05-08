@@ -104,6 +104,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const detailScreenRef = useRef(null)
   const detailGridRef = useRef(null)
   const { resetBoard } = useGameStore()
   const history = useAppDataStore((state) => state.history)
@@ -117,6 +118,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     if (!selectedMatch) return
 
     requestAnimationFrame(() => {
+      detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
+      window.scrollTo({ top: 0, left: 0 })
       if (detailGridRef.current) detailGridRef.current.scrollLeft = 0
     })
   }, [selectedMatch])
@@ -213,7 +216,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const scoreRows = selectedMatch.scoreRows || []
 
     return (
-      <div className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
+      <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         <header className="history-phone-header history-detail-header" aria-label="BGScore">
           <div className="history-detail-topbar">
