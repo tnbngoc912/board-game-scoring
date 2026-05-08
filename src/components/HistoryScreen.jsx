@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
+import { GameCard } from './GameCard'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -260,7 +260,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
         <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
           <section className="match-summary-strip">
-            <div className="history-game-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
+            <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
               {selectedMatch.thumbnailUrl ? (
                 <img loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
               ) : (
@@ -398,12 +398,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           {isLoadingHistory ? (
             <>
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="history-card-v2 history-card-skeleton" aria-hidden="true">
-                  <div className="history-game-thumb" />
-                  <div className="history-card-main">
-                    <span className="home-skeleton-line title" />
-                    <span className="home-skeleton-line" />
-                    <span className="home-skeleton-line short" />
+                <div key={index} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
+                  <div className="game-card-thumb" />
+                  <div className="game-card-info">
+                    <span className="game-card-skeleton-line title" />
+                    <span className="game-card-skeleton-line" />
+                    <span className="game-card-skeleton-line short" />
                   </div>
                 </div>
               ))}
@@ -431,9 +431,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             const winner = getWinner(entry)
 
             return (
-              <motion.article
+              <GameCard
+                as="article"
                 key={entry.id}
-                className="history-card-v2"
+                title={formatHistoryTitle(entry)}
+                thumbnailUrl={entry.thumbnailUrl}
+                fallbackText={entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}
+                background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
+                className="game-card--history"
                 role="button"
                 tabIndex={0}
                 onClick={() => openMatchDetail(entry)}
@@ -444,22 +449,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.02 }}
               >
-                <div className="history-game-thumb" style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }} aria-hidden="true">
-                  {entry.thumbnailUrl ? (
-                    <img loading="lazy" alt="" width={80} height={80} src={entry.thumbnailUrl} />
-                  ) : (
-                    <span>{entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
-                  )}
+                <p>{entry.playedAt}</p>
+                <div className="history-winner-line">
+                  <img src="/crown.svg" width={16} height={14} />
+                  <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
                 </div>
-                <div className="history-card-main">
-                  <h2>{formatHistoryTitle(entry)}</h2>
-                  <p>{entry.playedAt}</p>
-                  <div className="history-winner-line">
-                    <img src="/crown.svg" width={16} height={14} />
-                    <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
-                  </div>
-                </div>
-              </motion.article>
+              </GameCard>
             )
           })}
         </div>

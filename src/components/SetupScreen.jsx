@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
+import { GameCard } from './GameCard'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -253,12 +254,12 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               {isLoadingGames ? (
                 <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
                   {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="home-game-card home-game-card-skeleton">
-                      <div className="home-game-thumb" aria-hidden="true" />
-                      <div className="home-game-info">
-                        <span className="home-skeleton-line title" />
-                        <span className="home-skeleton-line" />
-                        <span className="home-skeleton-line short" />
+                    <div key={index} className="game-card game-card-skeleton">
+                      <div className="game-card-thumb" aria-hidden="true" />
+                      <div className="game-card-info">
+                        <span className="game-card-skeleton-line title" />
+                        <span className="game-card-skeleton-line" />
+                        <span className="game-card-skeleton-line short" />
                       </div>
                     </div>
                   ))}
@@ -283,28 +284,21 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                     const genres = getGenreLabels(game)
 
                     return (
-                      <motion.button
+                      <GameCard
                         type="button"
                         key={game.id || game.name}
-                        className="home-game-card"
+                        title={game.name}
+                        thumbnailUrl={game.thumbnail_url}
+                        fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
+                        background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
                         onClick={() => handleChooseGame(game)}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.02 }}
                       >
-                        <div
-                          className="home-game-thumb"
-                          style={{ background: `linear-gradient(135deg, ${startColor}, ${endColor})` }}
-                          aria-hidden="true"
-                        >
-                          <img loading="lazy" alt="" width={50} height={50} src={game.thumbnail_url} />
-                        </div>
-                        <div className="home-game-info">
-                          <h2>{game.name}</h2>
-                          <p>{formatPlayerRange(game)}</p>
-                          {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
-                        </div>
-                      </motion.button>
+                        <p>{formatPlayerRange(game)}</p>
+                        {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
+                      </GameCard>
                     )
                   })}
                 </div>
