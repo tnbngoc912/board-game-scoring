@@ -93,19 +93,6 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     setSetupStep('games')
   }, [homeResetToken])
 
-  useEffect(() => {
-    if (setupStep !== 'player-picker') return
-
-    const search = userSearchTerm.trim()
-    const timeoutId = window.setTimeout(() => {
-      fetchUsers({ force: Boolean(search), search }).catch(() => {
-        toast('Khong tim duoc nguoi choi')
-      })
-    }, 250)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [fetchUsers, setupStep, toast, userSearchTerm])
-
   const canStart = players.length >= 2 && players.every((player) => player.name.trim())
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
@@ -132,6 +119,23 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
       return matchesName && matchesPlayers && matchesGenres
     })
   }, [gameList, gameSearchTerm, playerCountFilter, selectedGenres])
+
+  const normalizeVietnamese = (str) => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+  }
+
+  const filteredUsers = useMemo(() => {
+    const search = normalizeVietnamese(userSearchTerm.trim())
+
+    return userList.filter(user =>
+      normalizeVietnamese(user.name).includes(search)
+    )
+  }, [userList, userSearchTerm])
 
   function isPlayerSelected(name, exceptPlayerId = null) {
     return players.some((player) => (
@@ -384,7 +388,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
             </section>
 
             <div className="player-picker-list">
-              {userList.map((user) => {
+              {filteredUsers.map((user) => {
                 const selected = isPlayerSelected(user.name)
                 const checked = selectedUserIds.includes(user.id)
 
@@ -402,8 +406,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   </label>
                 )
               })}
-              {!isLoadingUsers && userList.length === 0 ? (
-                <div className="paper-card empty-state">Khong tim thay nguoi choi.</div>
+              {!isLoadingUsers && filteredUsers.length === 0 ? (
+                <div className="paper-card empty-state">{userList.length === 0 ? 'Khong tim thay nguoi choi.' : 'Khong tim thay nguoi choi phu hop.'}</div>
               ) : null}
             </div>
           </div>
