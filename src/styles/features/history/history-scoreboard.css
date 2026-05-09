@@ -24,7 +24,6 @@
 }
 
 .history-score-board .score-grid-header {
-  min-height: var(--header-h);
   color: var(--color-text-strong);
   font-size: 16px;
   padding: 0 var(--space-2);
@@ -45,20 +44,27 @@
 
 .history-score-board .score-grid-cell {
   min-height: var(--cell-h);
+  /* display: grid; */
   align-items: center;
-  padding: 0 6px;
+  justify-items: stretch;
 }
 
 .score-box,
 .history-score-board .readonly-score-box {
   background: var(--color-card);
   border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-focus);
   padding: var(--space-2);
   font-weight: 700;
 }
 
 .history-score-board .readonly-score-box {
-  width: 62px;
+  width: 100% !important;
+  min-width: 100%;
+  max-width: none !important;
+  justify-self: stretch;
+  box-sizing: border-box;
+  padding: 0;
   height: 48px;
   display: grid;
   place-items: center;
@@ -74,9 +80,9 @@
 
 .history-score-board .score-grid-total,
 .history-score-board .score-grid-winner, .grid-spacer.border {
-  min-height: var(--total-h);
-  border-top: 1.5px solid var(--color-border);
-  border-bottom: 1.5px solid var(--color-border);
+  min-height: 48px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .history-score-board .score-grid-total {
@@ -103,7 +109,7 @@
   z-index: -1;
   position: absolute;
   left: 50%;
-  bottom: 6px;
+  bottom: 5px;
   width: 45px;
   height: 36px;
   transform: translateX(-50%);

@@ -91,12 +91,12 @@
 }
 
 .game-card--history .game-card-info {
-  gap: 6px;
+  gap: 4px;
 }
 
 .game-card--history .game-card-info p,
 .game-card--history .history-winner-line {
-  line-height: 20px;
+  line-height: 15px;
 }
 
 .game-card-skeleton {

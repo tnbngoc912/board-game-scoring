@@ -122,7 +122,7 @@
   align-items: center;
   border-bottom: 1.5px solid var(--color-border);
   background: var(--color-card);
-  padding: 18px;
+  padding: 12px;
 }
 
 .detail-thumb {
@@ -142,19 +142,20 @@
 }
 
 .match-summary-strip p {
-  margin-top: var(--space-3);
+  margin-top: 6px;
   color: rgba(0, 0, 0, 0.58);
   font-size: 16px;
 }
 
 .history-detail-note {
-  min-height: 132px;
+  min-height: 80px;
   margin: 26px var(--space-5) 100px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-card);
-  padding: var(--space-5) 28px;
+  padding: 8px 16px;
   font-size: 16px;
   line-height: 1.35;
+  border: 1px solid var(--color-border-focus);
 }
 
 .history-winner-only-card {

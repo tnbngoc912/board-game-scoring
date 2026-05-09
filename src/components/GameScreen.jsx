@@ -203,11 +203,11 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           className="match-description"
           value={matchDescription}
           onChange={(event) => setMatchDescription(event.target.value)}
-          placeholder="Nhap mo ta van choi"
+          placeholder="Nhập mô tả ván chơi (tùy chọn)"
         />
 
         <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Dang luu...' : 'Luu ket qua'}
+          {isSaving ? 'Đang lưu...' : 'Lưu kết quả'}
         </button>
       </div>
     </div>

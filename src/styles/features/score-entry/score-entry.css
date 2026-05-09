@@ -64,7 +64,7 @@
 }
 
 .score-screen .score-grid-header {
-  min-height: 88px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,10 +92,8 @@
 }
 
 .score-screen .score-grid-cell {
-  min-height: 80px;
-  display: grid;
+  height: 46px;
   place-items: center;
-  padding: 0 10px;
 }
 
 .score-screen .score-box {
@@ -120,7 +118,8 @@
 }
 
 .score-screen .score-grid-winner {
-  min-height: 80px;
+  height: 46px;
+  /* min-height: 80px; */
   display: grid;
   place-items: center;
   padding: 0 10px;
@@ -208,7 +207,7 @@
 }
 
 .match-description {
-  min-height: 132px;
+  min-height: 80px;
   margin: 0 var(--space-5);
   border: 0;
   border-radius: var(--radius-xl);

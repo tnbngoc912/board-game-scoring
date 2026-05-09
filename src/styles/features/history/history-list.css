@@ -27,6 +27,11 @@
   line-height: 20px;
 }
 
+.history-winner-line img {
+  display: block;
+  top: 1px;
+  position: relative;
+}
 
 .history-winner-line {
   display: flex;

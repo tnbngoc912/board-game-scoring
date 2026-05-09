@@ -299,7 +299,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 <div
                   className="score-grid score-entry-grid"
                   style={{
-                    gridTemplateColumns: `95px 8px repeat(${players.length}, 70px) 8px`,
+                    gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
                     minWidth: `${104 + players.length * 70}px`,
                   }}
                 >
@@ -329,7 +329,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
                   {!isTotalScoreOnly ? (
                     <>
-                      <div className="score-grid-total score-grid-sticky">Tong</div>
+                      <div className="score-grid-total score-grid-sticky">Tổng</div>
                       <div className="grid-spacer border"></div>
                       {players.map((player) => (
                         <div key={player.id} className="score-grid-winner">
