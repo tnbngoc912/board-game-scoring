@@ -4,6 +4,7 @@ import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
+import Image from "next/image"
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -266,7 +267,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           <section className="match-summary-strip">
             <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
               {selectedMatch.thumbnailUrl ? (
-                <img loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
+                <Image loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
               ) : (
                 <span>{selectedMatch.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
               )}
@@ -286,7 +287,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   <div key={player.id} className={`winner-only-player${isWinner ? ' winner' : ''}`}>
                     <span>{player.name}</span>
                     <div className="winner-only-crown-row" aria-label={isWinner ? 'Nguoi thang' : undefined}>
-                      {isWinner ? <img src="/crown.svg" alt="" width={32} height={28} /> : null}
+                      {isWinner ? <Image src="/crown.svg" alt="" width={32} height={28} /> : null}
                     </div>
                   </div>
                 )
@@ -422,7 +423,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         <div className="history-list" aria-busy={isLoadingHistory}>
           {isLoadingHistory ? (
             <>
-              {Array.from({ length: 4 }).map((_, index) => (
+              {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
                   <div className="game-card-thumb" />
                   <div className="game-card-info">
@@ -476,7 +477,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               >
                 <p>{entry.playedAt}</p>
                 <div className="history-winner-line">
-                  <img src="/crown.svg" width={16} height={14} />
+                  <Image src="/crown.svg" width={16} height={14} alt='' />
                   <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
                 </div>
               </GameCard>

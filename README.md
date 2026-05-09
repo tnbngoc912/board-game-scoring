@@ -1,6 +1,6 @@
 # 🎲 ScoreKeeper
 
-A mobile-first board game score tracker built with React + Vite + Zustand.
+A mobile-first board game score tracker built with Next.js + React + Zustand.
 
 ## Quick Start
 
@@ -8,14 +8,14 @@ A mobile-first board game score tracker built with React + Vite + Zustand.
 # 1. Install dependencies
 npm install
 
-# 2. Start dev server (opens on http://localhost:5173)
+# 2. Start dev server (opens on http://localhost:3000)
 npm run dev
 
 # 3. Build for production
 npm run build
 
-# 4. Preview production build
-npm run preview
+# 4. Start production server after building
+npm run start
 ```
 
 ## Features
@@ -51,8 +51,11 @@ src/
 │   └── gameStore.js       # Zustand state management
 ├── hooks/
 │   └── useToast.js        # Toast hook
+├── app/
+│   ├── layout.jsx         # Next.js root layout
+│   ├── manifest.js        # PWA manifest
+│   └── page.jsx           # Client SPA entry
 ├── App.jsx                # Root component + navigation
-├── main.jsx               # Entry point
 └── index.css              # Global styles + design tokens
 ```
 
@@ -69,15 +72,15 @@ https://boardgame-scorer-backend.onrender.com/api/v1
 Override it locally with:
 
 ```bash
-VITE_API_BASE_URL=https://your-api.example.com/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://your-api.example.com/api/v1
 ```
 
 ## Tech Stack
 
 - **React 18** — UI
-- **Vite** — build tool
+- **Next.js** — app framework and build tool
 - **Zustand** — state management (with localStorage persistence)
 - **Framer Motion** — animations
-- **vite-plugin-pwa** — PWA / offline support
+- **next-pwa** — PWA / offline support
 - **Google Fonts** — Outfit (display) + JetBrains Mono (numbers)
 # board-game-scoring

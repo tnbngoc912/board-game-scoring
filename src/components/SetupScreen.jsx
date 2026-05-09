@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
+import Image from "next/image"
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -215,7 +216,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   onClick={() => setIsFilterOpen((value) => !value)}
                   aria-label="Bo loc"
                 >
-                  <img src='/filter-icon.svg' />
+                  <Image src='/filter-icon.svg' alt='' width={24} height={24} />
                 </button>
               </div>
 
@@ -253,7 +254,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
             <section className="home-game-section">
               {isLoadingGames ? (
                 <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
-                  {Array.from({ length: 4 }).map((_, index) => (
+                  {Array.from({ length: 6 }).map((_, index) => (
                     <div key={index} className="game-card game-card-skeleton">
                       <div className="game-card-thumb" aria-hidden="true" />
                       <div className="game-card-info">
@@ -311,10 +312,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
           <header className="picker-topbar">
             <h1>Chọn Người Chơi</h1>
             <button className="picker-close-btn" onClick={() => setSetupStep('config')} aria-label="Dong">
-              {/* <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg> */}
-              <img src="/close-icon.svg" alt='' />
+              <Image src="/close-icon.svg" alt='' width={32} height={32} />
             </button>
           </header>
 
@@ -331,7 +329,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                 </span>
                 <input
                   value={searchTerm}
-                  // onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="Tìm người chơi"
                   aria-label="Tìm người chơi"
                 />
@@ -347,7 +345,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                 return (
                   <label key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}`}>
                     <div className="setup-player-row-left">
-                      <img src={user.avatar_url ? user.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
+                      <Image src={user.avatar_url ? user.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
                       <span>{user.name}</span>
                     </div>
                     <input
@@ -393,13 +391,13 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                       exit={{ opacity: 0, y: -8 }}
                     >
                       <div className="setup-player-row-left">
-                        <img src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
+                        <Image src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
                         <span>{player.name}</span>
 
                       </div>
 
                       <button className="setup-circle-btn remove" onClick={() => removePlayer(player.id)} aria-label={`Xoa ${player.name}`}>
-                        <img src="/minus-icon.svg" alt="" />
+                        <Image src="/minus-icon.svg" alt="" width={24} height={24} />
                       </button>
                     </motion.div>
                   ))}
@@ -407,7 +405,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
                 <button className="setup-player-row add" onClick={openPlayerPicker}>
                   <span>Thêm người chơi</span>
-                  <img src="/plus-icon.svg" alt="" />
+                  <Image src="/plus-icon.svg" alt="" width={24} height={24} />
                 </button>
               </div>
             </section>
@@ -417,7 +415,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               <div className="setup-date-row">
                 <span>{formatPlayDateTime(playDateTime)}</span>
                 <label className="setup-date-button" aria-label="Chon ngay gio">
-                  <img src="/datetime.svg" alt='' />
+                  <Image src="/datetime.svg" alt="" width={24} height={24} />
                   <input
                     type="datetime-local"
                     value={playDateTime}

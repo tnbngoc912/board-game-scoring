@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { LoadingOverlay } from './LoadingOverlay'
 
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
@@ -26,6 +27,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const [focusedCell, setFocusedCell] = useState(null)
   const [matchDescription, setMatchDescription] = useState('')
   const [winnerPlayerId, setWinnerPlayerId] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
   const isWinnerOnly = scoringType === 'WINNER_ONLY'
 
@@ -73,6 +75,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   async function handleSave() {
+    if (isSaving) return
+
     if (isWinnerOnly && !winnerPlayerId) {
       toast('Vui long chon nguoi thang')
       return
@@ -87,26 +91,35 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
         return scores
       }, {}),
     }]
-    const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
-    toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
-    if (ok) {
-      clearPlayers()
-      onShowHistory()
+    setIsSaving(true)
+    try {
+      const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
+      toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
+      if (ok) {
+        clearPlayers()
+        onShowHistory()
+        return
+      }
+    } finally {
+      setIsSaving(false)
     }
   }
 
   function handleClose() {
+    if (isSaving) return
+
     clearPlayers()
     onShowSetup()
   }
 
   return (
-    <div className="screen score-screen score-entry-screen">
+    <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
+      {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
       <header className="history-phone-header score-entry-header" aria-label="BGScore">
         <div className="history-detail-topbar score-entry-topbar">
           <div className="score-entry-spacer" aria-hidden="true" />
           <div className="home-logo">BGSCORE</div>
-          <button className="score-close-btn" onClick={handleClose} aria-label="Dong">
+          <button className="score-close-btn" onClick={handleClose} aria-label="Dong" disabled={isSaving}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
@@ -193,8 +206,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           placeholder="Nhap mo ta van choi"
         />
 
-        <button className="score-save-btn" onClick={handleSave}>
-          Luu ket qua
+        <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Dang luu...' : 'Luu ket qua'}
         </button>
       </div>
     </div>

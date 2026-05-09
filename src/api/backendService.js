@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://boardgame-scorer-backend.onrender.com/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://boardgame-scorer-backend.onrender.com/api/v1'
 
 function getEntityId(entity) {
   return entity?._id || entity?.id || entity?.match_id
