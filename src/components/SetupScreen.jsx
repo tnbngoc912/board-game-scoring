@@ -345,7 +345,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                 const checked = selectedUserIds.includes(user.id)
 
                 return (
-                  <div key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}`}>
+                  <label key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}`}>
                     <div className="setup-player-row-left">
                       <img src={user.avatar_url ? user.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
                       <span>{user.name}</span>
@@ -355,7 +355,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                       checked={checked}
                       onChange={() => toggleUserSelection(user.id)}
                     />
-                  </div>
+                  </label>
                 )
               })}
             </div>
