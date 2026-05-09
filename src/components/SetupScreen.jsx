@@ -236,6 +236,16 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   placeholder="Tìm trò chơi"
                   aria-label="Tìm tên game"
                 />
+                {gameSearchTerm ? (
+                  <button
+                    className="search-clear-button search-clear-button--with-filter"
+                    type="button"
+                    onClick={() => setGameSearchTerm('')}
+                    aria-label="Xoa tu khoa tim game"
+                  >
+                    ✕
+                  </button>
+                ) : null}
                 <span className="search-divider" aria-hidden="true" />
                 <button
                   className={`filter-button${isFilterOpen ? ' active' : ''}`}
@@ -347,7 +357,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
           <div className="screen-inner player-picker-content">
             <section className="home-search-panel" >
-              <div className="search-bar">
+              <div className="search-bar search-bar--plain">
                 <span className="search-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="7" />
@@ -360,6 +370,16 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   placeholder="Tìm người chơi"
                   aria-label="Tìm người chơi"
                 />
+                {userSearchTerm ? (
+                  <button
+                    className="search-clear-button"
+                    type="button"
+                    onClick={() => setUserSearchTerm('')}
+                    aria-label="Xoa tu khoa tim nguoi choi"
+                  >
+                    ✕
+                  </button>
+                ) : null}
               </div>
             </section>
 

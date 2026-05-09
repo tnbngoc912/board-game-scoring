@@ -391,6 +391,15 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               placeholder="Tìm ván chơi"
               aria-label="Tim trong mo ta van choi"
             />
+            {searchTerm ? (
+              <button
+                className="search-clear-button search-clear-button--with-filter"
+                type="button"
+                onClick={() => setSearchTerm('')}
+                aria-label="Xoa tu khoa tim van choi"
+              >✕
+              </button>
+            ) : null}
             <span className="search-divider" aria-hidden="true" />
             <button
               className={`filter-button${isFilterOpen || selectedGameName ? ' active' : ''}`}
