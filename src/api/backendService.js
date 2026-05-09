@@ -265,8 +265,13 @@ export async function syncUserByName(name) {
   }
 }
 
-export async function getUsers() {
-  const payload = await request('/users')
+export async function getUsers(params = {}) {
+  const searchParams = new URLSearchParams()
+
+  if (params.search) searchParams.set('search', params.search)
+
+  const query = searchParams.toString()
+  const payload = await request(`/users${query ? `?${query}` : ''}`)
   return unwrapList(payload).map(normalizeUser)
 }
 

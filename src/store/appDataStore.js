@@ -7,6 +7,8 @@ const HISTORY_TTL = 30 * 1000
 
 let boardGamesRequest = null
 let usersRequest = null
+let usersRequestKey = ''
+let usersRequestId = 0
 let historyRequest = null
 
 function isFresh(fetchedAt, ttl) {
@@ -50,27 +52,35 @@ export const useAppDataStore = create((set, get) => ({
     return boardGamesRequest
   },
 
-  async fetchUsers({ force = false } = {}) {
+  async fetchUsers({ force = false, search = '' } = {}) {
+    const normalizedSearch = search.trim()
     const { users, usersFetchedAt } = get()
-    if (!force && isFresh(usersFetchedAt, USERS_TTL)) return users
-    if (usersRequest) return usersRequest
+    if (!normalizedSearch && !force && isFresh(usersFetchedAt, USERS_TTL)) return users
+    if (usersRequest && usersRequestKey === normalizedSearch) return usersRequest
 
     set({ isLoadingUsers: true })
-    usersRequest = getUsers()
+    usersRequestKey = normalizedSearch
+    const requestId = ++usersRequestId
+    usersRequest = getUsers({ search: normalizedSearch })
       .then((items) => {
-        set({
-          users: items,
-          usersFetchedAt: Date.now(),
-          isLoadingUsers: false,
-        })
+        if (requestId === usersRequestId) {
+          set({
+            users: items,
+            usersFetchedAt: normalizedSearch ? 0 : Date.now(),
+            isLoadingUsers: false,
+          })
+        }
         return items
       })
       .catch((error) => {
-        set({ isLoadingUsers: false })
+        if (requestId === usersRequestId) set({ isLoadingUsers: false })
         throw error
       })
       .finally(() => {
-        usersRequest = null
+        if (requestId === usersRequestId) {
+          usersRequest = null
+          usersRequestKey = ''
+        }
       })
 
     return usersRequest

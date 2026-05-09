@@ -53,11 +53,13 @@ function getGameImageTheme(index) {
 
 export function SetupScreen({ onStart, homeResetToken, toast }) {
   const [setupStep, setSetupStep] = useState('games')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [gameSearchTerm, setGameSearchTerm] = useState('')
+  const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [playerCountFilter, setPlayerCountFilter] = useState('')
   const [selectedGenres, setSelectedGenres] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
+  const [selectedUsersById, setSelectedUsersById] = useState({})
   const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
   const {
     gameName,
@@ -91,6 +93,19 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     setSetupStep('games')
   }, [homeResetToken])
 
+  useEffect(() => {
+    if (setupStep !== 'player-picker') return
+
+    const search = userSearchTerm.trim()
+    const timeoutId = window.setTimeout(() => {
+      fetchUsers({ force: Boolean(search), search }).catch(() => {
+        toast('Khong tim duoc nguoi choi')
+      })
+    }, 250)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [fetchUsers, setupStep, toast, userSearchTerm])
+
   const canStart = players.length >= 2 && players.every((player) => player.name.trim())
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
@@ -101,7 +116,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     return [...new Set(labels)].filter(Boolean)
   }, [gameList])
   const filteredGames = useMemo(() => {
-    const keyword = searchTerm.trim().toLowerCase()
+    const keyword = gameSearchTerm.trim().toLowerCase()
     const playerCount = Number(playerCountFilter)
 
     return gameList.filter((game) => {
@@ -116,7 +131,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
       return matchesName && matchesPlayers && matchesGenres
     })
-  }, [gameList, playerCountFilter, searchTerm, selectedGenres])
+  }, [gameList, gameSearchTerm, playerCountFilter, selectedGenres])
 
   function isPlayerSelected(name, exceptPlayerId = null) {
     return players.some((player) => (
@@ -139,7 +154,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   }
 
   function resetFilters() {
-    setSearchTerm('')
+    setGameSearchTerm('')
     setPlayerCountFilter('')
     setSelectedGenres([])
   }
@@ -159,12 +174,20 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     onStart()
   }
 
-  function toggleUserSelection(userId) {
+  function toggleUserSelection(user) {
+    const userId = user.id
     setSelectedUserIds((current) => (
       current.includes(userId)
         ? current.filter((id) => id !== userId)
         : [...current, userId]
     ))
+    setSelectedUsersById((current) => {
+      if (!current[userId]) return { ...current, [userId]: user }
+
+      const next = { ...current }
+      delete next[userId]
+      return next
+    })
   }
 
   function handleAddSelectedPlayers() {
@@ -174,15 +197,19 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     }
 
     selectedUserIds.forEach((userId) => {
-      const user = userList.find((item) => item.id === userId)
+      const user = selectedUsersById[userId] || userList.find((item) => item.id === userId)
       if (user && !isPlayerSelected(user.name)) addPlayer(user.name, user.id, user.avatar_url)
     })
     setSelectedUserIds([])
+    setSelectedUsersById({})
+    setUserSearchTerm('')
     setSetupStep('config')
   }
 
   function openPlayerPicker() {
     setSelectedUserIds([])
+    setSelectedUsersById({})
+    setUserSearchTerm('')
     setSetupStep('player-picker')
   }
 
@@ -204,8 +231,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   </svg>
                 </span>
                 <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  value={gameSearchTerm}
+                  onChange={(event) => setGameSearchTerm(event.target.value)}
                   placeholder="Tìm trò chơi"
                   aria-label="Tìm tên game"
                 />
@@ -318,7 +345,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
 
 
-          <div className="screen-inner player-picker-content loading-shell" aria-busy={isLoadingUsers}>
+          <div className="screen-inner player-picker-content">
             <section className="home-search-panel" >
               <div className="search-bar">
                 <span className="search-icon" aria-hidden="true">
@@ -328,15 +355,14 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                   </svg>
                 </span>
                 <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  value={userSearchTerm}
+                  onChange={(event) => setUserSearchTerm(event.target.value)}
                   placeholder="Tìm người chơi"
                   aria-label="Tìm người chơi"
                 />
               </div>
             </section>
 
-            {isLoadingUsers ? <LoadingOverlay label="Đang tải..." inline /> : null}
             <div className="player-picker-list">
               {userList.map((user) => {
                 const selected = isPlayerSelected(user.name)
@@ -351,11 +377,14 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleUserSelection(user.id)}
+                      onChange={() => toggleUserSelection(user)}
                     />
                   </label>
                 )
               })}
+              {!isLoadingUsers && userList.length === 0 ? (
+                <div className="paper-card empty-state">Khong tim thay nguoi choi.</div>
+              ) : null}
             </div>
           </div>
 
