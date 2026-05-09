@@ -90,7 +90,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     setSetupStep('games')
   }, [homeResetToken])
 
-  const canStart = players.length >= 2 && players.every((player) => player.name.trim()) && categories.length >= 1
+  const canStart = players.length >= 2 && players.every((player) => player.name.trim())
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
     [gameList, gameName]
@@ -152,7 +152,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
 
   function handleStart() {
     if (!canStart) {
-      toast('Can it nhat 2 người chơi va 1 hang muc')
+      toast('Can it nhat 2 người chơi')
       return
     }
     onStart()

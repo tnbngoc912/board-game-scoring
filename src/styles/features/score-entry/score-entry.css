@@ -148,6 +148,65 @@
   background: #d1b79f;
 }
 
+.winner-picker-card,
+.winner-only-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-4) var(--space-5) 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  color: var(--color-text-strong);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-4);
+}
+
+.winner-picker-row {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  border-bottom: 1px solid rgba(93, 65, 40, 0.12);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.winner-picker-row:last-child {
+  border-bottom: 0;
+}
+
+.winner-picker-row input {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--color-brand);
+  justify-self: end;
+}
+
+.winner-only-player {
+  min-height: 74px;
+  display: grid;
+  grid-template-rows: minmax(24px, auto) 32px;
+  place-items: center;
+  border-bottom: 1px solid rgba(93, 65, 40, 0.12);
+  text-align: center;
+}
+
+.winner-only-player:last-child {
+  border-bottom: 0;
+}
+
+.winner-only-player span {
+  color: var(--color-text-strong);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.winner-only-crown-row {
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
+
 .match-description {
   min-height: 132px;
   margin: 0 var(--space-5);

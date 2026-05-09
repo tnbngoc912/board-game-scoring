@@ -157,6 +157,10 @@
   line-height: 1.35;
 }
 
+.history-winner-only-card {
+  margin-top: 26px;
+}
+
 .history-detail-loading {
   padding: var(--space-3) var(--space-4);
   color: var(--color-subtext);

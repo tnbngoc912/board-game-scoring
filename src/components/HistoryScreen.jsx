@@ -92,6 +92,7 @@ function attachMatchThumbnail(match, boardGames) {
   return {
     ...match,
     thumbnailUrl: match.thumbnailUrl || boardGame?.thumbnail_url || '',
+    scoringType: match.scoringType || boardGame?.scoringType || boardGame?.scoring_type || 'COLUMN_BASED',
   }
 }
 
@@ -214,6 +215,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
     const scoreRows = selectedMatch.scoreRows || []
+    const scoringType = selectedMatch.scoringType || 'COLUMN_BASED'
+    const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
+    const isWinnerOnly = scoringType === 'WINNER_ONLY'
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
@@ -273,49 +277,70 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </div>
           </section>
 
-          <section className="score-board history-score-board">
-            <div ref={detailGridRef} className="score-grid-wrap score-board-scroll">
-              <div
-                className="score-grid score-entry-grid"
-                style={{
-                  gridTemplateColumns: `95px 8px repeat(${players.length}, 70px) 8px`,
-                  minWidth: `${104 + players.length * 70}px`,
-                }}
-              >
-                <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-                <div class="grid-spacer"></div>
-                {players.map((player) => (
-                  <div key={player.id} className="score-grid-header player-header">
+          {isWinnerOnly ? (
+            <section className="winner-only-list history-winner-only-card" aria-label="Nguoi choi va nguoi thang">
+              {players.map((player) => {
+                const isWinner = winner?.id === player.id
+
+                return (
+                  <div key={player.id} className={`winner-only-player${isWinner ? ' winner' : ''}`}>
                     <span>{player.name}</span>
+                    <div className="winner-only-crown-row" aria-label={isWinner ? 'Nguoi thang' : undefined}>
+                      {isWinner ? <img src="/crown.svg" alt="" width={32} height={28} /> : null}
+                    </div>
                   </div>
-                ))}
-                <div class="grid-spacer"></div>
+                )
+              })}
+            </section>
+          ) : (
+            <section className="score-board history-score-board">
+              <div ref={detailGridRef} className="score-grid-wrap score-board-scroll">
+                <div
+                  className="score-grid score-entry-grid"
+                  style={{
+                    gridTemplateColumns: `95px 8px repeat(${players.length}, 70px) 8px`,
+                    minWidth: `${104 + players.length * 70}px`,
+                  }}
+                >
+                  <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
+                  <div className="grid-spacer"></div>
+                  {players.map((player) => (
+                    <div key={player.id} className="score-grid-header player-header">
+                      <span>{player.name}</span>
+                    </div>
+                  ))}
+                  <div className="grid-spacer"></div>
 
-                {scoreRows.map((row) => (
-                  <React.Fragment key={row.id}>
-                    <div className="score-grid-label score-grid-sticky">{row.name}</div>
-                    <div class="grid-spacer"></div>
-                    {players.map((player) => (
-                      <div key={player.id} className="score-grid-cell">
-                        <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                          {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                  {scoreRows.map((row) => (
+                    <React.Fragment key={row.id}>
+                      <div className="score-grid-label score-grid-sticky">{row.name}</div>
+                      <div className="grid-spacer"></div>
+                      {players.map((player) => (
+                        <div key={player.id} className="score-grid-cell">
+                          <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
+                            {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    <div class="grid-spacer"></div>
-                  </React.Fragment>
-                ))}
+                      ))}
+                      <div className="grid-spacer"></div>
+                    </React.Fragment>
+                  ))}
 
-                <div className="score-grid-total score-grid-sticky">Tong</div>
-                <div class="grid-spacer border"></div>
-                {players.map((player) => (
-                  <div key={player.id} className="score-grid-winner">
-                    <strong className={winner?.id === player.id ? 'winning-total' : ''}>{player.total}</strong>
-                  </div>
-                ))}
+                  {!isTotalScoreOnly ? (
+                    <>
+                      <div className="score-grid-total score-grid-sticky">Tong</div>
+                      <div className="grid-spacer border"></div>
+                      {players.map((player) => (
+                        <div key={player.id} className="score-grid-winner">
+                          <strong className={winner?.id === player.id ? 'winning-total' : ''}>{player.total}</strong>
+                        </div>
+                      ))}
+                    </>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>

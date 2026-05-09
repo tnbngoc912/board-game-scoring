@@ -100,18 +100,22 @@ export function normalizeBoardGame(game) {
   return {
     ...game,
     id: getEntityId(game),
+    scoringType: game.scoring_type || game.scoringType || 'COLUMN_BASED',
     categories: scoreColumns.map(normalizeScoreColumn),
   }
 }
 
 export function normalizeMatch(match) {
   const players = match.players || []
-  const winner = players.find((player) => player.is_winner)
+  const winnerIds = new Set(match.winner_ids || match.winnerIds || [])
+  const winner = players.find((player) => player.is_winner || winnerIds.has(player.user_id || player.id || player._id))
+  const boardGame = getPopulatedBoardGame(match)
 
   return {
     id: match.match_id || getEntityId(match),
     gameName: match.board_game_name || match.gameName || 'Khong ten',
     gameId: match.board_game_id,
+    scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: match.play_date
       ? (() => {
@@ -158,16 +162,21 @@ export function normalizeMatchDetail(payload) {
   const scoreColumns = boardGame.score_columns || boardGame.scoreColumns || match.score_columns || match.scoreColumns || []
   const rawScoreRows = match.score_rows || match.scoreRows || payload.score_rows || payload.scoreRows || []
   const players = payload.players || match.players || []
+  const winnerIds = new Set(match.winner_ids || match.winnerIds || payload.winner_ids || payload.winnerIds || [])
   const normalizedPlayers = players
-    .map((player, index) => ({
-      id: getEntityId(player.user_id) || player.user_id || getEntityId(player),
-      userId: getEntityId(player.user_id) || player.user_id || getEntityId(player),
-      name: player.user_id?.name || player.name,
-      total: player.total_score ?? 0,
-      rank: player.rank ?? index + 1,
-      isWinner: Boolean(player.is_winner),
-      scores: player.scores || {},
-    }))
+    .map((player, index) => {
+      const id = getEntityId(player.user_id) || player.user_id || getEntityId(player)
+
+      return {
+        id,
+        userId: id,
+        name: player.user_id?.name || player.name,
+        total: player.total_score ?? 0,
+        rank: player.rank ?? index + 1,
+        isWinner: Boolean(player.is_winner || winnerIds.has(id)),
+        scores: player.scores || {},
+      }
+    })
     .sort((a, b) => a.rank - b.rank)
   const winner = normalizedPlayers.find((player) => player.isWinner)
   const scoreRowsFromColumns = scoreColumns.map((column, index) => ({
@@ -185,6 +194,7 @@ export function normalizeMatchDetail(payload) {
     id: getEntityId(match),
     gameName: boardGame.name || match.board_game_name || match.gameName || 'Khong ten',
     gameId: getEntityId(boardGame) || match.board_game_id,
+    scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
     playerCount: match.player_count || normalizedPlayers.length,
@@ -324,13 +334,20 @@ export async function getMatch(matchId) {
   return normalizeMatchDetail(payload)
 }
 
-export async function updateMatchScores(matchId, { description, playerScores }) {
+export async function updateMatchScores(matchId, { description, playerScores, winnerIds }) {
+  const body = {
+    description,
+  }
+
+  if (winnerIds) {
+    body.winner_ids = winnerIds
+  } else {
+    body.player_scores = playerScores
+  }
+
   return request(`/matches/${matchId}/scores`, {
     method: 'PUT',
-    body: JSON.stringify({
-      description,
-      player_scores: playerScores,
-    }),
+    body: JSON.stringify(body),
   })
 }
 

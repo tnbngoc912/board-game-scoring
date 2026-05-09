@@ -95,10 +95,20 @@ function buildApiScoresForPlayer(playerId, scoreRows) {
   }, {})
 }
 
+function getWinnerIds(players, scoreRows) {
+  const winnerRow = scoreRows.find((row) => row.id === 'winner')
+
+  return players
+    .filter((player) => winnerRow?.scores?.[player.id])
+    .map((player) => player.apiUserId)
+    .filter(Boolean)
+}
+
 export const useGameStore = create(
   persist(
     (set, get) => ({
       gameName: '',
+      scoringType: 'COLUMN_BASED',
       players: [],
       categories: [],
       publishedScores: [],
@@ -117,18 +127,19 @@ export const useGameStore = create(
       selectGame(game) {
         if (!game) {
           const nextScores = ensureScoreRows([], get().players, [])
-          set({ gameName: '', categories: [], publishedScores: nextScores })
+          set({ gameName: '', scoringType: 'COLUMN_BASED', categories: [], publishedScores: nextScores })
           return
         }
 
         const gameName = game.name
+        const scoringType = game.scoringType || game.scoring_type || 'COLUMN_BASED'
         const categories = game.categories.map((category, index) => ({
           id: getScoreColumnId(category, index),
           ...normalizeCategory(category),
         }))
         const publishedScores = ensureScoreRows(categories, get().players, [])
 
-        set({ gameName, categories, publishedScores })
+        set({ gameName, scoringType, categories, publishedScores })
       },
 
       addPlayer(name, apiUserId = null, avatar) {
@@ -158,6 +169,13 @@ export const useGameStore = create(
         set({ players: nextPlayers, publishedScores: nextScores })
       },
 
+      clearPlayers() {
+        set({
+          players: [],
+          publishedScores: ensureScoreRows(get().categories, [], []),
+        })
+      },
+
       updatePlayerName(id, name, apiUserId = null) {
         const trimmed = normalizeLabel(name)
 
@@ -182,8 +200,10 @@ export const useGameStore = create(
       },
 
       async publishScores(scoreRows, description = '') {
-        const { gameName, players, categories } = get()
-        const publishedScores = ensureScoreRows(categories, players, scoreRows)
+        const { gameName, scoringType, players, categories } = get()
+        const publishedScores = scoringType === 'WINNER_ONLY'
+          ? scoreRows
+          : ensureScoreRows(categories, players, scoreRows)
 
         set({ syncStatus: 'syncing' })
         try {
@@ -194,18 +214,25 @@ export const useGameStore = create(
           const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
           const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id))
 
-          const playerScores = syncedUsers.map((user, index) => {
-            const player = players[index]
+          const playersWithApiIds = players.map((player, index) => ({
+            ...player,
+            apiUserId: syncedUsers[index].id,
+          }))
+          const playerScores = scoringType === 'WINNER_ONLY'
+            ? null
+            : syncedUsers.map((user, index) => {
+              const player = players[index]
 
-            return {
-              user_id: user.id,
-              scores: buildApiScoresForPlayer(player.id, publishedScores),
-            }
-          })
+              return {
+                user_id: user.id,
+                scores: buildApiScoresForPlayer(player.id, publishedScores),
+              }
+            })
+          const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
 
           await updateMatchScores(match.id, {
             description: description.trim() || `${gameName || 'Van choi'} - ${new Date().toLocaleString('vi-VN')}`,
-            playerScores,
+            ...(scoringType === 'WINNER_ONLY' ? { winnerIds } : { playerScores }),
           })
 
           set({
@@ -226,6 +253,7 @@ export const useGameStore = create(
         const categories = DEFAULT_CATEGORIES.map((name) => ({ id: crypto.randomUUID(), name }))
         set({
           gameName: '',
+          scoringType: 'COLUMN_BASED',
           players: [],
           categories,
           publishedScores: [],

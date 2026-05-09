@@ -21,14 +21,23 @@ function buildDraft(categories, players, publishedScores) {
 }
 
 export function GameScreen({ toast, onShowSetup, onShowHistory }) {
-  const { gameName, players, categories, publishedScores, publishScores } = useGameStore()
+  const { gameName, scoringType, players, categories, publishedScores, publishScores, clearPlayers } = useGameStore()
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
   const [matchDescription, setMatchDescription] = useState('')
+  const [winnerPlayerId, setWinnerPlayerId] = useState('')
+  const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
+  const isWinnerOnly = scoringType === 'WINNER_ONLY'
 
   useEffect(() => {
     setDraftScores(buildDraft(categories, players, publishedScores))
   }, [categories, players, publishedScores])
+
+  useEffect(() => {
+    setWinnerPlayerId((current) => (
+      players.some((player) => player.id === current) ? current : ''
+    ))
+  }, [players])
 
   function updateCell(categoryId, playerId, value, type) {
     const nextValue = type === 'text'
@@ -64,9 +73,31 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   }
 
   async function handleSave() {
-    const ok = await publishScores(draftScores, matchDescription)
+    if (isWinnerOnly && !winnerPlayerId) {
+      toast('Vui long chon nguoi thang')
+      return
+    }
+
+    const winnerOnlyScores = [{
+      id: 'winner',
+      name: 'Winner',
+      type: 'number',
+      scores: players.reduce((scores, player) => {
+        scores[player.id] = player.id === winnerPlayerId ? 1 : 0
+        return scores
+      }, {}),
+    }]
+    const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
     toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
-    if (ok) onShowHistory()
+    if (ok) {
+      clearPlayers()
+      onShowHistory()
+    }
+  }
+
+  function handleClose() {
+    clearPlayers()
+    onShowSetup()
   }
 
   return (
@@ -75,7 +106,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
         <div className="history-detail-topbar score-entry-topbar">
           <div className="score-entry-spacer" aria-hidden="true" />
           <div className="home-logo">BGSCORE</div>
-          <button className="score-close-btn" onClick={onShowSetup} aria-label="Dong">
+          <button className="score-close-btn" onClick={handleClose} aria-label="Dong">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
@@ -84,53 +115,76 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
       </header>
 
       <div className="score-content">
-        <section className="score-board">
-          <div className="score-grid-wrap score-board-scroll">
-            <div
-              className="score-grid score-entry-grid"
-              style={{
-                gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
-                minWidth: `${88 + players.length * 70}px`,
-              }}
-            >
-              <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-              {players.map((player) => (
-                <div key={player.id} className="score-grid-header player-header">
-                  <span>{player.name}</span>
-                </div>
-              ))}
-
-              {draftScores.map((row) => (
-                <React.Fragment key={row.id}>
-                  <div className="score-grid-label score-grid-sticky">{row.name}</div>
-                  {players.map((player) => (
-                    <div key={player.id} className="score-grid-cell">
-                      <input
-                        className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
-                        type={row.type === 'text' ? 'text' : 'number'}
-                        value={getInputValue(row, player.id)}
-                        onChange={(e) => updateCell(row.id, player.id, e.target.value, row.type)}
-                        onFocus={() => setFocusedCell(`${row.id}:${player.id}`)}
-                        onBlur={() => setFocusedCell(null)}
-                      />
-                    </div>
+        {isWinnerOnly ? (
+          <section className="winner-picker-card" aria-label="Chon nguoi thang">
+            {players.map((player) => (
+              <label key={player.id} className="winner-picker-row">
+                <span>{player.name}</span>
+                <input
+                  type="checkbox"
+                  checked={winnerPlayerId === player.id}
+                  onChange={() => setWinnerPlayerId((current) => (
+                    current === player.id ? '' : player.id
                   ))}
-                </React.Fragment>
-              ))}
+                />
+              </label>
+            ))}
+          </section>
+        ) : (
+          <section className="score-board">
+            <div className="score-grid-wrap score-board-scroll">
+              <div
+                className="score-grid score-entry-grid"
+                style={{
+                  gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
+                  minWidth: `${88 + players.length * 70}px`,
+                }}
+              >
+                <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
+                {players.map((player) => (
+                  <div key={player.id} className="score-grid-header player-header">
+                    <span>{player.name}</span>
+                  </div>
+                ))}
 
-              <div className="score-grid-total score-grid-sticky">Tong diem</div>
-              {players.map((player) => (
-                <div key={player.id} className="score-grid-winner">
-                  <strong>{getDraftTotal(player.id)}</strong>
-                </div>
-              ))}
+                {draftScores.map((row) => (
+                  <React.Fragment key={row.id}>
+                    <div className="score-grid-label score-grid-sticky">{row.name}</div>
+                    {players.map((player) => (
+                      <div key={player.id} className="score-grid-cell">
+                        <input
+                          className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
+                          type={row.type === 'text' ? 'text' : 'number'}
+                          value={getInputValue(row, player.id)}
+                          onChange={(e) => updateCell(row.id, player.id, e.target.value, row.type)}
+                          onFocus={() => setFocusedCell(`${row.id}:${player.id}`)}
+                          onBlur={() => setFocusedCell(null)}
+                        />
+                      </div>
+                    ))}
+                  </React.Fragment>
+                ))}
+
+                {!isTotalScoreOnly ? (
+                  <>
+                    <div className="score-grid-total score-grid-sticky">Tổng điểm</div>
+                    {players.map((player) => (
+                      <div key={player.id} className="score-grid-winner">
+                        <strong>{getDraftTotal(player.id)}</strong>
+                      </div>
+                    ))}
+                  </>
+                ) : null}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        <div className="score-scroll-indicator" aria-hidden="true">
-          <span />
-        </div>
+        {!isWinnerOnly ? (
+          <div className="score-scroll-indicator" aria-hidden="true">
+            <span />
+          </div>
+        ) : null}
 
         <textarea
           className="match-description"
