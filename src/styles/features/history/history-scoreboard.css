@@ -11,6 +11,7 @@
 .history-score-board .score-board-scroll,
 .history-score-board .score-grid-sticky {
   background: var(--color-bg-strong);
+    overflow-y: hidden;
 }
 
 .history-score-board .score-entry-grid {

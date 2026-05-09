@@ -53,6 +53,7 @@
   display: grid;
   gap: 0;
   align-items: stretch;
+  overflow-y: hidden;
 }
 
 .score-screen .score-grid-header,
