@@ -94,6 +94,14 @@
   text-align: left;
 }
 
+.setup-player-row[disabled] {
+  background: #E3E0DD;
+
+  img {
+    filter: grayscale(1);
+  }
+}
+
 .setup-player-row-left {
   display: flex;
   align-items: center;
@@ -120,6 +128,10 @@
 .setup-player-row.add,
 .player-picker-row {
   cursor: pointer;
+}
+
+.player-picker-row.disabled {
+  background: #E3E0DD;
 }
 
 .setup-date-row {

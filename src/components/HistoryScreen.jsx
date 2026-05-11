@@ -383,7 +383,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                           </div>
                         )
                       ))}
-                      <div className="grid-spacer"></div>
+                      <div className="grid-spacer border"></div>
                     </React.Fragment>
                   ))}
 

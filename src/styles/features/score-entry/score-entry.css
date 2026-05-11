@@ -256,7 +256,7 @@
 .score-entry-screen .score-board,
 .score-entry-screen .score-board-scroll,
 .score-entry-screen .score-grid-sticky {
-  background: var(--color-bg-strong);
+  background: var(--color-bg);
 }
 
 .score-entry-screen .score-board {
@@ -296,11 +296,24 @@
   padding: 0 16px;
 }
 
+.score-entry-screen .score-grid-label.total-score-only {
+  min-height: 48px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
 .score-entry-screen .score-grid-cell {
+  box-sizing: content-box;
   min-height: 60px;
   align-items: center;
   justify-items: stretch;
   padding: var(--space-1);
+}
+
+.score-entry-screen .score-grid-cell.total-score-only {
+  min-height: 48px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .score-entry-screen .score-box {

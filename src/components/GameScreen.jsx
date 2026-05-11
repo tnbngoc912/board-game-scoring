@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
 
@@ -22,6 +23,9 @@ function buildDraft(categories, players, publishedScores) {
 }
 
 export function GameScreen({ toast, onShowSetup, onShowHistory }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const didRedirectRef = useRef(false)
   const { gameName, scoringType, players, categories, publishedScores, publishScores, clearPlayers } = useGameStore()
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
@@ -30,6 +34,18 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const [isSaving, setIsSaving] = useState(false)
   const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
   const isWinnerOnly = scoringType === 'WINNER_ONLY'
+
+  useEffect(() => {
+    if (pathname !== '/game') {
+      didRedirectRef.current = false
+      return
+    }
+
+    if (!gameName?.trim() && !didRedirectRef.current) {
+      didRedirectRef.current = true
+      router.replace('/')
+    }
+  }, [pathname, gameName, router])
 
   useEffect(() => {
     setDraftScores(buildDraft(categories, players, publishedScores))
@@ -164,10 +180,10 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
                 {draftScores.map((row) => (
                   <React.Fragment key={row.id}>
-                    <div className="score-grid-label score-grid-sticky">{row.name}</div>
-                    <div className="grid-spacer"></div>
+                    <div className={`score-grid-label score-grid-sticky${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name}</div>
+                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
                     {players.map((player) => (
-                      <div key={player.id} className="score-grid-cell">
+                      <div key={player.id} className={`score-grid-cell${isTotalScoreOnly ? ' total-score-only' : ''}`}>
                         <input
                           className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
                           type={row.type === 'text' ? 'text' : 'number'}
@@ -178,7 +194,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
                         />
                       </div>
                     ))}
-                    <div className="grid-spacer"></div>
+                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
                   </React.Fragment>
                 ))}
 

@@ -213,6 +213,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   }
 
   function openPlayerPicker() {
+    if (players.length >= maxPlayersAllowed) return
     setSelectedUserIds([])
     setSelectedUsersById({})
     setUserSearchTerm('')
@@ -440,12 +441,9 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               <div className="setup-row-list">
                 <AnimatePresence initial={false}>
                   {players.map((player) => (
-                    <motion.div
+                    <div
                       key={player.id}
                       className="setup-player-row"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
                     >
                       <div className="setup-player-row-left">
                         <Image src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
@@ -456,11 +454,11 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                       <button className="setup-circle-btn remove" onClick={() => removePlayer(player.id)} aria-label={`Xoa ${player.name}`}>
                         <Image src="/minus-icon.svg" alt="" width={24} height={24} />
                       </button>
-                    </motion.div>
+                    </div>
                   ))}
                 </AnimatePresence>
 
-                <button className="setup-player-row add" onClick={openPlayerPicker}>
+                <button className="setup-player-row add" onClick={openPlayerPicker} disabled={players.length >= maxPlayersAllowed}>
                   <span>Thêm người chơi</span>
                   <Image src="/plus-icon.svg" alt="" width={24} height={24} />
                 </button>
