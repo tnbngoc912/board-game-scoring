@@ -149,20 +149,23 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
               <div
                 className="score-grid score-entry-grid"
                 style={{
-                  gridTemplateColumns: `88px repeat(${players.length}, 70px)`,
-                  minWidth: `${88 + players.length * 70}px`,
+                  gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
+                  minWidth: `${104 + players.length * 70}px`,
                 }}
               >
                 <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
+                <div className="grid-spacer"></div>
                 {players.map((player) => (
                   <div key={player.id} className="score-grid-header player-header">
                     <span>{player.name}</span>
                   </div>
                 ))}
+                <div className="grid-spacer"></div>
 
                 {draftScores.map((row) => (
                   <React.Fragment key={row.id}>
                     <div className="score-grid-label score-grid-sticky">{row.name}</div>
+                    <div className="grid-spacer"></div>
                     {players.map((player) => (
                       <div key={player.id} className="score-grid-cell">
                         <input
@@ -175,12 +178,14 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
                         />
                       </div>
                     ))}
+                    <div className="grid-spacer"></div>
                   </React.Fragment>
                 ))}
 
                 {!isTotalScoreOnly ? (
                   <>
-                    <div className="score-grid-total score-grid-sticky">Tổng điểm</div>
+                    <div className="score-grid-total score-grid-sticky">Tổng</div>
+                    <div className="grid-spacer border"></div>
                     {players.map((player) => (
                       <div key={player.id} className="score-grid-winner">
                         <strong>{getDraftTotal(player.id)}</strong>

@@ -53,7 +53,6 @@
   display: grid;
   gap: 0;
   align-items: stretch;
-  overflow-y: hidden;
 }
 
 .score-screen .score-grid-header,
@@ -266,57 +265,53 @@
 
 .score-entry-screen .score-board-scroll {
   overflow-x: auto;
-  padding: 0 0 0 var(--space-2);
+  padding: 0;
 }
 
 .score-entry-screen .score-grid-header {
-  min-height: 40px;
-  width: 70px;
-  color: var(--color-text);
-  font-size: 14px;
-  line-height: 15px;
+  min-height: 56px;
+  color: var(--color-text-strong);
+  font-size: 16px;
+  line-height: 1.15;
   font-weight: 700;
-  padding: var(--space-2) var(--space-1);
+  padding: 0 var(--space-2);
 }
 
 .score-entry-screen .score-grid-sticky-header {
-  width: 80px;
-  min-height: 40px;
+  min-height: 56px;
   opacity: 0;
 }
 
 .score-entry-screen .score-grid-sticky {
-  box-shadow: 3px 0 2px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sticky);
 }
 
 .score-entry-screen .score-grid-label {
-  min-height: 56px;
-  width: 80px;
+  min-height: 60px;
   color: var(--color-text);
   font-size: 14px;
-  line-height: 15px;
+  line-height: 1.15;
   font-weight: 700;
-  padding: var(--space-2);
+  padding: 0 16px;
 }
 
 .score-entry-screen .score-grid-cell {
-  min-height: 56px;
-  width: 70px;
+  min-height: 60px;
   padding: var(--space-1);
 }
 
 .score-entry-screen .score-box {
-  width: 62px;
-  max-width: 62px;
+  width: 100%;
+  max-width: none;
   height: 48px;
-  border: 0;
+  border: 1px solid var(--color-border-focus);
   border-radius: var(--radius-md);
-  background: var(--color-card-soft);
+  background: var(--color-card);
   color: var(--color-text);
   font-size: 16px;
   line-height: 19px;
-  font-weight: 600;
-  padding: var(--space-2);
+  font-weight: 700;
+  padding: 0 var(--space-2);
 }
 
 .score-entry-screen .score-box:focus {
@@ -328,31 +323,34 @@
 .score-entry-screen .score-grid-winner {
   min-height: 48px;
   height: 48px;
-  border-top: 1px solid var(--color-border-focus);
-  border-bottom: 1px solid var(--color-border-focus);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.score-entry-screen .grid-spacer.border {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .score-entry-screen .score-grid-total {
-  width: 80px;
   color: var(--color-text);
-  font-size: 14px;
-  line-height: 15px;
+  font-size: 17px;
+  line-height: 1.15;
   font-weight: 700;
-  padding: var(--space-2);
+  padding-left: var(--space-5);
 }
 
 .score-entry-screen .score-grid-winner {
-  width: 70px;
   color: var(--color-text);
   font-size: 18px;
   line-height: 20px;
   font-weight: 700;
-  padding: var(--space-2);
+  padding: 0 6px;
 }
 
 .score-entry-screen .score-grid-winner strong {
-  width: 62px;
-  max-width: 62px;
+  width: 100%;
+  text-align: center;
 }
 
 .score-entry-screen .score-scroll-indicator {
