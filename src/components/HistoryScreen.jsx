@@ -28,10 +28,23 @@ function getWinner(entry) {
   return [...(entry.players || [])].sort((a, b) => b.total - a.total)[0] || null
 }
 
+function getTopWinners(entry) {
+  const players = entry.players || []
+  if (players.length === 0) return []
+
+  const maxTotal = players.reduce((max, player) => Math.max(max, Number(player.total) || 0), Number.NEGATIVE_INFINITY)
+  if (!Number.isFinite(maxTotal)) return []
+
+  return players.filter((player) => (Number(player.total) || 0) === maxTotal)
+}
+
 function formatWinner(entry) {
-  const winner = getWinner(entry)
-  if (!winner) return 'Chua co nguoi thang'
-  return `${winner.name} - ${winner.total} diem`
+  const topWinners = getTopWinners(entry)
+  if (topWinners.length === 0) return 'Chua co nguoi thang'
+
+  const names = topWinners.map((player) => player.name).join(', ')
+  const total = Number(topWinners[0]?.total) || 0
+  return `${names} - ${total} diem`
 }
 
 function formatHistoryDateOnly(entry) {
@@ -478,7 +491,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
           {filteredHistory.map((entry, index) => {
             const [startColor, endColor] = getGameImageTheme(index)
-            const winner = getWinner(entry)
+            const topWinners = getTopWinners(entry)
+            const winnerNames = topWinners.map((player) => player.name).join(', ')
 
             return (
               <GameCard
@@ -502,7 +516,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 <p>{entry.playedAt}</p>
                 <div className="history-winner-line">
                   <Image src="/crown.svg" width={16} height={14} alt='' />
-                  <span>{winner ? winner.name : 'Chua co nguoi thang'}</span>
+                  <span>{winnerNames || 'Chua co nguoi thang'}</span>
                 </div>
               </GameCard>
             )

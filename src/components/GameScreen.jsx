@@ -198,11 +198,6 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           </section>
         )}
 
-        {!isWinnerOnly ? (
-          <div className="score-scroll-indicator" aria-hidden="true">
-            <span />
-          </div>
-        ) : null}
 
         <textarea
           className="match-description"

@@ -256,7 +256,7 @@
 .score-entry-screen .score-board,
 .score-entry-screen .score-board-scroll,
 .score-entry-screen .score-grid-sticky {
-  background: var(--color-bg);
+  background: var(--color-bg-strong);
 }
 
 .score-entry-screen .score-board {
@@ -265,7 +265,15 @@
 
 .score-entry-screen .score-board-scroll {
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 0;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+.score-entry-screen .score-entry-grid {
+  gap: 0;
 }
 
 .score-entry-screen .score-grid-header {
@@ -279,7 +287,6 @@
 
 .score-entry-screen .score-grid-sticky-header {
   min-height: 56px;
-  opacity: 0;
 }
 
 .score-entry-screen .score-grid-sticky {
@@ -289,6 +296,8 @@
 .score-entry-screen .score-grid-label {
   min-height: 60px;
   color: var(--color-text);
+  display: flex;
+  align-items: center;
   font-size: 14px;
   line-height: 1.15;
   font-weight: 700;
@@ -297,6 +306,8 @@
 
 .score-entry-screen .score-grid-cell {
   min-height: 60px;
+  align-items: center;
+  justify-items: stretch;
   padding: var(--space-1);
 }
 
@@ -312,6 +323,12 @@
   line-height: 19px;
   font-weight: 700;
   padding: 0 var(--space-2);
+  box-sizing: border-box;
+}
+
+.score-entry-screen .score-box.score-box-text {
+  font-size: 15px;
+  line-height: 1.25;
 }
 
 .score-entry-screen .score-box:focus {
