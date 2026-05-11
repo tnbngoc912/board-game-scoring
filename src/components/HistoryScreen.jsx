@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
@@ -111,6 +112,8 @@ function attachMatchThumbnail(match, boardGames) {
 }
 
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [selectedGameName, setSelectedGameName] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -128,6 +131,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const fetchHistory = useAppDataStore((state) => state.fetchHistory)
   const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
   const removeHistoryMatch = useAppDataStore((state) => state.removeHistoryMatch)
+  const routeDetailMatchId = useMemo(() => {
+    const match = pathname.match(/^\/history\/(.+)$/)
+    return match?.[1] || ''
+  }, [pathname])
 
   useEffect(() => {
     if (!selectedMatch) return
@@ -183,8 +190,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }
 
-  async function openMatchDetail(entry) {
-    setSelectedMatch(entry)
+  async function openMatchDetail(entry, options = {}) {
+    const { syncRoute = true } = options
+    if (syncRoute) router.push(`/history/${entry.id}`)
     setIsDetailMenuOpen(false)
     setIsLoadingMatchDetail(true)
 
@@ -199,6 +207,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       setIsLoadingMatchDetail(false)
     }
   }
+
+  useEffect(() => {
+    if (!routeDetailMatchId) {
+      if (selectedMatch) {
+        setSelectedMatch(null)
+        setIsDetailMenuOpen(false)
+      }
+      return
+    }
+
+    if (String(selectedMatch?.id || '') === routeDetailMatchId) return
+
+    const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
+    if (!entry) return
+
+    openMatchDetail(entry, { syncRoute: false })
+  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
 
   function clearFilters() {
     setSelectedGameName('')
@@ -224,6 +249,13 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }
 
+  if (routeDetailMatchId && !selectedMatch) {
+    return (
+      <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
+        <LoadingOverlay label="Đang tải..." />
+      </div>
+    )
+  }
 
   if (selectedMatch) {
     const winner = getWinner(selectedMatch)
@@ -247,7 +279,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           <div className="history-detail-topbar">
             <button className="score-back-btn" onClick={() => {
               setIsDetailMenuOpen(false)
-              setSelectedMatch(null)
+              router.push('/history')
             }} aria-label="Quay lai">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15 6 9 12l6 6" />

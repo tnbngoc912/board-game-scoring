@@ -93,11 +93,13 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
     setSetupStep('games')
   }, [homeResetToken])
 
-  const canStart = players.length >= 2 && players.every((player) => player.name.trim())
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
     [gameList, gameName]
   )
+  const canStart = players.length >= 2 && players.every((player) => player.name.trim())
+  const maxPlayersAllowed = selectedGame ? getMaxPlayers(selectedGame) : Number.POSITIVE_INFINITY
+  const isPickerAtMaxPlayers = players.length + selectedUserIds.length >= maxPlayersAllowed
   const genreOptions = useMemo(() => {
     const labels = gameList.flatMap(getGenreLabels)
     return [...new Set(labels)].filter(Boolean)
@@ -391,9 +393,10 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
               {filteredUsers.map((user) => {
                 const selected = isPlayerSelected(user.name)
                 const checked = selectedUserIds.includes(user.id)
+                const disabled = selected || (isPickerAtMaxPlayers && !checked)
 
                 return (
-                  <label key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}`}>
+                  <label key={user.id} className={`player-picker-row ${selected ? 'selected' : ''}${disabled ? ' disabled' : ''}`}>
                     <div className="setup-player-row-left">
                       <Image src={user.avatar_url ? user.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
                       <span>{user.name}</span>
@@ -401,6 +404,7 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
                     <input
                       type="checkbox"
                       checked={checked}
+                      disabled={disabled}
                       onChange={() => toggleUserSelection(user)}
                     />
                   </label>

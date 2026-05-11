@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { usePathname, useRouter } from 'next/navigation'
 import { useGameStore } from './store/gameStore'
 import { SetupScreen } from './components/SetupScreen'
 import { GameScreen } from './components/GameScreen'
@@ -8,10 +8,12 @@ import { Toast } from './components/Toast'
 import { useToast } from './hooks/useToast'
 
 export default function App() {
-  const [screen, setScreen] = useState('setup')
   const [homeResetToken, setHomeResetToken] = useState(0)
+  const router = useRouter()
+  const pathname = usePathname()
   const { darkMode } = useGameStore()
   const { message, visible, show: showToast } = useToast()
+  const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
 
   useEffect(() => {
     document.documentElement.className = darkMode ? '' : 'theme-light'
@@ -31,33 +33,24 @@ export default function App() {
   }, [screen])
 
   function showHome() {
-    setScreen('setup')
+    router.push('/')
     setHomeResetToken((value) => value + 1)
   }
 
   const screenProps = {
     toast: showToast,
     onShowSetup: showHome,
-    onShowHistory: () => setScreen('history'),
+    onShowHistory: () => router.push('/history'),
     onNewGame: showHome,
   }
 
   return (
     <div className={`app-shell screen-${screen}`}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={screen}
-          initial={false}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 1 }}
-          transition={{ duration: 0 }}
-          style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-        >
-          {screen === 'setup' ? <SetupScreen onStart={() => setScreen('game')} homeResetToken={homeResetToken} {...screenProps} /> : null}
-          {screen === 'game' ? <GameScreen {...screenProps} /> : null}
-          {screen === 'history' ? <HistoryScreen {...screenProps} /> : null}
-        </motion.div>
-      </AnimatePresence>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {screen === 'setup' ? <SetupScreen onStart={() => router.push('/game')} homeResetToken={homeResetToken} {...screenProps} /> : null}
+        {screen === 'game' ? <GameScreen {...screenProps} /> : null}
+        {screen === 'history' ? <HistoryScreen {...screenProps} /> : null}
+      </div>
 
       {screen !== 'game' ? (
         <nav
@@ -75,7 +68,7 @@ export default function App() {
             Trang chủ          </button>
           <button
             className={`bottom-nav-item${screen === 'history' ? ' active' : ''}`}
-            onClick={() => setScreen('history')}
+            onClick={() => router.push('/history')}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 3.5" /></svg>
