@@ -263,14 +263,6 @@
   padding: 0;
 }
 
-.score-entry-screen .score-board-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-}
 
 .score-entry-screen .score-entry-grid {
   gap: 0;

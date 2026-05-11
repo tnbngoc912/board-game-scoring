@@ -17,6 +17,16 @@
   box-shadow: 10px 0 12px -14px rgba(93, 65, 40, 0.65);
 }
 
+.score-board-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+
 .grid-spacer {
   width: 8px;
 }

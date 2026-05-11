@@ -18,6 +18,18 @@ export default function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', darkMode ? '#8c613b' : '#f5eedf')
   }, [darkMode])
 
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0 })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+      document.querySelectorAll('.screen').forEach((node) => {
+        node.scrollTop = 0
+        node.scrollLeft = 0
+      })
+    })
+  }, [screen])
+
   function showHome() {
     setScreen('setup')
     setHomeResetToken((value) => value + 1)
