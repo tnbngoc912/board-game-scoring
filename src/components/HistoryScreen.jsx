@@ -215,10 +215,17 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   if (selectedMatch) {
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
+    const maxTotal = players.reduce((max, player) => Math.max(max, Number(player.total) || 0), Number.NEGATIVE_INFINITY)
+    const winningPlayerIds = new Set(
+      players
+        .filter((player) => (Number(player.total) || 0) === maxTotal)
+        .map((player) => player.id)
+    )
     const scoreRows = selectedMatch.scoreRows || []
     const scoringType = selectedMatch.scoringType || 'COLUMN_BASED'
     const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
+    const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
@@ -312,16 +319,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   ))}
                   <div className="grid-spacer"></div>
 
-                  {scoreRows.map((row) => (
+                  {displayedScoreRows.map((row) => (
                     <React.Fragment key={row.id}>
-                      <div className="score-grid-label score-grid-sticky">{row.name}</div>
-                      <div className="grid-spacer"></div>
+                      <div className={`score-grid-label score-grid-sticky ${isTotalScoreOnly ? 'total-score-only' : ''}`}>{row.name}</div>
+                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
                       {players.map((player) => (
-                        <div key={player.id} className="score-grid-cell">
-                          <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                            {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                        isTotalScoreOnly ? (
+                          <div key={player.id} className="score-grid-winner">
+                            <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>
+                              {row.scores?.[player.id] ?? 0}
+                            </strong>
                           </div>
-                        </div>
+                        ) : (
+                          <div key={player.id} className="score-grid-cell">
+                            <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
+                              {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                            </div>
+                          </div>
+                        )
                       ))}
                       <div className="grid-spacer"></div>
                     </React.Fragment>
@@ -333,7 +348,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                       <div className="grid-spacer border"></div>
                       {players.map((player) => (
                         <div key={player.id} className="score-grid-winner">
-                          <strong className={winner?.id === player.id ? 'winning-total' : ''}>{player.total}</strong>
+                          <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>{player.total}</strong>
                         </div>
                       ))}
                     </>

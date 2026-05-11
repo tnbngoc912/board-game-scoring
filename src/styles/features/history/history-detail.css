@@ -149,7 +149,7 @@
 
 .history-detail-note {
   min-height: 80px;
-  margin: 26px var(--space-5) 100px;
+  margin: 16px 16px 100px;
   border-radius: var(--radius-md);
   background: var(--color-card);
   padding: 8px 16px;

@@ -31,7 +31,7 @@
 }
 
 .game-card--history {
-  grid-template-columns: 80px minmax(0, 1fr) 32px;
+  grid-template-columns: 80px minmax(0, 1fr);
   padding-right: var(--space-2);
 }
 
