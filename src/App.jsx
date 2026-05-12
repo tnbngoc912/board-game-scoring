@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useGameStore } from './store/gameStore'
 import { useAuthStore } from './store/authStore'
 import { SetupScreen } from './components/SetupScreen'
@@ -161,41 +162,51 @@ export default function App() {
                   : '0%',
           }}
         >
-          <button
+          <Link
+            href="/"
             className={`bottom-nav-item${screen === 'setup' ? ' active' : ''}`}
-            onClick={showHome}
+            aria-current={screen === 'setup' ? 'page' : undefined}
+            onClick={() => {
+              if (screen === 'setup') {
+                setHomeResetToken((value) => value + 1)
+              }
+            }}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z" /></svg>
             </span>
-            Trang chủ          </button>
-          <button
+            Trang chủ
+          </Link>
+          <Link
+            href="/history"
             className={`bottom-nav-item${screen === 'history' ? ' active' : ''}`}
-            onClick={() => router.push('/history')}
+            aria-current={screen === 'history' ? 'page' : undefined}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 3.5" /></svg>
             </span>
             Lịch sử
-          </button>
-          <button
+          </Link>
+          <Link
+            href="/achievements"
             className={`bottom-nav-item${screen === 'achievements' ? ' active' : ''}`}
-            onClick={() => router.push('/achievements')}
+            aria-current={screen === 'achievements' ? 'page' : undefined}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="m7 14 3 3 7-7" /><path d="M5 4h14v16H5z" /></svg>
             </span>
             Thành tựu
-          </button>
-          <button
+          </Link>
+          <Link
+            href="/account"
             className={`bottom-nav-item${screen === 'account' ? ' active' : ''}`}
-            onClick={() => router.push('/account')}
+            aria-current={screen === 'account' ? 'page' : undefined}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6" /></svg>
             </span>
             Tài khoản
-          </button>
+          </Link>
         </nav>
       ) : null}
 
