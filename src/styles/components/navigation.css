@@ -6,7 +6,7 @@
   width: min(430px, 100vw);
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   background: var(--color-white);
   padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
@@ -18,7 +18,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 33.333%;
+  width: 25%;
   height: 4px;
   background: var(--color-brand);
   transform: translateX(var(--bottom-nav-active, 0));
@@ -67,7 +67,9 @@
 }
 
 .app-shell.screen-setup .bottom-nav,
-.app-shell.screen-history .bottom-nav {
+.app-shell.screen-history .bottom-nav,
+.app-shell.screen-achievements .bottom-nav,
+.app-shell.screen-account .bottom-nav {
   width: min(600px, 100vw);
   height: calc(56px + env(safe-area-inset-bottom));
   padding: 0 0 env(safe-area-inset-bottom);
@@ -76,7 +78,9 @@
 }
 
 .app-shell.screen-setup .bottom-nav::before,
-.app-shell.screen-history .bottom-nav::before {
+.app-shell.screen-history .bottom-nav::before,
+.app-shell.screen-achievements .bottom-nav::before,
+.app-shell.screen-account .bottom-nav::before {
   top: 0;
   width: 33.333%;
   height: 2px;
@@ -89,11 +93,21 @@
 }
 
 .app-shell.screen-history .bottom-nav::before {
-  left: 33.333%;
+  left: 25%;
+}
+
+.app-shell.screen-achievements .bottom-nav::before {
+  left: 50%;
+}
+
+.app-shell.screen-account .bottom-nav::before {
+  left: 75%;
 }
 
 .app-shell.screen-setup .bottom-nav-item,
-.app-shell.screen-history .bottom-nav-item {
+.app-shell.screen-history .bottom-nav-item,
+.app-shell.screen-achievements .bottom-nav-item,
+.app-shell.screen-account .bottom-nav-item {
   height: 56px;
   justify-content: center;
   gap: 2px;
@@ -104,20 +118,26 @@
 }
 
 .app-shell.screen-setup .bottom-nav-item span,
-.app-shell.screen-history .bottom-nav-item span {
+.app-shell.screen-history .bottom-nav-item span,
+.app-shell.screen-achievements .bottom-nav-item span,
+.app-shell.screen-account .bottom-nav-item span {
   width: 24px;
   height: 24px;
 }
 
 .app-shell.screen-setup .bottom-nav-item svg,
-.app-shell.screen-history .bottom-nav-item svg {
+.app-shell.screen-history .bottom-nav-item svg,
+.app-shell.screen-achievements .bottom-nav-item svg,
+.app-shell.screen-account .bottom-nav-item svg {
   width: 22px;
   height: 22px;
   stroke-width: 1.7;
 }
 
 .app-shell.screen-setup .bottom-nav-item.active,
-.app-shell.screen-history .bottom-nav-item.active {
+.app-shell.screen-history .bottom-nav-item.active,
+.app-shell.screen-achievements .bottom-nav-item.active,
+.app-shell.screen-account .bottom-nav-item.active {
   color: var(--color-brand);
   border-top: 2px solid var(--color-brand);
   padding-top: 6px;

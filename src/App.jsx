@@ -5,6 +5,8 @@ import { useAuthStore } from './store/authStore'
 import { SetupScreen } from './components/SetupScreen'
 import { GameScreen } from './components/GameScreen'
 import { HistoryScreen } from './components/HistoryScreen'
+import { AchievementScreen } from './components/AchievementScreen'
+import { AccountScreen } from './components/AccountScreen'
 import { LoginScreen } from './components/LoginScreen'
 import { ForgotPasswordScreen } from './components/ForgotPasswordScreen'
 import { Toast } from './components/Toast'
@@ -18,7 +20,15 @@ export default function App() {
   const { darkMode } = useGameStore()
   const { token, user, isAuthLoading, bootstrap, login, forgotPassword, logout } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
-  const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
+  const screen = pathname === '/game'
+    ? 'game'
+    : pathname.startsWith('/history')
+      ? 'history'
+      : pathname.startsWith('/achievements')
+        ? 'achievements'
+        : pathname.startsWith('/account')
+          ? 'account'
+          : 'setup'
   const isForgotPasswordRoute = pathname === '/forgot-password'
 
   useEffect(() => {
@@ -83,6 +93,8 @@ export default function App() {
     toast: showToast,
     onShowSetup: showHome,
     onShowHistory: () => router.push('/history'),
+    onShowAchievements: () => router.push('/achievements'),
+    onShowAccount: () => router.push('/account'),
     onNewGame: showHome,
   }
 
@@ -123,13 +135,31 @@ export default function App() {
         {screen === 'setup' ? <SetupScreen onStart={() => router.push('/game')} homeResetToken={homeResetToken} {...screenProps} /> : null}
         {screen === 'game' ? <GameScreen {...screenProps} /> : null}
         {screen === 'history' ? <HistoryScreen {...screenProps} /> : null}
+        {screen === 'achievements' ? <AchievementScreen /> : null}
+        {screen === 'account' ? (
+          <AccountScreen
+            user={user}
+            onLogout={() => {
+              logout()
+              router.replace('/')
+            }}
+          />
+        ) : null}
       </div>
 
       {screen !== 'game' ? (
         <nav
           className="bottom-nav"
           aria-label="Dieu huong chinh"
-          style={{ '--bottom-nav-active': screen === 'history' ? '100%' : '0%' }}
+          style={{
+            '--bottom-nav-active': screen === 'history'
+              ? '25%'
+              : screen === 'achievements'
+                ? '50%'
+                : screen === 'account'
+                  ? '75%'
+                  : '0%',
+          }}
         >
           <button
             className={`bottom-nav-item${screen === 'setup' ? ' active' : ''}`}
@@ -149,17 +179,22 @@ export default function App() {
             Lịch sử
           </button>
           <button
-            className="bottom-nav-item"
-            type="button"
-            onClick={() => {
-              logout()
-              router.replace('/')
-            }}
+            className={`bottom-nav-item${screen === 'achievements' ? ' active' : ''}`}
+            onClick={() => router.push('/achievements')}
           >
             <span aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+              <svg viewBox="0 0 24 24"><path d="m7 14 3 3 7-7" /><path d="M5 4h14v16H5z" /></svg>
             </span>
-            Đăng xuất
+            Thành tựu
+          </button>
+          <button
+            className={`bottom-nav-item${screen === 'account' ? ' active' : ''}`}
+            onClick={() => router.push('/account')}
+          >
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6" /></svg>
+            </span>
+            Tài khoản
           </button>
         </nav>
       ) : null}
