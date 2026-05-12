@@ -383,7 +383,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                           </div>
                         )
                       ))}
-                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
+                      <div className="grid-spacer border"></div>
                     </React.Fragment>
                   ))}
 
@@ -396,7 +396,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                           <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>{player.total}</strong>
                         </div>
                       ))}
-                      <div className="grid-spacer border"></div>
                     </>
                   ) : null}
                 </div>
