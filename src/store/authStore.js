@@ -17,13 +17,18 @@ export const useAuthStore = create(
       isAuthLoading: true,
 
       async bootstrap() {
-        const { token } = get()
+        const { token, user } = get()
         if (!token) {
           set({ user: null, isAuthLoading: false })
           return
         }
 
         setAuthToken(token)
+        if (user) {
+          set({ isAuthLoading: false })
+          return
+        }
+
         try {
           const user = await getMyProfile()
           set({ user, isAuthLoading: false })
@@ -63,7 +68,7 @@ export const useAuthStore = create(
     {
       name: 'scorekeeper-auth',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ token: state.token, user: state.user }),
     },
   ),
 )
