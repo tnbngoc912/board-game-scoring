@@ -1,10 +1,10 @@
 .card,
 .paper-card {
-  border: 1px solid rgba(167, 125, 79, 0.14);
+  /* border: 1px solid rgba(167, 125, 79, 0.14);
   border-radius: var(--radius-md);
   background: var(--color-card);
   box-shadow: var(--shadow-card);
-  padding: 18px;
+  padding: 18px; */
 }
 
 .empty-state {

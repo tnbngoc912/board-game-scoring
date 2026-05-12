@@ -1,4 +1,31 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://boardgame-scorer-backend.onrender.com/api/v1'
+const AUTH_TOKEN_KEY = 'scorekeeper_auth_token'
+let authToken = null
+
+function readStoredToken() {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(AUTH_TOKEN_KEY)
+}
+
+function getAuthToken() {
+  if (authToken) return authToken
+  authToken = readStoredToken()
+  return authToken
+}
+
+export function setAuthToken(token) {
+  authToken = token || null
+  if (typeof window === 'undefined') return
+  if (authToken) {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, authToken)
+  } else {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY)
+  }
+}
+
+export function clearAuthToken() {
+  setAuthToken(null)
+}
 
 function getEntityId(entity) {
   return entity?._id || entity?.id || entity?.match_id
@@ -216,10 +243,12 @@ function unwrapEntity(payload, keys = []) {
 }
 
 async function request(path, options = {}) {
+  const token = getAuthToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })
@@ -232,6 +261,18 @@ async function request(path, options = {}) {
   }
 
   return payload?.data || payload
+}
+
+function normalizeAuthUser(user) {
+  return {
+    id: getEntityId(user),
+    name: user?.name || '',
+    email: user?.email || '',
+    role: user?.role || 'USER',
+    avatar: user?.avatar || '',
+    avatar_url: user?.avatar_url || '',
+    stats: user?.stats || null,
+  }
 }
 
 function slugify(value) {
@@ -263,6 +304,35 @@ export async function syncUserByName(name) {
     ...user,
     id: getEntityId(user),
   }
+}
+
+export async function login({ email, password }) {
+  const payload = await request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+  const token = payload?.token || ''
+  const user = normalizeAuthUser(payload?.user || {})
+  return { token, user }
+}
+
+export async function forgotPassword(email) {
+  return request('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function getMyProfile() {
+  const payload = await request('/users/me')
+  return normalizeAuthUser(payload || {})
+}
+
+export async function changePassword({ oldPassword, newPassword }) {
+  return request('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ oldPassword, newPassword }),
+  })
 }
 
 export async function getUsers(params = {}) {

@@ -17,6 +17,7 @@
 @import './components/toast.css';
 
 /* features */
+@import './features/auth/login.css';
 @import './features/home/home-list.css';
 @import './features/setup/setup-flow.css';
 @import './features/score-entry/score-entry.css';
