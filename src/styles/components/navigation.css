@@ -22,7 +22,6 @@
   height: 4px;
   background: var(--color-brand);
   transform: translateX(var(--bottom-nav-active, 0));
-  pointer-events: none;
 }
 
 .bottom-nav-item {
