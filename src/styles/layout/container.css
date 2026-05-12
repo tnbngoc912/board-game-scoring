@@ -8,8 +8,6 @@
 
 .app-shell.screen-setup,
 .app-shell.screen-history,
-.app-shell.screen-achievements,
-.app-shell.screen-account,
 .app-shell.screen-game {
   max-width: 600px;
   min-height: 100%;
