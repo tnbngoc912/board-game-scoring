@@ -199,8 +199,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     try {
       const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
-      const alignedMatch = alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
-      setSelectedMatch(attachMatchThumbnail(alignedMatch, cachedBoardGames))
+      const normalizedMatch = detail.scoreRows?.length
+        ? matchWithRows
+        : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
+      setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
     } catch {
       toast('Khong tai duoc chi tiet bang diem')
     } finally {
@@ -383,7 +385,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                           </div>
                         )
                       ))}
-                      <div className="grid-spacer border"></div>
+                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
+
                     </React.Fragment>
                   ))}
 

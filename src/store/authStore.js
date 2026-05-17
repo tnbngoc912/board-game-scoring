@@ -15,21 +15,32 @@ export const useAuthStore = create(
       token: '',
       user: null,
       isAuthLoading: true,
+      hasBootstrapped: false,
 
       async bootstrap() {
-        const { token } = get()
+        const { token, user, hasBootstrapped } = get()
+        if (hasBootstrapped) {
+          set({ isAuthLoading: false })
+          return
+        }
+
         if (!token) {
-          set({ user: null, isAuthLoading: false })
+          set({ user: null, isAuthLoading: false, hasBootstrapped: true })
           return
         }
 
         setAuthToken(token)
+        if (user) {
+          set({ isAuthLoading: false, hasBootstrapped: true })
+          return
+        }
+
         try {
           const user = await getMyProfile()
-          set({ user, isAuthLoading: false })
+          set({ user, isAuthLoading: false, hasBootstrapped: true })
         } catch {
           clearAuthToken()
-          set({ token: '', user: null, isAuthLoading: false })
+          set({ token: '', user: null, isAuthLoading: false, hasBootstrapped: true })
         }
       },
 
@@ -57,13 +68,13 @@ export const useAuthStore = create(
 
       logout() {
         clearAuthToken()
-        set({ token: '', user: null })
+        set({ token: '', user: null, hasBootstrapped: true })
       },
     }),
     {
       name: 'scorekeeper-auth',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ token: state.token, user: state.user }),
     },
   ),
 )

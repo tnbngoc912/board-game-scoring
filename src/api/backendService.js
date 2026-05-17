@@ -165,6 +165,7 @@ export function normalizeMatch(match) {
       : '',
     playerCount: match.player_count || players.length,
     description: match.description || '',
+    thumbnailUrl: match.thumbnail_url || '',
     winner: winner ? {
       id: winner.user_id,
       name: winner.name,
@@ -226,6 +227,8 @@ export function normalizeMatchDetail(payload) {
     playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
     playerCount: match.player_count || normalizedPlayers.length,
     description: match.description || '',
+    thumbnailUrl: match.thumbnail_url || '',
+    imageAttachments: match.image_attachments || [],
     winner: winner ? { id: winner.id, name: winner.name, total: winner.total } : null,
     players: normalizedPlayers,
     scoreRows: scoreRows.length > 0 ? scoreRows : buildScoreRowsFromPlayerScores(normalizedPlayers),
