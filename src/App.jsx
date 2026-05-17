@@ -13,6 +13,7 @@ import { useToast } from './hooks/useToast'
 export default function App() {
   const [homeResetToken, setHomeResetToken] = useState(0)
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
+  const [activeNav, setActiveNav] = useState('setup')
   const router = useRouter()
   const pathname = usePathname()
   const { darkMode } = useGameStore()
@@ -20,6 +21,10 @@ export default function App() {
   const { message, visible, show: showToast } = useToast()
   const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
   const isForgotPasswordRoute = pathname === '/forgot-password'
+
+  useEffect(() => {
+    setActiveNav(screen)
+  }, [screen])
 
   useEffect(() => {
     document.documentElement.className = darkMode ? '' : 'theme-light'
@@ -126,13 +131,10 @@ export default function App() {
       </div>
 
       {screen !== 'game' ? (
-        <nav
-          className="bottom-nav"
-          aria-label="Dieu huong chinh"
-          style={{ '--bottom-nav-active': screen === 'history' ? '100%' : '0%' }}
-        >
+        <nav className="bottom-nav" aria-label="Dieu huong chinh">
           <button
-            className={`bottom-nav-item${screen === 'setup' ? ' active' : ''}`}
+            className={`bottom-nav-item${activeNav === 'setup' ? ' active' : ''}`}
+            onPointerDown={() => setActiveNav('setup')}
             onClick={showHome}
           >
             <span aria-hidden="true">
@@ -140,7 +142,8 @@ export default function App() {
             </span>
             Trang chủ          </button>
           <button
-            className={`bottom-nav-item${screen === 'history' ? ' active' : ''}`}
+            className={`bottom-nav-item${activeNav === 'history' ? ' active' : ''}`}
+            onPointerDown={() => setActiveNav('history')}
             onClick={() => router.push('/history')}
           >
             <span aria-hidden="true">

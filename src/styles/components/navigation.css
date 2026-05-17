@@ -14,14 +14,7 @@
 }
 
 .bottom-nav::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 33.333%;
-  height: 4px;
-  background: var(--color-brand);
-  transform: translateX(var(--bottom-nav-active, 0));
+  content: none;
 }
 
 .bottom-nav-item {
