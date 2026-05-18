@@ -5,3 +5,5 @@ node_modules
 public/sw.js
 public/workbox-*.js
 .env
+.vercel
+.env*.local

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useGameStore } from './store/gameStore'
 import { useAuthStore } from './store/authStore'
 import { SetupScreen } from './components/SetupScreen'
@@ -13,7 +14,6 @@ import { useToast } from './hooks/useToast'
 export default function App() {
   const [homeResetToken, setHomeResetToken] = useState(0)
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
-  const [activeNav, setActiveNav] = useState('setup')
   const router = useRouter()
   const pathname = usePathname()
   const { darkMode } = useGameStore()
@@ -21,10 +21,6 @@ export default function App() {
   const { message, visible, show: showToast } = useToast()
   const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
   const isForgotPasswordRoute = pathname === '/forgot-password'
-
-  useEffect(() => {
-    setActiveNav(screen)
-  }, [screen])
 
   useEffect(() => {
     document.documentElement.className = darkMode ? '' : 'theme-light'
@@ -132,25 +128,31 @@ export default function App() {
 
       {screen !== 'game' ? (
         <nav className="bottom-nav" aria-label="Dieu huong chinh">
-          <button
-            className={`bottom-nav-item${activeNav === 'setup' ? ' active' : ''}`}
-            onPointerDown={() => setActiveNav('setup')}
-            onClick={showHome}
+          <Link
+            href="/"
+            className={`bottom-nav-item${screen === 'setup' ? ' active' : ''}`}
+            aria-current={screen === 'setup' ? 'page' : undefined}
+            onClick={() => {
+              if (screen === 'setup') {
+                setHomeResetToken((value) => value + 1)
+              }
+            }}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z" /></svg>
             </span>
-            Trang chủ          </button>
-          <button
-            className={`bottom-nav-item${activeNav === 'history' ? ' active' : ''}`}
-            onPointerDown={() => setActiveNav('history')}
-            onClick={() => router.push('/history')}
+            Trang chủ
+          </Link>
+          <Link
+            href="/history"
+            className={`bottom-nav-item${screen === 'history' ? ' active' : ''}`}
+            aria-current={screen === 'history' ? 'page' : undefined}
           >
             <span aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 3.5" /></svg>
             </span>
             Lịch sử
-          </button>
+          </Link>
           <button
             className="bottom-nav-item"
             type="button"
