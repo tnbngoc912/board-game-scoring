@@ -18,20 +18,6 @@ npm run build
 npm run start
 ```
 
-## Features
-
-- ✅ Add/remove players (up to 8)
-- ✅ Enter scores per round with stepper buttons
-- ✅ Quick-add presets (+1, +5, +10, +25 to all)
-- ✅ Animated live leaderboard with rank changes (Framer Motion)
-- ✅ Animated score counter
-- ✅ Round history table with undo
-- ✅ Add players mid-game
-- ✅ Save game history (localStorage, persists across sessions)
-- ✅ Dark / Light mode toggle
-- ✅ PWA installable (works offline after first load)
-- ✅ Mobile-first, touch-friendly (48px+ tap targets)
-
 ## Project Structure
 
 ```
