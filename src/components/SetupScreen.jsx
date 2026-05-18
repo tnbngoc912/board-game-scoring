@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
@@ -61,21 +62,34 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [selectedUsersById, setSelectedUsersById] = useState({})
   const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
-  const {
-    gameName,
-    players,
-    categories,
-    selectGame,
-    addPlayer,
-    removePlayer,
-  } = useGameStore()
+  const { gameName, players, categories, selectGame, addPlayer, removePlayer } = useGameStore(
+    useShallow((state) => ({
+      gameName: state.gameName,
+      players: state.players,
+      categories: state.categories,
+      selectGame: state.selectGame,
+      addPlayer: state.addPlayer,
+      removePlayer: state.removePlayer,
+    }))
+  )
 
-  const gameList = useAppDataStore((state) => state.boardGames)
-  const userList = useAppDataStore((state) => state.users)
-  const isLoadingGames = useAppDataStore((state) => state.isLoadingBoardGames)
-  const isLoadingUsers = useAppDataStore((state) => state.isLoadingUsers)
-  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
-  const fetchUsers = useAppDataStore((state) => state.fetchUsers)
+  const {
+    gameList,
+    userList,
+    isLoadingGames,
+    isLoadingUsers,
+    fetchBoardGames,
+    fetchUsers,
+  } = useAppDataStore(
+    useShallow((state) => ({
+      gameList: state.boardGames,
+      userList: state.users,
+      isLoadingGames: state.isLoadingBoardGames,
+      isLoadingUsers: state.isLoadingUsers,
+      fetchBoardGames: state.fetchBoardGames,
+      fetchUsers: state.fetchUsers,
+    }))
+  )
 
   useEffect(() => {
     async function loadSetupData() {
@@ -139,13 +153,13 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     )
   }, [userList, userSearchTerm])
 
-  function isPlayerSelected(name, exceptPlayerId = null) {
+  const isPlayerSelected = useCallback((name, exceptPlayerId = null) => {
     return players.some((player) => (
       player.id !== exceptPlayerId && player.name.trim().toLowerCase() === name.trim().toLowerCase()
     ))
-  }
+  }, [players])
 
-  function handleChooseGame(game) {
+  const handleChooseGame = useCallback((game) => {
     selectGame(game)
     setSelectedUserIds([])
     if (onChooseGame) {
@@ -153,21 +167,21 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       return
     }
     setSetupStep('config')
-  }
+  }, [onChooseGame, selectGame])
 
-  function toggleGenre(genre) {
+  const toggleGenre = useCallback((genre) => {
     setSelectedGenres((current) => (
       current.includes(genre)
         ? current.filter((item) => item !== genre)
         : [...current, genre]
     ))
-  }
+  }, [])
 
-  function resetFilters() {
+  const resetFilters = useCallback(() => {
     setGameSearchTerm('')
     setPlayerCountFilter('')
     setSelectedGenres([])
-  }
+  }, [])
 
   function formatPlayDateTime(value) {
     if (!value) return ''
@@ -176,15 +190,15 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     return `${timePart}, ${day}/${month}/${year}`
   }
 
-  function handleStart() {
+  const handleStart = useCallback(() => {
     if (!canStart) {
       toast('Can it nhat 2 người chơi')
       return
     }
     onStart()
-  }
+  }, [canStart, onStart, toast])
 
-  function toggleUserSelection(user) {
+  const toggleUserSelection = useCallback((user) => {
     const userId = user.id
     setSelectedUserIds((current) => (
       current.includes(userId)
@@ -198,9 +212,9 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       delete next[userId]
       return next
     })
-  }
+  }, [])
 
-  function handleAddSelectedPlayers() {
+  const handleAddSelectedPlayers = useCallback(() => {
     if (selectedUserIds.length === 0) {
       toast('Vui long chon người chơi')
       return
@@ -214,15 +228,15 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     setSelectedUsersById({})
     setUserSearchTerm('')
     setSetupStep('config')
-  }
+  }, [addPlayer, isPlayerSelected, selectedUserIds, selectedUsersById, toast, userList])
 
-  function openPlayerPicker() {
+  const openPlayerPicker = useCallback(() => {
     if (players.length >= maxPlayersAllowed) return
     setSelectedUserIds([])
     setSelectedUsersById({})
     setUserSearchTerm('')
     setSetupStep('player-picker')
-  }
+  }, [maxPlayersAllowed, players.length])
 
   return (
     <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>

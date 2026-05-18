@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { getBoardGameOverview } from '../api/backendService'
 import { useGameStore } from '../store/gameStore'
+import { useGameSessionStore } from '../store/gameSessionStore'
 import { LoadingOverlay } from './LoadingOverlay'
+import { EmptyState } from './ui/EmptyState'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -12,8 +14,11 @@ function formatLastPlayed(value) {
 }
 
 export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }) {
-  const { boardGameOverview, applyBoardGameOverview } = useGameStore()
-  const [overview, setOverview] = useState(null)
+  const applyBoardGameOverview = useGameStore((state) => state.applyBoardGameOverview)
+  const hydrateOverviewIfNeeded = useGameSessionStore((state) => state.hydrateOverviewIfNeeded)
+  const setOverview = useGameSessionStore((state) => state.setOverview)
+
+  const [overview, setLocalOverview] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -21,17 +26,22 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
     async function load() {
       if (!boardGameId) return
-      if (boardGameOverview?.id === boardGameId) {
-        setOverview(boardGameOverview)
+
+      const cached = hydrateOverviewIfNeeded(boardGameId)
+      if (cached) {
+        applyBoardGameOverview(cached)
+        setLocalOverview(cached)
         setIsLoading(false)
         return
       }
+
       setIsLoading(true)
       try {
         const data = await getBoardGameOverview(boardGameId)
         if (!isMounted) return
         applyBoardGameOverview(data)
-        setOverview(data)
+        setOverview(boardGameId, data)
+        setLocalOverview(data)
       } catch (error) {
         if (!isMounted) return
         toast(error?.message || 'Khong tai duoc thong tin game')
@@ -44,7 +54,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     return () => {
       isMounted = false
     }
-  }, [boardGameId, boardGameOverview, toast, applyBoardGameOverview])
+  }, [boardGameId, toast, applyBoardGameOverview, hydrateOverviewIfNeeded, setOverview])
 
   if (isLoading) {
     return (
@@ -57,7 +67,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   if (!overview) {
     return (
       <div className="screen score-screen loading-shell">
-        <div className="screen-inner">Không có dữ liệu game.</div>
+        <div className="screen-inner">
+          <EmptyState title="Không có dữ liệu game" description="Vui lòng thử lại." />
+        </div>
       </div>
     )
   }

@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
+import { ScoreGrid } from "./score/ScoreGrid"
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -123,14 +125,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const detailScreenRef = useRef(null)
-  const detailGridRef = useRef(null)
-  const { resetBoard } = useGameStore()
-  const history = useAppDataStore((state) => state.history)
-  const boardGames = useAppDataStore((state) => state.boardGames)
-  const isLoadingHistory = useAppDataStore((state) => state.isLoadingHistory)
-  const fetchHistory = useAppDataStore((state) => state.fetchHistory)
-  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
-  const removeHistoryMatch = useAppDataStore((state) => state.removeHistoryMatch)
+  const resetBoard = useGameStore((state) => state.resetBoard)
+  const {
+    history,
+    boardGames,
+    isLoadingHistory,
+    fetchHistory,
+    fetchBoardGames,
+    removeHistoryMatch,
+  } = useAppDataStore(
+    useShallow((state) => ({
+      history: state.history,
+      boardGames: state.boardGames,
+      isLoadingHistory: state.isLoadingHistory,
+      fetchHistory: state.fetchHistory,
+      fetchBoardGames: state.fetchBoardGames,
+      removeHistoryMatch: state.removeHistoryMatch,
+    }))
+  )
   const routeDetailMatchId = useMemo(() => {
     const match = pathname.match(/^\/history\/(.+)$/)
     return match?.[1] || ''
@@ -142,7 +154,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     requestAnimationFrame(() => {
       detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
       window.scrollTo({ top: 0, left: 0 })
-      if (detailGridRef.current) detailGridRef.current.scrollLeft = 0
     })
   }, [selectedMatch])
 
@@ -180,7 +191,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [historyWithThumbnails, searchTerm, selectedGameName])
   const hasFilters = Boolean(selectedGameName || searchTerm.trim())
 
-  async function handleNewGame() {
+  const handleNewGame = useCallback(async () => {
     const ok = await resetBoard()
     if (ok) {
       toast('Da tao van moi')
@@ -188,9 +199,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     } else {
       toast('Khong the tao van moi')
     }
-  }
+  }, [onNewGame, resetBoard, toast])
 
-  async function openMatchDetail(entry, options = {}) {
+  const openMatchDetail = useCallback(async (entry, options = {}) => {
     const { syncRoute = true } = options
     if (syncRoute) router.push(`/history/${entry.id}`)
     setIsDetailMenuOpen(false)
@@ -208,7 +219,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     } finally {
       setIsLoadingMatchDetail(false)
     }
-  }
+  }, [fetchBoardGames, router, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
@@ -227,13 +238,13 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     openMatchDetail(entry, { syncRoute: false })
   }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
 
-  function clearFilters() {
+  const clearFilters = useCallback(() => {
     setSelectedGameName('')
     setSearchTerm('')
     setIsFilterOpen(false)
-  }
+  }, [])
 
-  async function confirmDelete() {
+  const confirmDelete = useCallback(async () => {
     if (!matchToDelete) return
 
     setIsDeleting(true)
@@ -249,7 +260,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     } finally {
       setIsDeleting(false)
     }
-  }
+  }, [matchToDelete, removeHistoryMatch, selectedMatch?.id, toast])
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
@@ -349,60 +360,15 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </section>
           ) : (
             <section className="score-board history-score-board">
-              <div ref={detailGridRef} className="score-grid-wrap score-board-scroll">
-                <div
-                  className="score-grid score-entry-grid"
-                  style={{
-                    gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
-                    minWidth: `${104 + players.length * 70}px`,
-                  }}
-                >
-                  <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-                  <div className="grid-spacer"></div>
-                  {players.map((player) => (
-                    <div key={player.id} className="score-grid-header player-header">
-                      <span>{player.name}</span>
-                    </div>
-                  ))}
-                  <div className="grid-spacer"></div>
-
-                  {displayedScoreRows.map((row) => (
-                    <React.Fragment key={row.id}>
-                      <div className={`score-grid-label score-grid-sticky ${isTotalScoreOnly ? 'total-score-only' : ''}`}>{row.name}</div>
-                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
-                      {players.map((player) => (
-                        isTotalScoreOnly ? (
-                          <div key={player.id} className="score-grid-winner">
-                            <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>
-                              {row.scores?.[player.id] ?? 0}
-                            </strong>
-                          </div>
-                        ) : (
-                          <div key={player.id} className="score-grid-cell">
-                            <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                              {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
-                            </div>
-                          </div>
-                        )
-                      ))}
-                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
-
-                    </React.Fragment>
-                  ))}
-
-                  {!isTotalScoreOnly ? (
-                    <>
-                      <div className="score-grid-total score-grid-sticky">Tổng</div>
-                      <div className="grid-spacer border"></div>
-                      {players.map((player) => (
-                        <div key={player.id} className="score-grid-winner">
-                          <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>{player.total}</strong>
-                        </div>
-                      ))}
-                    </>
-                  ) : null}
-                </div>
-              </div>
+              <ScoreGrid
+                players={players}
+                rows={displayedScoreRows}
+                mode={isTotalScoreOnly ? "TOTAL_SCORE_ONLY" : "COLUMN_BASED"}
+                stickyHeader
+                showTotal={!isTotalScoreOnly}
+                winningPlayerIds={winningPlayerIds}
+                editable={false}
+              />
             </section>
           )}
 
