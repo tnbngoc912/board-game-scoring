@@ -353,6 +353,30 @@ export async function getBoardGames() {
   return unwrapList(payload).map(normalizeBoardGame)
 }
 
+export async function getBoardGameOverview(boardGameId, { leaderboardLimit } = {}) {
+  const searchParams = new URLSearchParams()
+  if (leaderboardLimit) searchParams.set('leaderboardLimit', String(leaderboardLimit))
+  const query = searchParams.toString()
+  const payload = await request(`/board-games/${boardGameId}/overview${query ? `?${query}` : ''}`)
+  const raw = payload || {}
+  const scoreColumns = raw.score_columns || raw.scoreColumns || []
+
+  return {
+    id: getEntityId(raw) || boardGameId,
+    name: raw.name || '',
+    description: raw.description || '',
+    minPlayers: raw.min_players ?? raw.minPlayers ?? 1,
+    maxPlayers: raw.max_players ?? raw.maxPlayers ?? 12,
+    minPlayTime: raw.min_play_time ?? raw.minPlayTime ?? null,
+    maxPlayTime: raw.max_play_time ?? raw.maxPlayTime ?? null,
+    thumbnailUrl: raw.thumbnail_url || '',
+    scoringType: raw.scoring_type || raw.scoringType || 'COLUMN_BASED',
+    categories: scoreColumns.map(normalizeScoreColumn),
+    stats: raw.stats || null,
+    leaderboard: raw.leaderboard || [],
+  }
+}
+
 export async function getMatches(params = {}) {
   const searchParams = new URLSearchParams()
 

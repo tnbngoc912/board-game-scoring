@@ -5,22 +5,25 @@ import { useGameStore } from './store/gameStore'
 import { useAuthStore } from './store/authStore'
 import { SetupScreen } from './components/SetupScreen'
 import { GameScreen } from './components/GameScreen'
+import { GameOverviewScreen } from './components/GameOverviewScreen'
 import { HistoryScreen } from './components/HistoryScreen'
 import { LoginScreen } from './components/LoginScreen'
 import { ForgotPasswordScreen } from './components/ForgotPasswordScreen'
 import { Toast } from './components/Toast'
 import { useToast } from './hooks/useToast'
+import { LoadingOverlay } from "./components/LoadingOverlay"
 
 export default function App() {
   const [homeResetToken, setHomeResetToken] = useState(0)
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const { darkMode } = useGameStore()
+  const { darkMode, boardGameId, gameFlow, setGameFlow, clearPlayers } = useGameStore()
   const { token, user, isAuthLoading, bootstrap, login, forgotPassword, logout } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
   const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
   const isForgotPasswordRoute = pathname === '/forgot-password'
+  const isHistoryDetailRoute = /^\/history\/[^/]+$/.test(pathname)
 
   useEffect(() => {
     document.documentElement.className = darkMode ? '' : 'theme-light'
@@ -44,7 +47,14 @@ export default function App() {
     })
   }, [screen])
 
+  useEffect(() => {
+    if (screen !== 'game') return
+    if (boardGameId) return
+    router.replace('/')
+  }, [screen, boardGameId, router])
+
   function showHome() {
+    clearPlayers()
     router.push('/')
     setHomeResetToken((value) => value + 1)
   }
@@ -89,11 +99,8 @@ export default function App() {
 
   if (isAuthLoading) {
     return (
-      <div className="app-shell screen-setup">
-        <div className="screen">
-          <div className="screen-inner">Đang tải...</div>
-        </div>
-      </div>
+      <LoadingOverlay label="Đang tải..." />
+
     )
   }
 
@@ -121,12 +128,43 @@ export default function App() {
   return (
     <div className={`app-shell screen-${screen}`}>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {screen === 'setup' ? <SetupScreen onStart={() => router.push('/game')} homeResetToken={homeResetToken} {...screenProps} /> : null}
-        {screen === 'game' ? <GameScreen {...screenProps} /> : null}
+        {screen === 'game' && !boardGameId ? (
+          <div className="screen loading-shell" aria-busy="true">
+            <div className="screen-inner">Đang chuyển hướng...</div>
+          </div>
+        ) : null}
+        {screen === 'setup' ? (
+          <SetupScreen
+            onStart={() => router.push('/game')}
+            onChooseGame={() => router.push('/game')}
+            homeResetToken={homeResetToken}
+            {...screenProps}
+          />
+        ) : null}
+        {screen === 'game' && boardGameId ? (
+          gameFlow === 'overview' ? (
+            <GameOverviewScreen
+              boardGameId={boardGameId}
+              toast={showToast}
+              onBack={showHome}
+              onCreateScore={() => setGameFlow('setup')}
+            />
+          ) : gameFlow === 'setup' ? (
+            <SetupScreen
+              onStart={() => setGameFlow('entry')}
+              initialStep="config"
+              onBackFromConfig={() => setGameFlow('overview')}
+              homeResetToken={homeResetToken}
+              {...screenProps}
+            />
+          ) : (
+            <GameScreen {...screenProps} />
+          )
+        ) : null}
         {screen === 'history' ? <HistoryScreen {...screenProps} /> : null}
       </div>
 
-      {screen !== 'game' ? (
+      {screen !== 'game' && !isHistoryDetailRoute ? (
         <nav className="bottom-nav" aria-label="Dieu huong chinh">
           <Link
             href="/"

@@ -26,7 +26,15 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const router = useRouter()
   const pathname = usePathname()
   const didRedirectRef = useRef(false)
-  const { gameName, scoringType, players, categories, publishedScores, publishScores, clearPlayers } = useGameStore()
+  const {
+    gameName,
+    scoringType,
+    players,
+    categories,
+    publishedScores,
+    publishScores,
+    clearPlayers,
+  } = useGameStore()
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
   const [matchDescription, setMatchDescription] = useState('')
@@ -180,7 +188,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
 
                 {draftScores.map((row) => (
                   <React.Fragment key={row.id}>
-                    <div className={`score-grid-label score-grid-sticky${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name}</div>
+                    <div className={`score-grid-label score-grid-sticky${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name || row.id}</div>
                     <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
                     {players.map((player) => (
                       <div key={player.id} className={`score-grid-cell${isTotalScoreOnly ? ' total-score-only' : ''}`}>

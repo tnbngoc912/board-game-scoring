@@ -108,6 +108,9 @@ export const useGameStore = create(
   persist(
     (set, get) => ({
       gameName: '',
+      boardGameId: '',
+      gameFlow: 'overview',
+      boardGameOverview: null,
       scoringType: 'COLUMN_BASED',
       players: [],
       categories: [],
@@ -127,10 +130,19 @@ export const useGameStore = create(
       selectGame(game) {
         if (!game) {
           const nextScores = ensureScoreRows([], get().players, [])
-          set({ gameName: '', scoringType: 'COLUMN_BASED', categories: [], publishedScores: nextScores })
+          set({
+            gameName: '',
+            boardGameId: '',
+            gameFlow: 'overview',
+            boardGameOverview: null,
+            scoringType: 'COLUMN_BASED',
+            categories: [],
+            publishedScores: nextScores
+          })
           return
         }
 
+        const boardGameId = game.id || game._id || ''
         const gameName = game.name
         const scoringType = game.scoringType || game.scoring_type || 'COLUMN_BASED'
         const categories = game.categories.map((category, index) => ({
@@ -139,7 +151,36 @@ export const useGameStore = create(
         }))
         const publishedScores = ensureScoreRows(categories, get().players, [])
 
-        set({ gameName, scoringType, categories, publishedScores })
+        set({
+          boardGameId,
+          gameName,
+          gameFlow: 'overview',
+          boardGameOverview: null,
+          scoringType,
+          categories,
+          publishedScores
+        })
+      },
+
+      setGameFlow(gameFlow) {
+        set({ gameFlow })
+      },
+
+      applyBoardGameOverview(overview) {
+        if (!overview) return
+        const categories = (overview.categories || []).map((category, index) => ({
+          id: getScoreColumnId(category, index),
+          ...normalizeCategory(category),
+        }))
+        const nextScores = ensureScoreRows(categories, get().players, get().publishedScores)
+        set({
+          boardGameId: overview.id || get().boardGameId,
+          gameName: overview.name || get().gameName,
+          boardGameOverview: overview,
+          scoringType: overview.scoringType || get().scoringType,
+          categories,
+          publishedScores: nextScores,
+        })
       },
 
       addPlayer(name, apiUserId = null, avatar) {
@@ -253,6 +294,9 @@ export const useGameStore = create(
         const categories = DEFAULT_CATEGORIES.map((name) => ({ id: crypto.randomUUID(), name }))
         set({
           gameName: '',
+          boardGameId: '',
+          gameFlow: 'overview',
+          boardGameOverview: null,
           scoringType: 'COLUMN_BASED',
           players: [],
           categories,

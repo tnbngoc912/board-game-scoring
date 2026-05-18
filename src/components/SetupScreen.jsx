@@ -51,8 +51,8 @@ function getGameImageTheme(index) {
   return GAME_IMAGE_THEMES[index % GAME_IMAGE_THEMES.length]
 }
 
-export function SetupScreen({ onStart, homeResetToken, toast }) {
-  const [setupStep, setSetupStep] = useState('games')
+export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
+  const [setupStep, setSetupStep] = useState(initialStep)
   const [gameSearchTerm, setGameSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -90,8 +90,8 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   }, [fetchBoardGames, fetchUsers, toast])
 
   useEffect(() => {
-    setSetupStep('games')
-  }, [homeResetToken])
+    setSetupStep(initialStep)
+  }, [homeResetToken, initialStep])
 
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
@@ -148,6 +148,10 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
   function handleChooseGame(game) {
     selectGame(game)
     setSelectedUserIds([])
+    if (onChooseGame) {
+      onChooseGame(game)
+      return
+    }
     setSetupStep('config')
   }
 
@@ -426,7 +430,17 @@ export function SetupScreen({ onStart, homeResetToken, toast }) {
       ) : (
         <>
           <header className="setup-topbar">
-            <button className="setup-back-btn" onClick={() => setSetupStep('games')} aria-label="Quay lai">
+            <button
+              className="setup-back-btn"
+              onClick={() => {
+                if (onBackFromConfig) {
+                  onBackFromConfig()
+                  return
+                }
+                setSetupStep('games')
+              }}
+              aria-label="Quay lai"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15 6 9 12l6 6" />
                 <path d="M10 12h9" />
