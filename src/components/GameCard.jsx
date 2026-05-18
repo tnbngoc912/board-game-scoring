@@ -14,7 +14,7 @@ export function GameCard({
   children,
   ...props
 }) {
-  const MotionComponent = as === 'article' ? motion.article : motion.button
+  const MotionComponent = as === 'article' ? 'article' : 'button'
 
   return (
     <MotionComponent className={`game-card ${className}`.trim()} {...props}>
