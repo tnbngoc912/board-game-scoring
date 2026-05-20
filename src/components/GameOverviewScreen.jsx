@@ -93,37 +93,51 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
       </header>
 
       <div className="screen-inner history-content">
-        <section className="match-summary-strip">
-          <div className="game-card-thumb detail-thumb">
+        <section className="game-card-summary">
+          <div className="detail-thumbnail">
             {overview.thumbnailUrl ? (
-              <Image alt="" src={overview.thumbnailUrl} width={78} height={78} />
+              <img
+                src={overview.thumbnailUrl}
+                alt="Thumbnail"
+              />
             ) : (
               <span>{overview.name?.slice(0, 2).toUpperCase() || 'BG'}</span>
             )}
           </div>
+
           <div>
             <h2>{overview.name}</h2>
-            <p>{overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút</p>
+            <p>
+              {overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút
+            </p>
             <p>{categories || 'Board game'}</p>
           </div>
         </section>
-
-        <section className="winner-picker-card">
-          <div className="winner-picker-row">
+        <section className="game-summary">
+          <div className="summary-card">
             <span>TỔNG VÁN CHƠI</span>
             <strong>{overview.stats?.total_played ?? 0}</strong>
           </div>
-          <div className="winner-picker-row">
+
+          <div className="summary-card">
             <span>CHƠI GẦN ĐÂY</span>
             <strong>{formatLastPlayed(overview.stats?.last_played_at)}</strong>
           </div>
         </section>
 
-        <section className="winner-only-list" aria-label="Bang xep hang">
+        <section className="top-player-card" aria-label="Bang xep hang">
+          <span className="top-player-title">BẢNG XẾP HẠNG</span>
           {leaders.map((item) => (
-            <div key={item.user_id} className="winner-only-player">
-              <span>#{item.rank} {item.name}</span>
-              <div className="winner-only-crown-row">THẮNG {item.wins}</div>
+            <div key={item.user_id} className="top-player">
+              <div className="top-player-info">
+                <Image src={item.rank == 1 ? '/top1.svg' : item.rank == 2 ? '/top2.svg' : '/top3.svg'} alt='Avatar' width={24} height={24} />
+                <Image src={item.avatar_url ? item.avatar_url : '/avatar-default.svg'} alt='Avatar' width={40} height={40} style={{ borderRadius: '50%' }} />
+                <span>{item.name}</span>
+              </div>
+              <div className="totals-winner-matches">
+                <span>THẮNG</span>
+                <span>{item.wins}</span>
+              </div>
             </div>
           ))}
         </section>
