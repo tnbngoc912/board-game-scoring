@@ -105,7 +105,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             )}
           </div>
 
-          <div>
+          <div className="game-card-content">
             <h2>{overview.name}</h2>
             <p>
               {overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút

@@ -28,6 +28,12 @@
     font-weight: 700;
 }
 
+.game-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .game-card-summary h2 {
     font-size: 20px;
     line-height: 1.0;
