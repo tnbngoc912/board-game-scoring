@@ -300,7 +300,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </svg>
             </button>
             <div className="home-logo">BGSCORE</div>
-            <button
+            {/* <button
               className="score-menu-btn"
               onClick={() => setIsDetailMenuOpen((value) => !value)}
               aria-label="Mo tuy chon"
@@ -311,7 +311,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 <circle cx="12" cy="12" r="1.8" />
                 <circle cx="12" cy="19" r="1.8" />
               </svg>
-            </button>
+            </button> */}
           </div>
         </header>
 

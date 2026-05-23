@@ -59,7 +59,11 @@ export function ScoreGrid({
                     />
                   ) : (
                     <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                      {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
+                      {(() => {
+                        const value = row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)
+                        if (row.type !== 'text' && Number(value) === 0) return '-'
+                        return value
+                      })()}
                     </div>
                   )}
                 </div>

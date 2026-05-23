@@ -355,9 +355,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                         fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
                         background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
                         onClick={() => handleChooseGame(game)}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
                       >
                         <p>{formatPlayerRange(game)}</p>
                         {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
