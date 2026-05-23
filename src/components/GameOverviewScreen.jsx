@@ -142,8 +142,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
           ))}
         </section>
 
-        <button className="score-save-btn" onClick={onCreateScore}>
-          Tạo bảng điểm
+        <button className="score-create-btn" onClick={onCreateScore}>
+          <Image src={'/plus-icon-white.svg'} alt='Avatar' width={24} height={24} />
+          <span>Tạo bảng điểm</span>
         </button>
       </div>
     </div>

@@ -24,6 +24,7 @@
 @import './features/history/history-list.css';
 @import './features/history/history-detail.css';
 @import './features/history/history-scoreboard.css';
+@import './features/summary-game/summary-game.css';
 
 /* utils */
 @import './utils/helpers.css';
