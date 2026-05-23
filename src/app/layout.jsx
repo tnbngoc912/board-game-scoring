@@ -26,8 +26,8 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={barlow.variable} suppressHydrationWarning>
+      <ScrollToTopOnRouteChange />
       <body className={barlow.className} suppressHydrationWarning>
-        <ScrollToTopOnRouteChange />
         {children}
       </body>
     </html>
