@@ -1,5 +1,6 @@
 import { Barlow_Semi_Condensed } from 'next/font/google'
 import '../index.css'
+import { ScrollToTopOnRouteChange } from '../components/navigation/ScrollToTopOnRouteChange'
 
 const barlow = Barlow_Semi_Condensed({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -25,7 +26,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={barlow.variable} suppressHydrationWarning>
-      <body className={barlow.className} suppressHydrationWarning>{children}</body>
+      <body className={barlow.className} suppressHydrationWarning>
+        <ScrollToTopOnRouteChange />
+        {children}
+      </body>
     </html>
   )
 }
