@@ -27,6 +27,7 @@
 @import './features/history/history-scoreboard.css';
 @import './features/achievements.css';
 @import './features/account.css';
+@import './features/change-password.css';
 
 /* utils */
 @import './utils/helpers.css';

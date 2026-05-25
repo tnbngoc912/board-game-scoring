@@ -8,15 +8,12 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
-import { ChangePasswordModal } from '../components/auth/ChangePasswordModal'
 
 export function AccountShell() {
   const router = useRouter()
   const { user, logout, changePassword } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
-  
-  // Chỉ cần quản lý state đóng mở modal
-  const [isModalOpen, setIsModalOpen] = useState(false)
+
 
   function handleLogout() {
     logout()
@@ -69,7 +66,7 @@ export function AccountShell() {
               <button 
                 className="btn-account-action" 
                 type="button"
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => router.push('/change-password')}
               >
                 <LockKeyhole size={20} strokeWidth={1.8} />
                 Đổi mật khẩu
@@ -91,13 +88,6 @@ export function AccountShell() {
             </div>
           </div>
         </div>
-
-        <ChangePasswordModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          onSubmit={changePassword} 
-          toast={showToast} 
-        />
 
         <BottomNav />
         <Toast message={message} visible={visible} />
