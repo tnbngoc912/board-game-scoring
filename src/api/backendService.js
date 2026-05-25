@@ -374,6 +374,7 @@ export async function getBoardGameOverview(boardGameId, { leaderboardLimit } = {
     categories: scoreColumns.map(normalizeScoreColumn),
     stats: raw.stats || null,
     leaderboard: raw.leaderboard || [],
+    category: raw.category_ids[0]
   }
 }
 
