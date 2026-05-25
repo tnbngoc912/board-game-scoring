@@ -1,0 +1,42 @@
+import { getEntityId } from './entityMapper'
+
+export function normalizeScoreColumn(column, index = 0) {
+  return {
+    id: column.id || column._id || `score-${index + 1}`,
+    name: column.name,
+    type: column.type === 'text' ? 'text' : 'number',
+    weight: column.weight ?? 1,
+  }
+}
+
+export function normalizeBoardGame(game) {
+  const scoreColumns = game.score_columns || game.scoreColumns || game.categories || []
+
+  return {
+    ...game,
+    id: getEntityId(game),
+    scoringType: game.scoring_type || game.scoringType || 'COLUMN_BASED',
+    categories: scoreColumns.map(normalizeScoreColumn),
+  }
+}
+
+export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
+  const source = raw || {}
+  const scoreColumns = source.score_columns || source.scoreColumns || []
+
+  return {
+    id: getEntityId(source) || fallbackBoardGameId,
+    name: source.name || '',
+    description: source.description || '',
+    minPlayers: source.min_players ?? source.minPlayers ?? 1,
+    maxPlayers: source.max_players ?? source.maxPlayers ?? 12,
+    minPlayTime: source.min_play_time ?? source.minPlayTime ?? null,
+    maxPlayTime: source.max_play_time ?? source.maxPlayTime ?? null,
+    thumbnailUrl: source.thumbnail_url || '',
+    scoringType: source.scoring_type || source.scoringType || 'COLUMN_BASED',
+    categories: scoreColumns.map(normalizeScoreColumn),
+    stats: source.stats || null,
+    leaderboard: source.leaderboard || [],
+    category: source.category_ids[0]
+  }
+}

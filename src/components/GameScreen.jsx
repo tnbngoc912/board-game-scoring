@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
+import { ScoreGrid } from './score/ScoreGrid'
 
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
@@ -34,7 +36,17 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
     publishedScores,
     publishScores,
     clearPlayers,
-  } = useGameStore()
+  } = useGameStore(
+    useShallow((state) => ({
+      gameName: state.gameName,
+      scoringType: state.scoringType,
+      players: state.players,
+      categories: state.categories,
+      publishedScores: state.publishedScores,
+      publishScores: state.publishScores,
+      clearPlayers: state.clearPlayers,
+    }))
+  )
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
   const [matchDescription, setMatchDescription] = useState('')
@@ -64,6 +76,20 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
       players.some((player) => player.id === current) ? current : ''
     ))
   }, [players])
+
+  const winningPlayerIds = useMemo(() => {
+    const totals = players.map((player) => ({
+      id: player.id,
+      total: draftScores.reduce((sum, row) => {
+        if (row.type === 'text') return sum
+        const score = Number(row.scores[player.id] ?? 0)
+        return sum + (Number.isNaN(score) ? 0 : score)
+      }, 0),
+    }))
+    if (totals.length === 0) return new Set()
+    const max = Math.max(...totals.map((item) => item.total))
+    return new Set(totals.filter((item) => item.total === max).map((item) => item.id))
+  }, [players, draftScores])
 
   function updateCell(categoryId, playerId, value, type) {
     const nextValue = type === 'text'
@@ -122,7 +148,6 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
       if (ok) {
         clearPlayers()
         onShowHistory()
-        return
       }
     } finally {
       setIsSaving(false)
@@ -169,56 +194,20 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           </section>
         ) : (
           <section className="score-board">
-            <div className="score-grid-wrap score-board-scroll">
-              <div
-                className="score-grid score-entry-grid"
-                style={{
-                  gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
-                  minWidth: `${104 + players.length * 70}px`,
-                }}
-              >
-                <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-                <div className="grid-spacer"></div>
-                {players.map((player) => (
-                  <div key={player.id} className="score-grid-header player-header">
-                    <span>{player.name}</span>
-                  </div>
-                ))}
-                <div className="grid-spacer"></div>
-
-                {draftScores.map((row) => (
-                  <React.Fragment key={row.id}>
-                    <div className={`score-grid-label score-grid-sticky${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name || row.id}</div>
-                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
-                    {players.map((player) => (
-                      <div key={player.id} className={`score-grid-cell${isTotalScoreOnly ? ' total-score-only' : ''}`}>
-                        <input
-                          className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
-                          type={row.type === 'text' ? 'text' : 'number'}
-                          value={getInputValue(row, player.id)}
-                          onChange={(e) => updateCell(row.id, player.id, e.target.value, row.type)}
-                          onFocus={() => setFocusedCell(`${row.id}:${player.id}`)}
-                          onBlur={() => setFocusedCell(null)}
-                        />
-                      </div>
-                    ))}
-                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
-                  </React.Fragment>
-                ))}
-
-                {!isTotalScoreOnly ? (
-                  <>
-                    <div className="score-grid-total score-grid-sticky">Tổng</div>
-                    <div className="grid-spacer border"></div>
-                    {players.map((player) => (
-                      <div key={player.id} className="score-grid-winner">
-                        <strong>{getDraftTotal(player.id)}</strong>
-                      </div>
-                    ))}
-                  </>
-                ) : null}
-              </div>
-            </div>
+            <ScoreGrid
+              players={players}
+              rows={draftScores}
+              mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
+              stickyHeader
+              showTotal={!isTotalScoreOnly}
+              editable
+              winningPlayerIds={winningPlayerIds}
+              getTotal={getDraftTotal}
+              getInputValue={getInputValue}
+              onCellChange={updateCell}
+              onCellFocus={setFocusedCell}
+              onCellBlur={() => setFocusedCell(null)}
+            />
           </section>
         )}
 

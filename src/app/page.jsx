@@ -1,7 +1,7 @@
 'use client'
 
-import App from '../App'
+import { HomeShell } from '../shells/HomeShell'
 
 export default function HomePage() {
-  return <App />
+  return <HomeShell />
 }

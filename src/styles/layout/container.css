@@ -29,7 +29,7 @@
 .history-detail-screen,
 .score-entry-screen {
   min-height: 852px;
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
   background: var(--color-bg);
   font-family: var(--font-main);
 }
