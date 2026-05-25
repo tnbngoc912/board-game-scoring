@@ -4,7 +4,15 @@
   height: 100%;
   background: var(--color-bg);
   overflow-y: auto;
+  padding: 0;
+  position: relative;
+}
+
+.achievements-content {
+  flex: 1;
   padding: 24px 20px calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
 }
 
 .achievements-header {
@@ -183,4 +191,121 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Achievements Loading State */
+.achievements-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  gap: 16px;
+  color: var(--color-subtext);
+}
+
+.achievements-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3.5px solid var(--color-border-soft);
+  border-top-color: var(--color-brand);
+  border-radius: var(--radius-round);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Achievements Games Stats */
+.achievements-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.game-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease;
+}
+
+.game-stat-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border);
+  box-shadow: 0 4px 12px rgba(147, 101, 63, 0.08);
+}
+
+.game-stat-thumb-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-stat-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-stat-thumb-fallback {
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-stat-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-stat-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.game-stat-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-subtext);
+}
+
+.game-stat-detail span {
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.game-stats-empty {
+  text-align: center;
+  padding: 32px 16px;
+  background: var(--color-card);
+  border: 1px dashed var(--color-border-control);
+  border-radius: var(--radius-lg);
+  color: var(--color-subtext);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.section-title-icon {
+  color: var(--color-brand);
+  flex-shrink: 0;
 }

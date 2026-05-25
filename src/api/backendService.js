@@ -106,6 +106,14 @@ export async function getMyProfile() {
   return normalizeAuthUser(payload || {})
 }
 
+export async function getUserGameStats(userId, params = {}) {
+  const searchParams = new URLSearchParams()
+  if (params.page) searchParams.set('page', String(params.page))
+  if (params.limit) searchParams.set('limit', String(params.limit))
+  const query = searchParams.toString()
+  return request(`/users/${userId}/game-stats${query ? `?${query}` : ''}`)
+}
+
 export async function changePassword({ oldPassword, newPassword }) {
   return request('/auth/change-password', {
     method: 'POST',
