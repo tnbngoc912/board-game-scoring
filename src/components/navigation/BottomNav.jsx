@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useAuthStore } from '../../store/authStore'
+import { usePathname } from 'next/navigation'
+import { Home, Clock, Trophy, UserCircle } from 'lucide-react'
 
 export function BottomNav({ onHomeReselect }) {
   const pathname = usePathname()
-  const router = useRouter()
-  const logout = useAuthStore((state) => state.logout)
 
   const activeKey = useMemo(() => {
     if (pathname.startsWith('/history')) return 'history'
+    if (pathname.startsWith('/achievements')) return 'achievements'
+    if (pathname.startsWith('/account')) return 'account'
     return 'home'
   }, [pathname])
 
@@ -25,7 +25,7 @@ export function BottomNav({ onHomeReselect }) {
         }}
       >
         <span aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z" /></svg>
+          <Home />
         </span>
         Trang chủ
       </Link>
@@ -37,24 +37,34 @@ export function BottomNav({ onHomeReselect }) {
         aria-current={activeKey === 'history' ? 'page' : undefined}
       >
         <span aria-hidden="true">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3.5 3.5" /></svg>
+          <Clock />
         </span>
         Lịch sử
       </Link>
 
-      <button
-        className="bottom-nav-item"
-        type="button"
-        onClick={() => {
-          logout()
-          router.replace('/')
-        }}
+      <Link
+        href="/achievements"
+        prefetch
+        className={`bottom-nav-item${activeKey === 'achievements' ? ' active' : ''}`}
+        aria-current={activeKey === 'achievements' ? 'page' : undefined}
       >
         <span aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+          <Trophy />
         </span>
-        Đăng xuất
-      </button>
+        Thành tựu
+      </Link>
+
+      <Link
+        href="/account"
+        prefetch
+        className={`bottom-nav-item${activeKey === 'account' ? ' active' : ''}`}
+        aria-current={activeKey === 'account' ? 'page' : undefined}
+      >
+        <span aria-hidden="true">
+          <UserCircle />
+        </span>
+        Tài khoản
+      </Link>
     </nav>
   )
 }

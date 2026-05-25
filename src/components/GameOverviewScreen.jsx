@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { getBoardGameOverview } from '../api/backendService'
 import { useGameStore } from '../store/gameStore'
 import { useGameSessionStore } from '../store/gameSessionStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { EmptyState } from './ui/EmptyState'
+import { Header } from './Header'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -75,20 +76,11 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const categories = (overview.categories || []).map((item) => item.name).join(', ')
   const leaders = overview.leaderboard || []
 
   return (
     <div className="game-overview-screen">
-      <header className="overview-header" aria-label="BGScore">
-        <div className="overview-topbar">
-          <button className="overview-back-btn" onClick={onBack} aria-label="Quay lại">
-            <ArrowLeft size={16} strokeWidth={3} />
-          </button>
-          <div className="home-logo">BGSCORE</div>
-          <div className="score-entry-spacer" aria-hidden="true" />
-        </div>
-      </header>
+      <Header onBack={onBack} />
 
       <main className="overview-content">
         <section className="overview-game-banner">

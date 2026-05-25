@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { ScoreGrid } from './score/ScoreGrid'
+import { Header } from './Header'
 
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
@@ -164,17 +165,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   return (
     <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
       {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
-      <header className="history-phone-header score-entry-header" aria-label="BGScore">
-        <div className="history-detail-topbar score-entry-topbar">
-          <div className="score-entry-spacer" aria-hidden="true" />
-          <div className="home-logo">BGSCORE</div>
-          <button className="score-close-btn" onClick={handleClose} aria-label="Dong" disabled={isSaving}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      <Header onClose={handleClose} isCloseDisabled={isSaving} />
 
       <div className="score-content">
         {isWinnerOnly ? (
