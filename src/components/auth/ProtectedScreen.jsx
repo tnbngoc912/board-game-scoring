@@ -21,7 +21,7 @@ export function ProtectedScreen({ children }) {
 
   useEffect(() => {
     if (isAuthLoading) return
-    if (!token || !user) router.replace('/')
+    if (!token || !user) router.replace('/login')
   }, [isAuthLoading, token, user, router])
 
   if (isAuthLoading) return <LoadingState label="Đang tải..." />

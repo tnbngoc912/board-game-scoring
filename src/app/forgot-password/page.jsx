@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
     <div className="app-shell screen-setup">
       <ForgotPasswordScreen
         onSubmit={handleSubmit}
-        onBack={() => router.push('/')}
+        onBack={() => router.push('/login')}
         isSubmitting={isSubmitting}
       />
       <Toast message={message} visible={visible} />
