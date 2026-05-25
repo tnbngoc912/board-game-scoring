@@ -21,6 +21,7 @@
 @import './features/home/home-list.css';
 @import './features/setup/setup-flow.css';
 @import './features/score-entry/score-entry.css';
+@import './features/score-entry/game-overview.css';
 @import './features/history/history-list.css';
 @import './features/history/history-detail.css';
 @import './features/history/history-scoreboard.css';

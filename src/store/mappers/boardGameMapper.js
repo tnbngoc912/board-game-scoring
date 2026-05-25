@@ -37,5 +37,6 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
     categories: scoreColumns.map(normalizeScoreColumn),
     stats: source.stats || null,
     leaderboard: source.leaderboard || [],
+    category: source.category_ids[0]
   }
 }
