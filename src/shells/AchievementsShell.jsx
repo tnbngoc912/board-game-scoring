@@ -37,10 +37,12 @@ export function AchievementsShell() {
 
   // Trích xuất các chỉ số từ profile
   const totalGamesPlayed = user?.stats?.total_games_played || 0
+  const totalWins = user?.stats?.total_wins || 0
   const winRate = user?.stats?.win_rate || 0
 
   const statsSummary = [
     { label: 'Tổng ván chơi', value: totalGamesPlayed },
+    { label: 'Tổng ván thắng', value: totalWins },
     { label: 'Tỉ lệ thắng', value: `${winRate}%` },
   ]
 
@@ -109,7 +111,7 @@ export function AchievementsShell() {
                             </div>
                             {game.best_score !== undefined && game.scoring_type !== 'WINNER_ONLY' && (
                               <div className="game-stat-detail">
-                                Kỷ lục: <span>{game.best_score}đ</span>
+                                Kỷ lục: <span>{game.best_score}</span>
                               </div>
                             )}
                           </div>
