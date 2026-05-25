@@ -5,35 +5,82 @@ import { Gamepad2 } from 'lucide-react'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
-import { getUserGameStats } from '../api/backendService'
+import { useAppDataStore } from '../store/appDataStore'
 import { Header } from '../components/Header'
 import Image from 'next/image'
 
+// Skeleton cho stats tổng quan (3 ô)
+function StatsSkeleton() {
+  return (
+    <div className="skeleton-stats">
+      {[0, 1, 2].map((i) => (
+        <div className="skeleton-stat-box" key={i}>
+          <div className="skeleton skeleton-stat-val" />
+          <div className="skeleton skeleton-stat-label" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Skeleton cho mỗi card game stats
+function GameCardSkeleton() {
+  return (
+    <div className="skeleton-game-card">
+      <div className="skeleton skeleton-game-thumb" />
+      <div className="skeleton-game-info">
+        <div className="skeleton skeleton-game-name" />
+        <div className="skeleton-game-details">
+          <div className="skeleton skeleton-game-detail" />
+          <div className="skeleton skeleton-game-detail" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Skeleton cho toàn bộ nội dung
+function AchievementsSkeleton() {
+  return (
+    <>
+      <StatsSkeleton />
+      <div className="skeleton-section-title">
+        <div className="skeleton skeleton-title-icon" />
+        <div className="skeleton skeleton-title-text" />
+      </div>
+      <div className="skeleton-games-list">
+        {[0, 1, 2].map((i) => (
+          <GameCardSkeleton key={i} />
+        ))}
+      </div>
+    </>
+  )
+}
+
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
-  const [gameStats, setGameStats] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { userGameStats, fetchUserGameStats, isLoadingUserGameStats } = useAppDataStore()
+  const [isInitLoading, setIsInitLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
       try {
-        setIsLoading(true)
-        // Refresh thông tin user để có stats mới nhất
+        // Chỉ hiện skeleton ở lần đầu tiên vào trang
+        setIsInitLoading(true)
         const freshUser = await refreshProfile()
         const userId = freshUser?.id || freshUser?._id || user?.id || user?._id
         if (userId) {
-          const statsRes = await getUserGameStats(userId)
-          setGameStats(statsRes?.results || statsRes || [])
+          await fetchUserGameStats(userId)
         }
       } catch (error) {
         console.error('Lỗi khi tải thông tin thành tựu:', error)
       } finally {
-        setIsLoading(false)
+        setIsInitLoading(false)
       }
     }
 
     loadData()
-  }, [refreshProfile, user?.id, user?._id])
+  }, [refreshProfile, fetchUserGameStats, user?.id, user?._id])
 
   // Trích xuất các chỉ số từ profile
   const totalGamesPlayed = user?.stats?.total_games_played || 0
@@ -45,6 +92,8 @@ export function AchievementsShell() {
     { label: 'Tổng ván thắng', value: totalWins },
     { label: 'Tỉ lệ thắng', value: `${winRate}%` },
   ]
+
+  const isLoading = isInitLoading || isLoadingUserGameStats
 
   return (
     <ProtectedScreen>
@@ -59,10 +108,7 @@ export function AchievementsShell() {
             </div>
 
             {isLoading ? (
-              <div className="achievements-loading">
-                <div className="achievements-spinner"></div>
-                <span>Đang tải thành tựu...</span>
-              </div>
+              <AchievementsSkeleton />
             ) : (
               <>
                 {/* Thống kê chung */}
@@ -82,8 +128,8 @@ export function AchievementsShell() {
                 </div>
 
                 <div className="achievements-games-list">
-                  {gameStats.length > 0 ? (
-                    gameStats.map((game, index) => (
+                  {userGameStats.length > 0 ? (
+                    userGameStats.map((game, index) => (
                       <div className="game-stat-card" key={index}>
                         <div className="game-stat-thumb-wrapper">
                           {game.thumbnail_url ? (
@@ -111,7 +157,7 @@ export function AchievementsShell() {
                             </div>
                             {game.best_score !== undefined && game.scoring_type !== 'WINNER_ONLY' && (
                               <div className="game-stat-detail">
-                                Kỷ lục: <span>{game.best_score}</span>
+                                Kỷ lục: <span>{game.best_score}đ</span>
                               </div>
                             )}
                           </div>

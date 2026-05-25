@@ -282,6 +282,7 @@ export const useGameStore = create(
           useAppDataStore.getState().invalidateHistory()
           useAppDataStore.getState().invalidateBoardGames()
           useAppDataStore.getState().invalidateUsers()
+          useAppDataStore.getState().invalidateUserGameStats()
           set({ syncStatus: 'synced' })
           return true
         } catch {
