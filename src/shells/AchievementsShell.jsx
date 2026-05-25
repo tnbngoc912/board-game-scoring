@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Gamepad2 } from 'lucide-react'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
@@ -60,13 +60,10 @@ function AchievementsSkeleton() {
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const { userGameStats, fetchUserGameStats, isLoadingUserGameStats } = useAppDataStore()
-  const [isInitLoading, setIsInitLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
       try {
-        // Chỉ hiện skeleton ở lần đầu tiên vào trang
-        setIsInitLoading(true)
         const freshUser = await refreshProfile()
         const userId = freshUser?.id || freshUser?._id || user?.id || user?._id
         if (userId) {
@@ -74,8 +71,6 @@ export function AchievementsShell() {
         }
       } catch (error) {
         console.error('Lỗi khi tải thông tin thành tựu:', error)
-      } finally {
-        setIsInitLoading(false)
       }
     }
 
@@ -93,8 +88,6 @@ export function AchievementsShell() {
     { label: 'Tỉ lệ thắng', value: `${winRate}%` },
   ]
 
-  const isLoading = isInitLoading || isLoadingUserGameStats
-
   return (
     <ProtectedScreen>
       <div className="app-shell screen-achievements">
@@ -107,7 +100,7 @@ export function AchievementsShell() {
               <div className="achievements-subtitle">Thống kê thành tích chơi của bạn</div>
             </div>
 
-            {isLoading ? (
+            {isLoadingUserGameStats ? (
               <AchievementsSkeleton />
             ) : (
               <>
@@ -157,7 +150,7 @@ export function AchievementsShell() {
                             </div>
                             {game.best_score !== undefined && game.scoring_type !== 'WINNER_ONLY' && (
                               <div className="game-stat-detail">
-                                Kỷ lục: <span>{game.best_score}đ</span>
+                                Kỷ lục: <span>{game.best_score}</span>
                               </div>
                             )}
                           </div>
