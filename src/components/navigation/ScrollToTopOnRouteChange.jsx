@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
 export function ScrollToTopOnRouteChange() {
   const pathname = usePathname();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.scroll(0, 0);
   }, [pathname]);
 
