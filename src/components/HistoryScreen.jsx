@@ -8,6 +8,7 @@ import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
+import { Header } from './Header'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -288,32 +289,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
-        <header className="history-phone-header history-detail-header" aria-label="BGScore">
-          <div className="history-detail-topbar">
-            <button className="score-back-btn" onClick={() => {
-              setIsDetailMenuOpen(false)
-              router.push('/history')
-            }} aria-label="Quay lai">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 6 9 12l6 6" />
-                <path d="M10 12h9" />
-              </svg>
-            </button>
-            <div className="home-logo">BGSCORE</div>
-            {/* <button
-              className="score-menu-btn"
-              onClick={() => setIsDetailMenuOpen((value) => !value)}
-              aria-label="Mo tuy chon"
-              aria-expanded={isDetailMenuOpen}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="5" r="1.8" />
-                <circle cx="12" cy="12" r="1.8" />
-                <circle cx="12" cy="19" r="1.8" />
-              </svg>
-            </button> */}
-          </div>
-        </header>
+        <Header
+          onBack={() => {
+            setIsDetailMenuOpen(false)
+            router.push('/history')
+          }}
+        />
 
         <DetailActionMenu
           isOpen={isDetailMenuOpen}
@@ -399,11 +380,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   return (
     <div className="screen history-screen">
-      <header className="history-phone-header" aria-label="BGScore">
-        <div className="history-brandbar">
-          <div className="home-logo">BGSCORE</div>
-        </div>
-      </header>
+      <Header />
 
       <div className="screen-inner history-content">
         <section className="home-search-panel" aria-label="Tim va loc lich su">

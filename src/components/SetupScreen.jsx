@@ -6,6 +6,7 @@ import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
+import { Header } from './Header'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -242,9 +243,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
       {setupStep === 'games' ? (
         <>
-          <header className="home-header">
-            <div className="home-logo">BGSCORE</div>
-          </header>
+          <Header />
 
           <div className="screen-inner home-content">
             <section className="home-search-panel" aria-label="Tim va loc game">
