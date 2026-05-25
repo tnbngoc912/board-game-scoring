@@ -8,7 +8,6 @@ export function ScrollToTopOnRouteChange() {
 
   useEffect(() => {
     window.scroll(0, 0);
-    console.log('pathname', pathname)
   }, [pathname]);
 
   return <></>;
