@@ -1,13 +1,15 @@
 import { create } from 'zustand'
-import { getBoardGames, getMatches, getUsers } from '../api/backendService'
+import { getBoardGames, getMatches, getUsers, getUserGameStats } from '../api/backendService'
 
 const BOARD_GAMES_TTL = 5 * 60 * 1000
 const USERS_TTL = 5 * 60 * 1000
 const HISTORY_TTL = 30 * 1000
+const USER_GAME_STATS_TTL = 5 * 60 * 1000
 
 let boardGamesRequest = null
 let usersRequest = null
 let historyRequest = null
+let userGameStatsRequest = null
 
 function isFresh(fetchedAt, ttl) {
   return fetchedAt > 0 && Date.now() - fetchedAt < ttl
@@ -23,6 +25,9 @@ export const useAppDataStore = create((set, get) => ({
   history: [],
   historyFetchedAt: 0,
   isLoadingHistory: false,
+  userGameStats: [],
+  userGameStatsFetchedAt: 0,
+  isLoadingUserGameStats: false,
 
   async fetchBoardGames({ force = false } = {}) {
     const { boardGames, boardGamesFetchedAt } = get()
@@ -112,6 +117,38 @@ export const useAppDataStore = create((set, get) => ({
 
   invalidateHistory() {
     set({ historyFetchedAt: 0 })
+  },
+
+  async fetchUserGameStats(userId, { force = false } = {}) {
+    if (!userId) return []
+    const { userGameStats, userGameStatsFetchedAt } = get()
+    if (!force && isFresh(userGameStatsFetchedAt, USER_GAME_STATS_TTL)) return userGameStats
+    if (userGameStatsRequest) return userGameStatsRequest
+
+    set({ isLoadingUserGameStats: true })
+    userGameStatsRequest = getUserGameStats(userId)
+      .then((res) => {
+        const items = res?.results || res || []
+        set({
+          userGameStats: items,
+          userGameStatsFetchedAt: Date.now(),
+          isLoadingUserGameStats: false,
+        })
+        return items
+      })
+      .catch((error) => {
+        set({ isLoadingUserGameStats: false })
+        throw error
+      })
+      .finally(() => {
+        userGameStatsRequest = null
+      })
+
+    return userGameStatsRequest
+  },
+
+  invalidateUserGameStats() {
+    set({ userGameStatsFetchedAt: 0 })
   },
 
   removeHistoryMatch(matchId) {
