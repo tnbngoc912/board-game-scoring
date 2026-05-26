@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Gamepad2 } from 'lucide-react'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
@@ -9,57 +9,23 @@ import { useAppDataStore } from '../store/appDataStore'
 import { Header } from '../components/Header'
 import Image from 'next/image'
 
-// Skeleton cho stats tổng quan (3 ô)
-function StatsSkeleton() {
-  return (
-    <div className="skeleton-stats">
-      {[0, 1, 2].map((i) => (
-        <div className="skeleton-stat-box" key={i}>
-          <div className="skeleton skeleton-stat-val" />
-          <div className="skeleton skeleton-stat-label" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Skeleton cho mỗi card game stats
+// Skeleton cho mỗi card game stats (đồng bộ visual với History nhưng giữ kích thước nhỏ gọn của Achievements)
 function GameCardSkeleton() {
   return (
-    <div className="skeleton-game-card">
-      <div className="skeleton skeleton-game-thumb" />
-      <div className="skeleton-game-info">
-        <div className="skeleton skeleton-game-name" />
-        <div className="skeleton-game-details">
-          <div className="skeleton skeleton-game-detail" />
-          <div className="skeleton skeleton-game-detail" />
-        </div>
+    <div className="game-stat-card game-card-skeleton" aria-hidden="true">
+      <div className="game-card-thumb" style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-sm)' }} />
+      <div className="game-stat-info">
+        <span className="game-card-skeleton-line title" />
+        <span className="game-card-skeleton-line" />
       </div>
     </div>
-  )
-}
-
-// Skeleton cho toàn bộ nội dung
-function AchievementsSkeleton() {
-  return (
-    <>
-      <StatsSkeleton />
-      <div className="skeleton-section-title">
-        <div className="skeleton skeleton-title-icon" />
-        <div className="skeleton skeleton-title-text" />
-      </div>
-      <div className="skeleton-games-list">
-        {[0, 1, 2].map((i) => (
-          <GameCardSkeleton key={i} />
-        ))}
-      </div>
-    </>
   )
 }
 
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
-  const { userGameStats, fetchUserGameStats, isLoadingUserGameStats } = useAppDataStore()
+  const { userGameStats, fetchUserGameStats, userGameStatsFetchedAt } = useAppDataStore()
+  const [isInitializing, setIsInitializing] = useState(userGameStatsFetchedAt === 0)
 
   useEffect(() => {
     async function loadData() {
@@ -71,6 +37,8 @@ export function AchievementsShell() {
         }
       } catch (error) {
         console.error('Lỗi khi tải thông tin thành tựu:', error)
+      } finally {
+        setIsInitializing(false)
       }
     }
 
@@ -100,71 +68,71 @@ export function AchievementsShell() {
               <div className="achievements-subtitle">Thống kê thành tích chơi của bạn</div>
             </div>
 
-            {isLoadingUserGameStats ? (
-              <AchievementsSkeleton />
-            ) : (
-              <>
-                {/* Thống kê chung */}
-                <div className="achievements-stats">
-                  {statsSummary.map((stat, i) => (
-                    <div className="stat-box" key={i}>
-                      <div className="stat-val">{stat.value}</div>
-                      <div className="stat-label">{stat.label}</div>
-                    </div>
+            {/* Thống kê chung */}
+            <div className="achievements-stats">
+              {statsSummary.map((stat, i) => (
+                <div className="stat-box" key={i}>
+                  <div className="stat-val">{stat.value}</div>
+                  <div className="stat-label">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Thống kê theo Board Game */}
+            <div className="achievements-section-title">
+              <Gamepad2 size={20} className="section-title-icon" />
+              <span>Thống kê theo Board Game</span>
+            </div>
+
+            <div className="achievements-games-list">
+              {isInitializing ? (
+                <>
+                  {Array.from({ length: 6 }).map((i) => (
+                    <GameCardSkeleton key={i} />
                   ))}
-                </div>
-
-                {/* Thống kê theo Board Game */}
-                <div className="achievements-section-title">
-                  <Gamepad2 size={20} className="section-title-icon" />
-                  <span>Thống kê theo Board Game</span>
-                </div>
-
-                <div className="achievements-games-list">
-                  {userGameStats.length > 0 ? (
-                    userGameStats.map((game, index) => (
-                      <div className="game-stat-card" key={index}>
-                        <div className="game-stat-thumb-wrapper">
-                          {game.thumbnail_url ? (
-                            <Image
-                              src={game.thumbnail_url}
-                              alt={game.board_game_name}
-                              className="game-stat-thumb"
-                              width={44}
-                              height={44}
-                            />
-                          ) : (
-                            <div className="game-stat-thumb-fallback">
-                              <Gamepad2 size={20} />
-                            </div>
-                          )}
+                </>
+              ) : userGameStats.length > 0 ? (
+                userGameStats.map((game, index) => (
+                  <div className="game-stat-card" key={index}>
+                    <div className="game-stat-thumb-wrapper">
+                      {game.thumbnail_url ? (
+                        <Image
+                          src={game.thumbnail_url}
+                          alt={game.board_game_name}
+                          className="game-stat-thumb"
+                          width={44}
+                          height={44}
+                        />
+                      ) : (
+                        <div className="game-stat-thumb-fallback">
+                          <Gamepad2 size={20} />
                         </div>
-                        <div className="game-stat-info">
-                          <div className="game-stat-name">{game.board_game_name}</div>
-                          <div className="game-stat-details">
-                            <div className="game-stat-detail">
-                              Số ván: <span>{game.played_count}</span>
-                            </div>
-                            <div className="game-stat-detail">
-                              Tỉ lệ thắng: <span>{game.win_rate}%</span>
-                            </div>
-                            {game.best_score !== undefined && game.scoring_type !== 'WINNER_ONLY' && (
-                              <div className="game-stat-detail">
-                                Kỷ lục: <span>{game.best_score}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="game-stats-empty">
-                      Bạn chưa lưu ván đấu nào. Hãy bắt đầu chơi và ghi điểm để tích lũy thành tích nhé!
+                      )}
                     </div>
-                  )}
+                    <div className="game-stat-info">
+                      <div className="game-stat-name">{game.board_game_name}</div>
+                      <div className="game-stat-details">
+                        <div className="game-stat-detail">
+                          Số ván: <span>{game.played_count}</span>
+                        </div>
+                        <div className="game-stat-detail">
+                          Tỉ lệ thắng: <span>{game.win_rate}%</span>
+                        </div>
+                        {game.best_score !== undefined && game.scoring_type !== 'WINNER_ONLY' && (
+                          <div className="game-stat-detail">
+                            Kỷ lục: <span>{game.best_score}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="game-stats-empty">
+                  Bạn chưa lưu ván đấu nào. Hãy bắt đầu chơi và ghi điểm để tích lũy thành tích nhé!
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
         <BottomNav />
