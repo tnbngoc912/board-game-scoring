@@ -8,7 +8,10 @@
 
 .app-shell.screen-setup,
 .app-shell.screen-history,
-.app-shell.screen-game {
+.app-shell.screen-game,
+.app-shell.screen-achievements,
+.app-shell.screen-account,
+.app-shell.change-password-screen {
   max-width: 600px;
   min-height: 100%;
   background: var(--color-bg);
