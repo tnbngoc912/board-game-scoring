@@ -149,14 +149,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     return match?.[1] || ''
   }, [pathname])
 
+  const forceScrollTop = useCallback(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
+  }, [])
+
   useEffect(() => {
     if (!selectedMatch) return
 
     requestAnimationFrame(() => {
-      detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
-      window.scrollTo({ top: 0, left: 0 })
+      forceScrollTop()
+      setTimeout(forceScrollTop, 0)
     })
-  }, [selectedMatch])
+  }, [selectedMatch, forceScrollTop])
 
   useEffect(() => {
     async function loadHistory() {
@@ -204,6 +211,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   const openMatchDetail = useCallback(async (entry, options = {}) => {
     const { syncRoute = true } = options
+    forceScrollTop()
     if (syncRoute) router.push(`/history/${entry.id}`)
     setIsDetailMenuOpen(false)
     setIsLoadingMatchDetail(true)
@@ -215,12 +223,16 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         ? matchWithRows
         : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
       setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
+      requestAnimationFrame(() => {
+        forceScrollTop()
+        setTimeout(forceScrollTop, 0)
+      })
     } catch {
       toast('Khong tai duoc chi tiet bang diem')
     } finally {
       setIsLoadingMatchDetail(false)
     }
-  }, [fetchBoardGames, router, toast])
+  }, [fetchBoardGames, forceScrollTop, router, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
@@ -287,135 +299,183 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
 
     return (
-      <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
-        {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
-        <Header
-          onBack={() => {
-            setIsDetailMenuOpen(false)
-            router.push('/history')
-          }}
-        />
-
-        <DetailActionMenu
-          isOpen={isDetailMenuOpen}
-          onClose={() => setIsDetailMenuOpen(false)}
-          onEdit={() => {
-            setIsDetailMenuOpen(false)
-            toast('Tinh nang chinh sua se duoc bo sung')
-          }}
-          onDelete={() => {
-            setIsDetailMenuOpen(false)
-            setMatchToDelete(selectedMatch)
-          }}
-        />
-
-        <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
-          <section className="match-summary-strip">
-            <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
-              {selectedMatch.thumbnailUrl ? (
-                <Image loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
-              ) : (
-                <span>{selectedMatch.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
-              )}
-            </div>
-            <div>
-              <h2>{selectedMatch.gameName}</h2>
-              <p>{selectedMatch.playedAt}</p>
-            </div>
-          </section>
-
-          {isWinnerOnly ? (
-            <section className="winner-only-list history-winner-only-card" aria-label="Nguoi choi va nguoi thang">
-              {players.map((player) => {
-                const isWinner = winner?.id === player.id
-
-                return (
-                  <div key={player.id} className={`winner-only-player${isWinner ? ' winner' : ''}`}>
-                    <span>{player.name}</span>
-                    <div className="winner-only-crown-row" aria-label={isWinner ? 'Nguoi thang' : undefined}>
-                      {isWinner ? <Image src="/crown.svg" alt="" width={32} height={28} /> : null}
-                    </div>
-                  </div>
-                )
-              })}
-            </section>
-          ) : (
-            <section className="score-board history-score-board">
-              <ScoreGrid
-                players={players}
-                rows={displayedScoreRows}
-                mode={isTotalScoreOnly ? "TOTAL_SCORE_ONLY" : "COLUMN_BASED"}
-                stickyHeader
-                showTotal={!isTotalScoreOnly}
-                winningPlayerIds={winningPlayerIds}
-                editable={false}
-              />
-            </section>
-          )}
-
-          {selectedMatch.description ? (
-            <div className="history-detail-note">{selectedMatch.description}</div>
-          ) : null}
-        </div>
-
-        {isDetailMenuOpen ? (
-          <button
-            className="detail-menu-dismiss"
-            type="button"
-            onClick={() => setIsDetailMenuOpen(false)}
-            aria-label="Dong tuy chon"
-          />
-        ) : null}
-
-        <DeleteConfirmDialog
-          entry={matchToDelete}
-          isDeleting={isDeleting}
-          onCancel={() => setMatchToDelete(null)}
-          onConfirm={confirmDelete}
-        />
-      </div>
+      <HistoryDetailView
+        detailScreenRef={detailScreenRef}
+        isLoadingMatchDetail={isLoadingMatchDetail}
+        isDetailMenuOpen={isDetailMenuOpen}
+        selectedMatch={selectedMatch}
+        isWinnerOnly={isWinnerOnly}
+        players={players}
+        winner={winner}
+        displayedScoreRows={displayedScoreRows}
+        isTotalScoreOnly={isTotalScoreOnly}
+        winningPlayerIds={winningPlayerIds}
+        matchToDelete={matchToDelete}
+        isDeleting={isDeleting}
+        onBack={() => {
+          setIsDetailMenuOpen(false)
+          router.push('/history')
+        }}
+        onCloseMenu={() => setIsDetailMenuOpen(false)}
+        onEdit={() => {
+          setIsDetailMenuOpen(false)
+          toast('Tinh nang chinh sua se duoc bo sung')
+        }}
+        onDelete={() => {
+          setIsDetailMenuOpen(false)
+          setMatchToDelete(selectedMatch)
+        }}
+        onDismiss={() => setIsDetailMenuOpen(false)}
+        onCancelDelete={() => setMatchToDelete(null)}
+        onConfirmDelete={confirmDelete}
+      />
     )
   }
 
 
   return (
+    <HistoryListView
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      isFilterOpen={isFilterOpen}
+      setIsFilterOpen={setIsFilterOpen}
+      selectedGameName={selectedGameName}
+      setSelectedGameName={setSelectedGameName}
+      gameOptions={gameOptions}
+      hasFilters={hasFilters}
+      clearFilters={clearFilters}
+      isLoadingHistory={isLoadingHistory}
+      historyWithThumbnails={historyWithThumbnails}
+      filteredHistory={filteredHistory}
+      handleNewGame={handleNewGame}
+      openMatchDetail={openMatchDetail}
+      matchToDelete={matchToDelete}
+      isDeleting={isDeleting}
+      onCancelDelete={() => setMatchToDelete(null)}
+      onConfirmDelete={confirmDelete}
+    />
+  )
+}
+
+function HistoryDetailView({
+  detailScreenRef,
+  isLoadingMatchDetail,
+  isDetailMenuOpen,
+  selectedMatch,
+  isWinnerOnly,
+  players,
+  winner,
+  displayedScoreRows,
+  isTotalScoreOnly,
+  winningPlayerIds,
+  matchToDelete,
+  isDeleting,
+  onBack,
+  onCloseMenu,
+  onEdit,
+  onDelete,
+  onDismiss,
+  onCancelDelete,
+  onConfirmDelete,
+}) {
+  return (
+    <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
+      {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
+      <Header onBack={onBack} />
+
+      <DetailActionMenu isOpen={isDetailMenuOpen} onClose={onCloseMenu} onEdit={onEdit} onDelete={onDelete} />
+
+      <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
+        <section className="match-summary-strip">
+          <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
+            {selectedMatch.thumbnailUrl ? (
+              <Image loading="lazy" alt="" width={78} height={78} src={selectedMatch.thumbnailUrl} />
+            ) : (
+              <span>{selectedMatch.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+            )}
+          </div>
+          <div>
+            <h2>{selectedMatch.gameName}</h2>
+            <p>{selectedMatch.playedAt}</p>
+          </div>
+        </section>
+
+        {isWinnerOnly ? (
+          <section className="winner-only-list history-winner-only-card" aria-label="Nguoi choi va nguoi thang">
+            {players.map((player) => {
+              const isWinner = winner?.id === player.id
+              return (
+                <div key={player.id} className={`winner-only-player${isWinner ? ' winner' : ''}`}>
+                  <span>{player.name}</span>
+                  <div className="winner-only-crown-row" aria-label={isWinner ? 'Nguoi thang' : undefined}>
+                    {isWinner ? <Image src="/crown.svg" alt="" width={32} height={28} /> : null}
+                  </div>
+                </div>
+              )
+            })}
+          </section>
+        ) : (
+          <section className="score-board history-score-board">
+            <ScoreGrid
+              players={players}
+              rows={displayedScoreRows}
+              mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
+              stickyHeader
+              showTotal={!isTotalScoreOnly}
+              winningPlayerIds={winningPlayerIds}
+              editable={false}
+            />
+          </section>
+        )}
+
+        {selectedMatch.description ? <div className="history-detail-note">{selectedMatch.description}</div> : null}
+      </div>
+
+      {isDetailMenuOpen ? (
+        <button className="detail-menu-dismiss" type="button" onClick={onDismiss} aria-label="Dong tuy chon" />
+      ) : null}
+
+      <DeleteConfirmDialog entry={matchToDelete} isDeleting={isDeleting} onCancel={onCancelDelete} onConfirm={onConfirmDelete} />
+    </div>
+  )
+}
+
+function HistoryListView({
+  searchTerm,
+  setSearchTerm,
+  isFilterOpen,
+  setIsFilterOpen,
+  selectedGameName,
+  setSelectedGameName,
+  gameOptions,
+  hasFilters,
+  clearFilters,
+  isLoadingHistory,
+  historyWithThumbnails,
+  filteredHistory,
+  handleNewGame,
+  openMatchDetail,
+  matchToDelete,
+  isDeleting,
+  onCancelDelete,
+  onConfirmDelete,
+}) {
+  return (
     <div className="screen history-screen">
       <Header />
-
       <div className="screen-inner history-content">
         <section className="home-search-panel" aria-label="Tim va loc lich su">
           <div className="search-bar">
             <span className="search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M16.5 16.5L21 21" />
-              </svg>
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
             </span>
-            <input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Tìm ván chơi"
-              aria-label="Tim trong mo ta van choi"
-            />
+            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm ván chơi" aria-label="Tim trong mo ta van choi" />
             {searchTerm ? (
-              <button
-                className="search-clear-button search-clear-button--with-filter"
-                type="button"
-                onClick={() => setSearchTerm('')}
-                aria-label="Xoa tu khoa tim van choi"
-              >✕
-              </button>
+              <button className="search-clear-button search-clear-button--with-filter" type="button" onClick={() => setSearchTerm('')} aria-label="Xoa tu khoa tim van choi">✕</button>
             ) : null}
             <span className="search-divider" aria-hidden="true" />
-            <button
-              className={`filter-button${isFilterOpen || selectedGameName ? ' active' : ''}`}
-              type="button"
-              onClick={() => setIsFilterOpen((value) => !value)}
-              aria-label="Bo loc game"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5h16l-6.4 7.4v5.2L10.4 19v-6.6L4 5z" />
-              </svg>
+            <button className={`filter-button${isFilterOpen || selectedGameName ? ' active' : ''}`} type="button" onClick={() => setIsFilterOpen((value) => !value)} aria-label="Bo loc game">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.4 7.4v5.2L10.4 19v-6.6L4 5z" /></svg>
             </button>
           </div>
 
@@ -425,9 +485,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 <span>Ten game</span>
                 <select value={selectedGameName} onChange={(event) => setSelectedGameName(event.target.value)}>
                   <option value="">Tat ca tua game</option>
-                  {gameOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
+                  {gameOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
               </label>
               {hasFilters ? <button className="secondary-mini history-clear-btn" onClick={clearFilters}>Bo loc</button> : null}
@@ -493,7 +551,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               >
                 <p>{entry.playedAt}</p>
                 <div className="history-winner-line">
-                  <Image src="/crown.svg" width={16} height={14} alt='' />
+                  <Image src="/crown.svg" width={16} height={14} alt="" />
                   <span>{winnerNames || 'Chua co nguoi thang'}</span>
                 </div>
               </GameCard>
@@ -502,12 +560,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         </div>
       </div>
 
-      <DeleteConfirmDialog
-        entry={matchToDelete}
-        isDeleting={isDeleting}
-        onCancel={() => setMatchToDelete(null)}
-        onConfirm={confirmDelete}
-      />
+      <DeleteConfirmDialog entry={matchToDelete} isDeleting={isDeleting} onCancel={onCancelDelete} onConfirm={onConfirmDelete} />
     </div>
   )
 }
