@@ -4,6 +4,13 @@ body,
   /* height: 100%; */
 }
 
+html {
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  word-break: normal;
+}
+
 body {
   color: var(--color-text);
   background: var(--color-bg);
