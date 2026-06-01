@@ -457,10 +457,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               }}
               aria-label="Quay lai"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 6 9 12l6 6" />
-                <path d="M10 12h9" />
-              </svg>
+              <Image src="/back-icon.svg" alt="Back" width={32} height={32} />
             </button>
             <h1>{selectedGame?.name || gameName || 'Chưa chọn trò chơi'}</h1>
           </header>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { ArrowLeft, X } from 'lucide-react'
+import Image from "next/image"
 
 export function Header({ onBack, onClose, isCloseDisabled = false, title = 'BGSCORE' }) {
   return (
@@ -7,7 +8,7 @@ export function Header({ onBack, onClose, isCloseDisabled = false, title = 'BGSC
       <div className="overview-topbar">
         {onBack ? (
           <button className="overview-back-btn" onClick={onBack} aria-label="Quay lại">
-            <ArrowLeft size={16} strokeWidth={3} />
+            <Image src="/back-icon.svg" alt="Back" width={32} height={32} />
           </button>
         ) : (
           <div className="score-entry-spacer" aria-hidden="true" />
@@ -16,13 +17,13 @@ export function Header({ onBack, onClose, isCloseDisabled = false, title = 'BGSC
         <div className="home-logo">{title}</div>
 
         {onClose ? (
-          <button 
-            className="score-close-btn" 
-            onClick={onClose} 
+          <button
+            className="score-close-btn"
+            onClick={onClose}
             aria-label="Đóng"
             disabled={isCloseDisabled}
           >
-            <X size={16} strokeWidth={3} />
+            <Image src="/close-icon.svg" alt='' width={32} height={32} />
           </button>
         ) : (
           <div className="score-entry-spacer" aria-hidden="true" />
