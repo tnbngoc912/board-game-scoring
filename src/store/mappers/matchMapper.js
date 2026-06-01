@@ -139,7 +139,6 @@ export function normalizeMatchDetail(payload) {
         scores: player.scores || {},
       }
     })
-    .sort((a, b) => a.rank - b.rank)
   const winner = normalizedPlayers.find((player) => player.isWinner)
   const scoreRowsFromColumns = scoreColumns.map((column, index) => ({
     ...normalizeScoreColumn(column, index),
