@@ -129,7 +129,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
     if (isSaving) return
 
     if (isWinnerOnly && !winnerPlayerId) {
-      toast('Vui long chon nguoi thang')
+      toast('Vui lòng chọn người thắng')
       return
     }
 
@@ -145,7 +145,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
     setIsSaving(true)
     try {
       const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
-      toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
+      toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
       if (ok) {
         clearPlayers()
         onShowHistory()

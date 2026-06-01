@@ -36,7 +36,7 @@
 
 .history-score-board .score-grid-header {
   color: var(--color-text-strong);
-  font-size: 16px;
+  font-size: 14px;
   padding: 0 var(--space-2);
 }
 
@@ -98,7 +98,7 @@
 
 .history-score-board .score-grid-total {
   padding-left: var(--space-5);
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .history-score-board .score-grid-winner {

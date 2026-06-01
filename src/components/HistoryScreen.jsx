@@ -163,7 +163,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       try {
         await Promise.all([fetchHistory(), fetchBoardGames()])
       } catch {
-        toast('Khong tai duoc lich su')
+        toast('Không tải được lịch sử ván chơi')
       }
     }
 
@@ -195,10 +195,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const handleNewGame = useCallback(async () => {
     const ok = await resetBoard()
     if (ok) {
-      toast('Da tao van moi')
+      toast('Đã tạo ván mới')
       onNewGame()
     } else {
-      toast('Khong the tao van moi')
+      toast('Không thể tạo ván mới')
     }
   }, [onNewGame, resetBoard, toast])
 
@@ -255,9 +255,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       if (selectedMatch?.id === matchToDelete.id) setSelectedMatch(null)
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)
-      toast('Da xoa bang diem')
+      toast('Đã xóa bảng điểm')
     } catch {
-      toast('Khong the xoa bang diem')
+      toast('Không thể xóa bảng điểm')
     } finally {
       setIsDeleting(false)
     }
@@ -301,7 +301,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           onClose={() => setIsDetailMenuOpen(false)}
           onEdit={() => {
             setIsDetailMenuOpen(false)
-            toast('Tinh nang chinh sua se duoc bo sung')
+            toast('Tính năng chỉnh sửa sẽ được bổ sung')
           }}
           onDelete={() => {
             setIsDetailMenuOpen(false)

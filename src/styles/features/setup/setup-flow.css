@@ -20,15 +20,10 @@
 .picker-topbar h1 {
   grid-column: 2;
   color: var(--color-white);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.15;
   font-weight: 700;
   text-align: center;
-}
-
-.picker-topbar h1 {
-  font-size: 20px;
-  line-height: 1.1;
 }
 
 .setup-topbar .setup-back-btn {

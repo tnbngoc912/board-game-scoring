@@ -53,6 +53,12 @@ function getGameImageTheme(index) {
   return GAME_IMAGE_THEMES[index % GAME_IMAGE_THEMES.length]
 }
 
+function getCurrentLocalDateTimeValue() {
+  const now = new Date()
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
   const [gameSearchTerm, setGameSearchTerm] = useState('')
@@ -97,7 +103,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       try {
         await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {
-        toast('Khong tai duoc du lieu setup')
+        toast('Không tải được dữ liệu')
       }
     }
 
@@ -193,7 +199,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
   const handleStart = useCallback(() => {
     if (!canStart) {
-      toast('Can it nhat 2 người chơi')
+      toast('Cần ít nhất 2 người chơi')
       return
     }
     onStart()
@@ -217,7 +223,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
   const handleAddSelectedPlayers = useCallback(() => {
     if (selectedUserIds.length === 0) {
-      toast('Vui long chon người chơi')
+      toast('Vui lòng chọn người chơi')
       return
     }
 
@@ -492,7 +498,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
             <section className="setup-section">
               <h2>Ngày giờ</h2>
               <div className="setup-date-row">
-                <span>{formatPlayDateTime(playDateTime)}</span>
+                <span>{formatPlayDateTime(getCurrentLocalDateTimeValue())}</span>
                 <label className="setup-date-button" aria-label="Chon ngay gio">
                   <Image src="/datetime.svg" alt="" width={24} height={24} />
                   <input
