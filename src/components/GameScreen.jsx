@@ -165,7 +165,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   return (
     <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
       {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
-      <Header onClose={handleClose} isCloseDisabled={isSaving} />
+      <Header title="Nhập điểm" onClose={handleClose} isCloseDisabled={isSaving} />
 
       <div className="score-content">
         {isWinnerOnly ? (

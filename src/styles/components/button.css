@@ -60,10 +60,8 @@
 
 .score-close-btn,
 .setup-back-btn{
-  width: 48px;
-  height: 48px;
-  background: var(--color-card);
-  color: var(--color-brand);
+  width: 32px;
+  height: 32px;
 }
 
 .score-close-btn,

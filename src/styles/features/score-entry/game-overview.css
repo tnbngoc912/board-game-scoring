@@ -23,13 +23,16 @@
   padding: 0 var(--space-3);
 }
 
-.overview-topbar .home-logo {
+.overview-topbar .title-header {
   justify-self: center;
+  min-width: 0;
+  max-width: 100%;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-white);
   font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
 .overview-back-btn {

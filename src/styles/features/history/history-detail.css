@@ -11,7 +11,7 @@
   padding: 0 var(--space-2);
 }
 
-.history-detail-topbar .home-logo {
+.history-detail-topbar .title-header {
   justify-self: center;
   text-align: center;
 }

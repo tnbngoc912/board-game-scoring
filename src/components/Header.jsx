@@ -1,8 +1,15 @@
 import React from 'react'
-import { ArrowLeft, X } from 'lucide-react'
 import Image from "next/image"
 
-export function Header({ onBack, onClose, isCloseDisabled = false, title = 'BGSCORE' }) {
+function HeaderBrand({ title }) {
+  if (title) {
+    return <div className="title-header">{title}</div>
+  }
+
+  return <Image src="/logo.svg" className="logo-header" alt="BGScore" width={103} height={17} />
+}
+
+export function Header({ onBack, onClose, isCloseDisabled = false, title }) {
   return (
     <header className="overview-header" aria-label="BGScore">
       <div className="overview-topbar">
@@ -14,7 +21,7 @@ export function Header({ onBack, onClose, isCloseDisabled = false, title = 'BGSC
           <div className="score-entry-spacer" aria-hidden="true" />
         )}
 
-        <div className="home-logo">{title}</div>
+        <HeaderBrand title={title} />
 
         {onClose ? (
           <button

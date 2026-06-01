@@ -289,7 +289,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
-        <Header
+        <Header title="Bảng điểm"
           onBack={() => {
             setIsDetailMenuOpen(false)
             router.push('/history')

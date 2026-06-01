@@ -10,7 +10,7 @@
   background: var(--color-brand);
 }
 
-.score-entry-topbar .home-logo {
+.score-entry-topbar .title-header {
   grid-column: 2;
 }
 

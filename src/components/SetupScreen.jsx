@@ -373,14 +373,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         </>
       ) : setupStep === 'player-picker' ? (
         <>
-          <header className="picker-topbar">
-            <h1>Chọn Người Chơi</h1>
-            <button className="picker-close-btn" onClick={() => setSetupStep('config')} aria-label="Dong">
-              <Image src="/close-icon.svg" alt='' width={32} height={32} />
-            </button>
-          </header>
-
-
+          <Header title="Chọn Người Chơi" onClose={() => setSetupStep('config')} />
 
           <div className="screen-inner player-picker-content">
             <section className="home-search-panel" >
@@ -445,22 +438,16 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         </>
       ) : (
         <>
-          <header className="setup-topbar">
-            <button
-              className="setup-back-btn"
-              onClick={() => {
-                if (onBackFromConfig) {
-                  onBackFromConfig()
-                  return
-                }
-                setSetupStep('games')
-              }}
-              aria-label="Quay lai"
-            >
-              <Image src="/back-icon.svg" alt="Back" width={32} height={32} />
-            </button>
-            <h1>{selectedGame?.name || gameName || 'Chưa chọn trò chơi'}</h1>
-          </header>
+          <Header
+            title={selectedGame?.name || gameName || 'Chưa chọn trò chơi'}
+            onBack={() => {
+              if (onBackFromConfig) {
+                onBackFromConfig()
+                return
+              }
+              setSetupStep('games')
+            }}
+          />
 
           <div className="screen-inner setup-flow">
             <section className="setup-section">
