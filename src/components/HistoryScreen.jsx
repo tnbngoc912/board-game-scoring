@@ -125,6 +125,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const detailScreenRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
   const {
@@ -156,6 +157,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
       window.scrollTo({ top: 0, left: 0 })
     })
+    setLightboxImageIndex(null)
   }, [selectedMatch])
 
   useEffect(() => {
@@ -285,6 +287,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
+    const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
@@ -356,7 +359,39 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>
           ) : null}
+
+          {memoryImages.length ? (
+            <section className="history-memory-section" aria-label="Hình ảnh kỉ niệm">
+              <h2>Hình ảnh kỉ niệm</h2>
+              <div className="history-memory-grid">
+                {memoryImages.map((image, index) => (
+                  <button
+                    key={image.fileId || image.url || index}
+                    className="history-memory-card"
+                    type="button"
+                    onClick={() => setLightboxImageIndex(index)}
+                    aria-label={`Mở hình ảnh kỉ niệm ${index + 1}`}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={image.fileName || 'Hình ảnh kỉ niệm'}
+                      width={320}
+                      height={320}
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
+
+        <MemoryImageLightbox
+          images={memoryImages}
+          activeIndex={lightboxImageIndex}
+          onClose={() => setLightboxImageIndex(null)}
+          onChange={setLightboxImageIndex}
+        />
 
         {isDetailMenuOpen ? (
           <button
@@ -506,6 +541,72 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         onCancel={() => setMatchToDelete(null)}
         onConfirm={confirmDelete}
       />
+    </div>
+  )
+}
+
+function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
+  const hasImages = images.length > 0
+  const isOpen = activeIndex !== null && hasImages
+  const activeImage = isOpen ? images[activeIndex] : null
+
+  const showPrevious = useCallback(() => {
+    onChange((activeIndex - 1 + images.length) % images.length)
+  }, [activeIndex, images.length, onChange])
+
+  const showNext = useCallback(() => {
+    onChange((activeIndex + 1) % images.length)
+  }, [activeIndex, images.length, onChange])
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') onClose()
+      if (event.key === 'ArrowLeft') showPrevious()
+      if (event.key === 'ArrowRight') showNext()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose, showNext, showPrevious])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="memory-lightbox" role="dialog" aria-modal="true" aria-label="Xem hình ảnh kỉ niệm">
+      <button className="memory-lightbox-backdrop" type="button" onClick={onClose} aria-label="Đóng hình ảnh" />
+      <div className="memory-lightbox-content">
+        <button className="memory-lightbox-close" type="button" onClick={onClose} aria-label="Đóng">
+          <Image src="/close-icon.svg" alt="" width={32} height={32} />
+        </button>
+
+        {images.length > 1 ? (
+          <button className="memory-lightbox-nav prev" type="button" onClick={showPrevious} aria-label="Ảnh trước">
+            <Image src="/back-icon.svg" alt="" width={32} height={32} />
+          </button>
+        ) : null}
+
+        <div className="memory-lightbox-image-wrap">
+          <Image
+            src={activeImage.url}
+            alt={activeImage.fileName || 'Hình ảnh kỉ niệm'}
+            width={1200}
+            height={900}
+            priority
+          />
+        </div>
+
+        {images.length > 1 ? (
+          <button className="memory-lightbox-nav next" type="button" onClick={showNext} aria-label="Ảnh tiếp theo">
+            <Image src="/back-icon.svg" alt="" width={32} height={32} />
+          </button>
+        ) : null}
+
+        {images.length > 1 ? (
+          <div className="memory-lightbox-count">{activeIndex + 1}/{images.length}</div>
+        ) : null}
+      </div>
     </div>
   )
 }

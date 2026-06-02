@@ -149,13 +149,132 @@
 
 .history-detail-note {
   min-height: 80px;
-  margin: 16px 16px 100px;
+  margin: 16px 16px;
   border-radius: var(--radius-md);
   background: var(--color-card);
   padding: 8px 16px;
   font-size: 16px;
   line-height: 1.35;
-  border: 1px solid var(--color-border-focus);
+}
+
+.history-memory-section {
+  margin: 0 16px 100px;
+}
+
+.history-memory-section h2 {
+  margin-bottom: 8px;
+  color: var(--color-subtext);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.history-memory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.history-memory-card {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid #E8A97B;
+  border-radius: 8px;
+  background: var(--color-card);
+  cursor: pointer;
+  padding: 0;
+}
+
+.history-memory-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.memory-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.memory-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.memory-lightbox-content {
+  position: relative;
+  z-index: 1;
+  width: min(960px, 100%);
+  height: min(760px, 86dvh);
+  display: grid;
+  place-items: center;
+}
+
+.memory-lightbox-image-wrap {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.memory-lightbox-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.memory-lightbox-close,
+.memory-lightbox-nav {
+  position: absolute;
+  z-index: 2;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  opacity: 0.8;
+}
+
+.memory-lightbox-close {
+  top: 0;
+  right: 0;
+}
+
+.memory-lightbox-nav {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.memory-lightbox-nav.prev {
+  left: 0;
+}
+
+.memory-lightbox-nav.next {
+  right: 0;
+}
+
+.memory-lightbox-nav.next img {
+  transform: rotate(180deg);
+}
+
+.memory-lightbox-count {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-text-strong);
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .history-winner-only-card {

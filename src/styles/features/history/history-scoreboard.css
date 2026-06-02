@@ -10,7 +10,7 @@
 .history-score-board,
 .history-score-board .score-board-scroll,
 .history-score-board .score-grid-sticky {
-  background: var(--color-bg-strong);
+  background: var(--color-bg);
 }
 
 .history-score-board .score-grid-label.total-score-only {
@@ -62,9 +62,9 @@
 
 .score-box,
 .history-score-board .readonly-score-box {
-  background: var(--color-card);
+  background: var(--color-card-soft);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-focus);
+  /* border: 1px solid var(--color-border-focus); */
   padding: var(--space-2);
   font-weight: 700;
 }
