@@ -190,11 +190,6 @@
   overflow: hidden;
 }
 
-.leaderboard-item-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(147, 101, 63, 0.1);
-}
-
 .leaderboard-rank {
   font-size: 18px;
   font-weight: 800;
@@ -292,8 +287,6 @@
 
 .overview-action-btn:hover {
   background: var(--color-brand-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(147, 101, 63, 0.3);
 }
 
 .overview-action-btn:active {
