@@ -285,7 +285,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: var(--space-3) var(--space-4) var(--space-5);
+  margin: 0 var(--space-4) var(--space-4);
   min-height: 50px;
   background: var(--color-brand);
   color: var(--color-white);
