@@ -272,7 +272,7 @@ export const useGameStore = create(
           const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
 
           await updateMatchScores(match.id, {
-            description: description.trim() || `${gameName || 'Van choi'} - ${new Date().toLocaleString('vi-VN')}`,
+            description: description.trim() || '',
             ...(scoringType === 'WINNER_ONLY' ? { winnerIds } : { playerScores }),
           })
 
