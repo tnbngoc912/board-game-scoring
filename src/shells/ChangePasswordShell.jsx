@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
+import { Icon } from '../components/ui/Icon'
+import { PasswordInput } from '../components/ui/PasswordInput'
 
 export function ChangePasswordShell() {
   const router = useRouter()
@@ -16,11 +17,6 @@ export function ChangePasswordShell() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Trạng thái ẩn/hiện mật khẩu cho từng ô nhập liệu
-  const [showOldPassword, setShowOldPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -70,79 +66,34 @@ export function ChangePasswordShell() {
 
           <form onSubmit={handleSubmit} className="change-password-form">
             {/* Mật khẩu cũ */}
-            <div className="change-password-input-wrapper">
-              <span className="change-password-input-icon">
-                <Lock size={20} strokeWidth={1.8} />
-              </span>
-              <input
-                id="old-password"
-                type={showOldPassword ? 'text' : 'password'}
-                className="change-password-input"
-                placeholder="Nhập mật khẩu hiện tại"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <button
-                type="button"
-                className="change-password-toggle-btn"
-                onClick={() => setShowOldPassword(!showOldPassword)}
-                aria-label={showOldPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showOldPassword ? <Eye size={20} strokeWidth={1.8} /> : <EyeOff size={20} strokeWidth={1.8} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="old-password"
+              placeholder="Nhập mật khẩu hiện tại"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
 
             {/* Mật khẩu mới */}
-            <div className="change-password-input-wrapper">
-              <span className="change-password-input-icon">
-                <Lock size={20} strokeWidth={1.8} />
-              </span>
-              <input
-                id="new-password"
-                type={showNewPassword ? 'text' : 'password'}
-                className="change-password-input"
-                placeholder="Nhập mật khẩu mới"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <button
-                type="button"
-                className="change-password-toggle-btn"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                aria-label={showNewPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showNewPassword ? <Eye size={20} strokeWidth={1.8} /> : <EyeOff size={20} strokeWidth={1.8} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="new-password"
+              placeholder="Nhập mật khẩu mới"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
 
             {/* Xác nhận mật khẩu mới */}
-            <div className="change-password-input-wrapper">
-              <span className="change-password-input-icon">
-                <Lock size={20} strokeWidth={1.8} />
-              </span>
-              <input
-                id="confirm-password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                className="change-password-input"
-                placeholder="Xác nhận mật khẩu mới"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-              <button
-                type="button"
-                className="change-password-toggle-btn"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showConfirmPassword ? <Eye size={20} strokeWidth={1.8} /> : <EyeOff size={20} strokeWidth={1.8} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="confirm-password"
+              placeholder="Xác nhận mật khẩu mới"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
 
             {/* Nút submit */}
             <button
@@ -150,7 +101,7 @@ export function ChangePasswordShell() {
               className="btn-change-password-submit"
               disabled={isSubmitting}
             >
-              <RotateCcw size={18} strokeWidth={2.5} />
+              <Icon src="/change-pass.png" size={24} color="currentColor" />
               <span>{isSubmitting ? 'Đang đổi mật khẩu...' : 'Đổi mật khẩu'}</span>
             </button>
           </form>

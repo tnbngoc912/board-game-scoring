@@ -131,6 +131,16 @@
 .app-shell.screen-achievements .bottom-nav-item.active,
 .app-shell.screen-account .bottom-nav-item.active {
   color: var(--color-brand);
-  border-top: 2px solid var(--color-brand);
-  padding-top: 6px;
 }
+
+.bottom-nav-active-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-brand);
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+

@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Mail, User, LockKeyhole, LogOut } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
+import { Icon } from '../components/ui/Icon'
 
 export function AccountShell() {
   const router = useRouter()
@@ -55,7 +55,7 @@ export function AccountShell() {
                 <div className="account-email-section">
                   <div className="account-email-label">EMAIL</div>
                   <div className="account-email-box">
-                    <Mail size={20} strokeWidth={1.7} />
+                    <Icon src="/email.png" size={24} color="#38322E" />
                     <span>{user?.email}</span>
                   </div>
                 </div>
@@ -68,7 +68,7 @@ export function AccountShell() {
                 type="button"
                 onClick={() => router.push('/change-password')}
               >
-                <LockKeyhole size={20} strokeWidth={1.8} />
+                <Icon src="/change-pass.png" size={24} color="#38322E" />
                 Đổi mật khẩu
               </button>
 
@@ -77,7 +77,7 @@ export function AccountShell() {
                 type="button" 
                 onClick={handleLogout}
               >
-                <LogOut size={20} strokeWidth={1.8} />
+                <Icon src="/logout.png" size={24} color="#38322E" />
                 Đăng xuất
               </button>
             </div>
