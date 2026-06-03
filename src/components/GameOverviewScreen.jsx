@@ -7,6 +7,7 @@ import { useGameSessionStore } from '../store/gameSessionStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
+import { Icon } from './ui/Icon';
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -86,7 +87,14 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         <section className="overview-game-banner">
           <div className="overview-game-thumb">
             {overview.thumbnailUrl ? (
-              <Image alt="" src={overview.thumbnailUrl} width={88} height={88} />
+              <Image
+                alt=""
+                src={overview.thumbnailUrl}
+                width={0}
+                height={0}
+                sizes="100vw"
+                style={{ width: 'auto', height: '79px', borderRadius: '4px' }}
+              />
             ) : (
               <span>{overview.name?.slice(0, 2).toUpperCase() || 'BG'}</span>
             )}
@@ -148,10 +156,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         </section>
 
         <button className="overview-action-btn" onClick={onCreateScore}>
-          <span className="btn-plus-icon-wrapper">
-            <Plus size={14} strokeWidth={3.5} />
-          </span>
-          Tạo bảng điểm
+          <Icon src="/add_icon.png" color="#FFFF" size={24} />
+          <p className="overview-action-btn-text">Tạo bảng điểm</p>
         </button>
       </main>
     </div>
