@@ -1,4 +1,13 @@
 import React from 'react'
+import {
+  ScoreGridHeaderCell,
+  ScoreGridInputCell,
+  ScoreGridLabelCell,
+  ScoreGridReadonlyCell,
+  ScoreGridSpacer,
+  ScoreGridTotalLabelCell,
+  ScoreGridWinnerCell,
+} from './ScoreGridCells'
 
 export function ScoreGrid({
   players,
@@ -26,63 +35,60 @@ export function ScoreGrid({
           minWidth: `${104 + players.length * 70}px`,
         }}
       >
-        <div className={`score-grid-header${stickyHeader ? ' score-grid-sticky score-grid-sticky-header' : ''}`} />
-        <div className="grid-spacer"></div>
+        <ScoreGridHeaderCell sticky={stickyHeader} />
+        <ScoreGridSpacer />
         {players.map((player) => (
-          <div key={player.id} className="score-grid-header player-header">
+          <ScoreGridHeaderCell key={player.id} player>
             <span>{player.name}</span>
-          </div>
+          </ScoreGridHeaderCell>
         ))}
-        <div className="grid-spacer"></div>
+        <ScoreGridSpacer />
 
         {displayRows.map((row) => (
           <React.Fragment key={row.id}>
-            <div className={`score-grid-label${stickyHeader ? ' score-grid-sticky' : ''}${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name || row.id}</div>
-            <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
+            <ScoreGridLabelCell sticky={stickyHeader} totalScoreOnly={isTotalScoreOnly}>
+              {row.name || row.id}
+            </ScoreGridLabelCell>
+            <ScoreGridSpacer bordered={isTotalScoreOnly} />
             {players.map((player) => (
               isTotalScoreOnly && !editable ? (
-                <div key={player.id} className="score-grid-winner">
-                  <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>
-                    {row.scores?.[player.id] ?? 0}
-                  </strong>
-                </div>
+                <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
+                  {row.scores?.[player.id] ?? 0}
+                </ScoreGridWinnerCell>
               ) : (
-                <div key={player.id} className={`score-grid-cell${isTotalScoreOnly ? ' total-score-only' : ''}`}>
-                  {editable ? (
-                    <input
-                      className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
-                      type={row.type === 'text' ? 'text' : 'number'}
-                      value={getInputValue(row, player.id)}
-                      onChange={(event) => onCellChange(row.id, player.id, event.target.value, row.type)}
-                      onFocus={() => onCellFocus?.(`${row.id}:${player.id}`)}
-                      onBlur={() => onCellBlur?.()}
-                    />
-                  ) : (
-                    <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                      {(() => {
-                        const value = row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)
-                        if (row.type !== 'text' && Number(value) === 0) return '-'
-                        return value
-                      })()}
-                    </div>
-                  )}
-                </div>
+                editable ? (
+                  <ScoreGridInputCell
+                    key={player.id}
+                    row={row}
+                    playerId={player.id}
+                    totalScoreOnly={isTotalScoreOnly}
+                    getInputValue={getInputValue}
+                    onCellChange={onCellChange}
+                    onCellFocus={onCellFocus}
+                    onCellBlur={onCellBlur}
+                  />
+                ) : (
+                  <ScoreGridReadonlyCell
+                    key={player.id}
+                    row={row}
+                    playerId={player.id}
+                    totalScoreOnly={isTotalScoreOnly}
+                  />
+                )
               )
             ))}
-            <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
+            <ScoreGridSpacer bordered={isTotalScoreOnly} />
           </React.Fragment>
         ))}
 
         {!isTotalScoreOnly && showTotal ? (
           <>
-            <div className={`score-grid-total${stickyHeader ? ' score-grid-sticky' : ''}`}>Tổng</div>
-            <div className="grid-spacer border"></div>
+            <ScoreGridTotalLabelCell sticky={stickyHeader}>Tổng</ScoreGridTotalLabelCell>
+            <ScoreGridSpacer bordered />
             {players.map((player) => (
-              <div key={player.id} className="score-grid-winner">
-                <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>
-                  {getTotal ? getTotal(player.id) : player.total}
-                </strong>
-              </div>
+              <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
+                {getTotal ? getTotal(player.id) : player.total}
+              </ScoreGridWinnerCell>
             ))}
           </>
         ) : null}

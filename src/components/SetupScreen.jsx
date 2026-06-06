@@ -373,7 +373,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         </>
       ) : setupStep === 'player-picker' ? (
         <>
-          <Header title="Chọn Người Chơi" onClose={() => setSetupStep('config')} />
+          <Header title="Chọn Người Chơi" onClose={() => setSetupStep('config')} compact />
 
           <div className="screen-inner player-picker-content">
             <section className="home-search-panel" >
@@ -440,6 +440,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         <>
           <Header
             title={selectedGame?.name || gameName || 'Chưa chọn trò chơi'}
+            compact
             onBack={() => {
               if (onBackFromConfig) {
                 onBackFromConfig()

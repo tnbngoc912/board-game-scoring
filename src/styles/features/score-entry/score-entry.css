@@ -12,6 +12,7 @@
 
 .score-entry-topbar .title-header {
   grid-column: 2;
+  width: 100%;
 }
 
 .score-entry-spacer {
@@ -269,7 +270,7 @@
 }
 
 .score-entry-screen .score-grid-header {
-  min-height: 56px;
+  min-height: 40px;
   color: var(--color-text-strong);
   font-size: 14px;
   line-height: 1.15;
@@ -278,7 +279,7 @@
 }
 
 .score-entry-screen .score-grid-sticky-header {
-  min-height: 56px;
+  min-height: 40px;
 }
 
 .score-entry-screen .score-grid-sticky {

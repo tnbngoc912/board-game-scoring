@@ -1,6 +1,6 @@
 .setup-topbar,
 .picker-topbar {
-  min-height: 56px;
+  min-height: 40px;
   display: grid;
   align-items: center;
   background: var(--color-brand);

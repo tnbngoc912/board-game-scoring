@@ -13,6 +13,7 @@
 
 .history-detail-topbar .title-header {
   justify-self: center;
+  width: 100%;
   text-align: center;
 }
 

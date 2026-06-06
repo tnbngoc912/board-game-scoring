@@ -3,7 +3,7 @@ import Image from "next/image"
 
 function HeaderBrand({ title }) {
   if (title) {
-    return <div className="title-header">{title}</div>
+    return <div className="title-header" title={title}>{title}</div>
   }
 
   return <Image src="/logo.svg" className="logo-header" alt="BGScore" width={103} height={17} />

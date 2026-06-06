@@ -69,6 +69,10 @@
   font-weight: 700;
 }
 
+
+.history-score-board .readonly-score-box.zero-score { 
+  color: #D1CBC7;
+}
 .history-score-board .readonly-score-box {
   width: 100% !important;
   min-width: 100%;

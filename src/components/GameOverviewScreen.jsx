@@ -90,8 +90,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
               <Image
                 alt=""
                 src={overview.thumbnailUrl}
-                width={0}
-                height={0}
+                width={112}
+                height={79}
                 sizes="100vw"
                 style={{ width: 'auto', height: '79px', borderRadius: '4px' }}
               />

@@ -52,11 +52,12 @@ export function ScoreGridInputCell({
 
 export function ScoreGridReadonlyCell({ row, playerId, totalScoreOnly = false }) {
   const value = row.scores?.[playerId] ?? (row.type === 'text' ? '' : 0)
-  const displayValue = row.type !== 'text' && Number(value) === 0 ? '-' : value
+  const isZeroScore = row.type !== 'text' && Number(value) === 0
+  const displayValue = isZeroScore ? '-' : value
 
   return (
     <div className={clsx('score-grid-cell', totalScoreOnly && 'total-score-only')}>
-      <div className={clsx('readonly-score-box', row.type === 'text' && 'text')}>
+      <div className={clsx('readonly-score-box', row.type === 'text' && 'text', isZeroScore && 'zero-score')}>
         {displayValue}
       </div>
     </div>
