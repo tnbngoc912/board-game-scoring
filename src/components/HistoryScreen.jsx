@@ -549,6 +549,9 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
   const hasImages = images.length > 0
   const isOpen = activeIndex !== null && hasImages
   const activeImage = isOpen ? images[activeIndex] : null
+  const swipeStartXRef = useRef(null)
+  const swipeStartYRef = useRef(null)
+  const swipeHandledRef = useRef(false)
 
   const showPrevious = useCallback(() => {
     onChange((activeIndex - 1 + images.length) % images.length)
@@ -571,6 +574,38 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, showNext, showPrevious])
 
+  const handlePointerDown = useCallback((event) => {
+    if (images.length <= 1) return
+
+    swipeStartXRef.current = event.clientX
+    swipeStartYRef.current = event.clientY
+    swipeHandledRef.current = false
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }, [images.length])
+
+  const handlePointerMove = useCallback((event) => {
+    if (images.length <= 1 || swipeStartXRef.current === null || swipeStartYRef.current === null || swipeHandledRef.current) return
+
+    const deltaX = event.clientX - swipeStartXRef.current
+    const deltaY = event.clientY - swipeStartYRef.current
+
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return
+
+    swipeHandledRef.current = true
+    if (deltaX < 0) {
+      showNext()
+    } else {
+      showPrevious()
+    }
+  }, [images.length, showNext, showPrevious])
+
+  const handlePointerEnd = useCallback((event) => {
+    swipeStartXRef.current = null
+    swipeStartYRef.current = null
+    swipeHandledRef.current = false
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+  }, [])
+
   if (!isOpen) return null
 
   return (
@@ -581,13 +616,14 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
           <Image src="/close-icon.svg" alt="" width={32} height={32} />
         </button>
 
-        {images.length > 1 ? (
-          <button className="memory-lightbox-nav prev" type="button" onClick={showPrevious} aria-label="Ảnh trước">
-            <Image src="/back-icon.svg" alt="" width={32} height={32} />
-          </button>
-        ) : null}
-
-        <div className="memory-lightbox-image-wrap">
+        <div
+          className="memory-lightbox-image-wrap"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onPointerLeave={handlePointerEnd}
+        >
           <Image
             src={activeImage.url}
             alt={activeImage.fileName || 'Hình ảnh kỉ niệm'}
@@ -596,12 +632,6 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
             priority
           />
         </div>
-
-        {images.length > 1 ? (
-          <button className="memory-lightbox-nav next" type="button" onClick={showNext} aria-label="Ảnh tiếp theo">
-            <Image src="/back-icon.svg" alt="" width={32} height={32} />
-          </button>
-        ) : null}
 
         {images.length > 1 ? (
           <div className="memory-lightbox-count">{activeIndex + 1}/{images.length}</div>
