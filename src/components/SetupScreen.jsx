@@ -8,6 +8,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
+import { Icon } from './ui/Icon'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -284,16 +285,15 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                   onClick={() => setIsFilterOpen((value) => !value)}
                   aria-label="Bo loc"
                 >
-                  <Image src='/filter-icon.svg' alt='' width={24} height={24} />
+                  <Icon src={isFilterOpen ? "/filter-filled.png" : "/filter-icon.svg"} color={isFilterOpen ? "#93653F" : "#38322E"} size={24} />
                 </button>
               </div>
 
-              {isFilterOpen && (
-                <FilterPanel
-                  playerCountFilter={playerCountFilter}
-                  setPlayerCountFilter={setPlayerCountFilter}
-                />
-              )}
+              <FilterPanel
+                playerCountFilter={playerCountFilter}
+                setPlayerCountFilter={setPlayerCountFilter}
+                isOpen={isFilterOpen}
+              />
             </section>
 
             <section className="home-game-section">

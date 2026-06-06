@@ -11,6 +11,7 @@ import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
 import { useAuthStore } from '../store/authStore'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
+import { Icon } from './ui/Icon'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -474,23 +475,22 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               onClick={() => setIsFilterOpen((value) => !value)}
               aria-label="Bo loc game"
             >
-              <Image src='/filter-icon.svg' alt='' width={24} height={24} />
+              <Icon src={isFilterOpen ? "/filter-filled.png" : "/filter-icon.svg"} color={isFilterOpen ? "#93653F" : "#38322E"} size={24} />
             </button>
           </div>
 
-          {isFilterOpen ? (
-            <HistoryFilterPanel
-              selectedGameName={selectedGameName}
-              setSelectedGameName={setSelectedGameName}
-              gameOptions={gameOptions}
-              selectedPlayerName={selectedPlayerName}
-              setSelectedPlayerName={setSelectedPlayerName}
-              playerOptions={playerOptions}
-              myMatchesOnly={myMatchesOnly}
-              setMyMatchesOnly={setMyMatchesOnly}
-              onClear={clearFilters}
-            />
-          ) : null}
+          <HistoryFilterPanel
+            selectedGameName={selectedGameName}
+            setSelectedGameName={setSelectedGameName}
+            gameOptions={gameOptions}
+            selectedPlayerName={selectedPlayerName}
+            setSelectedPlayerName={setSelectedPlayerName}
+            playerOptions={playerOptions}
+            myMatchesOnly={myMatchesOnly}
+            setMyMatchesOnly={setMyMatchesOnly}
+            onClear={clearFilters}
+            isOpen={isFilterOpen}
+          />
         </section>
 
         <div className="history-list" aria-busy={isLoadingHistory}>

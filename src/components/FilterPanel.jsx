@@ -1,7 +1,7 @@
 import React from 'react'
 import { Select } from './ui/Select'
 
-export function FilterPanel({ playerCountFilter, setPlayerCountFilter }) {
+export function FilterPanel({ playerCountFilter, setPlayerCountFilter, isOpen }) {
   const handleClear = () => {
     setPlayerCountFilter('')
   }
@@ -19,22 +19,24 @@ export function FilterPanel({ playerCountFilter, setPlayerCountFilter }) {
   ]
 
   return (
-    <div className="filter-panel">
-      <div className="filter-field">
-        <span>SỐ LƯỢNG NGƯỜI CHƠI</span>
-        <Select
-          value={playerCountFilter}
-          onChange={setPlayerCountFilter}
-          options={options}
-        />
+    <div className={`filter-panel ${isOpen ? 'open' : ''}`}>
+      <div className="filter-panel-inner">
+        <div className="filter-field">
+          <span>SỐ LƯỢNG NGƯỜI CHƠI</span>
+          <Select
+            value={playerCountFilter}
+            onChange={setPlayerCountFilter}
+            options={options}
+          />
+        </div>
+        <button
+          type="button"
+          className="filter-clear-button"
+          onClick={handleClear}
+        >
+          Xóa bộ lọc
+        </button>
       </div>
-      <button
-        type="button"
-        className="filter-clear-button"
-        onClick={handleClear}
-      >
-        Xóa bộ lọc
-      </button>
     </div>
   )
 }

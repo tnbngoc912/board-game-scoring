@@ -104,13 +104,37 @@
 }
 
 .filter-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 250, 247, 0.92);
+  padding: 0 var(--space-4);
+  margin-top: 0;
+  box-shadow: none;
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-panel.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  border-color: rgba(167, 125, 79, 0.12);
+  padding: var(--space-4);
+  overflow: visible;
+}
+
+.filter-panel-inner {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  border: 1px solid rgba(167, 125, 79, 0.12);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 250, 247, 0.92);
-  padding: var(--space-4);
 }
 
 .filter-field {
@@ -209,7 +233,7 @@
 
 .home-screen .home-search-panel,
 .history-content .home-search-panel {
-  gap: var(--space-3);
+  gap: var(--space-1);
 }
 
 .home-screen .search-bar,
@@ -268,13 +292,14 @@
 .history-filter-panel {
   border-radius: var(--radius-md);
   background: var(--color-card-soft);
+  box-shadow: none;
 }
 
-.home-screen .filter-panel {
+.home-screen .filter-panel.open {
   box-shadow: var(--shadow-card);
 }
 
-.history-filter-panel {
+.history-filter-panel.open {
   box-shadow: var(--shadow-filter-panel);
 }
 

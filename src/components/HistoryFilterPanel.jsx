@@ -11,6 +11,7 @@ export function HistoryFilterPanel({
   myMatchesOnly,
   setMyMatchesOnly,
   onClear,
+  isOpen,
 }) {
   const gameSelectOptions = [
     { value: '', label: 'Tất cả' },
@@ -23,46 +24,48 @@ export function HistoryFilterPanel({
   ]
 
   return (
-    <div className="filter-panel history-filter-panel">
-      <div className="filter-field">
-        <span>TỰA GAME</span>
-        <Select
-          value={selectedGameName}
-          onChange={setSelectedGameName}
-          options={gameSelectOptions}
-        />
-      </div>
-
-      <div className="history-filter-row">
-        <div className="filter-field history-player-field">
-          <span>NGƯỜI CHƠI</span>
+    <div className={`filter-panel history-filter-panel ${isOpen ? 'open' : ''}`}>
+      <div className="filter-panel-inner">
+        <div className="filter-field">
+          <span>TỰA GAME</span>
           <Select
-            value={selectedPlayerName}
-            onChange={setSelectedPlayerName}
-            options={playerSelectOptions}
+            value={selectedGameName}
+            onChange={setSelectedGameName}
+            options={gameSelectOptions}
           />
         </div>
 
-        <div className="filter-field history-toggle-field">
-          <span>VÁN CÓ TÔI</span>
-          <label className="toggle-switch" aria-label="Lọc ván có tôi tham gia">
-            <input
-              type="checkbox"
-              checked={myMatchesOnly}
-              onChange={(e) => setMyMatchesOnly(e.target.checked)}
+        <div className="history-filter-row">
+          <div className="filter-field history-player-field">
+            <span>NGƯỜI CHƠI</span>
+            <Select
+              value={selectedPlayerName}
+              onChange={setSelectedPlayerName}
+              options={playerSelectOptions}
             />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-      </div>
+          </div>
 
-      <button
-        type="button"
-        className="history-clear-filter-btn"
-        onClick={onClear}
-      >
-        Xóa bộ lọc
-      </button>
+          <div className="filter-field history-toggle-field">
+            <span>VÁN CÓ TÔI</span>
+            <label className="toggle-switch" aria-label="Lọc ván có tôi tham gia">
+              <input
+                type="checkbox"
+                checked={myMatchesOnly}
+                onChange={(e) => setMyMatchesOnly(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="history-clear-filter-btn"
+          onClick={onClear}
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
     </div>
   )
 }
