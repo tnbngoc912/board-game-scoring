@@ -28,6 +28,27 @@ function getScoreValue(scores, columnId, fallbackId) {
   return undefined
 }
 
+function formatPlayedAt(value) {
+  if (!value) return ''
+
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+
+  const time = d.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+
+  const date = d.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+
+  return `${time} - ${date}`
+}
+
 function normalizeRawScoreRows(rawRows, players) {
   if (!Array.isArray(rawRows)) return []
 
@@ -78,25 +99,7 @@ export function normalizeMatch(match) {
     gameId: match.board_game_id,
     scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
-    playedAt: match.play_date
-      ? (() => {
-        const d = new Date(match.play_date)
-
-        const time = d.toLocaleTimeString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        })
-
-        const date = d.toLocaleDateString('vi-VN', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
-
-        return `${time} - ${date}`
-      })()
-      : '',
+    playedAt: formatPlayedAt(match.play_date),
     playerCount: match.player_count || players.length,
     description: match.description || '',
     thumbnailUrl: match.thumbnail_url || '',
@@ -157,7 +160,7 @@ export function normalizeMatchDetail(payload) {
     gameId: getEntityId(boardGame) || match.board_game_id,
     scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
-    playedAt: match.play_date ? new Date(match.play_date).toLocaleString('vi-VN') : '',
+    playedAt: formatPlayedAt(match.play_date),
     playerCount: match.player_count || normalizedPlayers.length,
     description: match.description || '',
     thumbnailUrl: match.thumbnail_url || '',
