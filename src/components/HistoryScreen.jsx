@@ -549,9 +549,19 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
   const hasImages = images.length > 0
   const isOpen = activeIndex !== null && hasImages
   const activeImage = isOpen ? images[activeIndex] : null
+  const [imageTransform, setImageTransform] = useState({ scale: 1, x: 0, y: 0 })
+  const imageTransformRef = useRef(imageTransform)
+  const activePointersRef = useRef(new Map())
+  const pinchStartRef = useRef(null)
+  const dragStartRef = useRef(null)
   const swipeStartXRef = useRef(null)
   const swipeStartYRef = useRef(null)
   const swipeHandledRef = useRef(false)
+
+  const applyImageTransform = useCallback((nextTransform) => {
+    imageTransformRef.current = nextTransform
+    setImageTransform(nextTransform)
+  }, [])
 
   const showPrevious = useCallback(() => {
     onChange((activeIndex - 1 + images.length) % images.length)
@@ -574,16 +584,77 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, showNext, showPrevious])
 
+  useEffect(() => {
+    activePointersRef.current.clear()
+    pinchStartRef.current = null
+    dragStartRef.current = null
+    swipeStartXRef.current = null
+    swipeStartYRef.current = null
+    swipeHandledRef.current = false
+    applyImageTransform({ scale: 1, x: 0, y: 0 })
+  }, [activeIndex, applyImageTransform])
+
   const handlePointerDown = useCallback((event) => {
-    if (images.length <= 1) return
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+
+    if (activePointersRef.current.size >= 2) {
+      const [firstPointer, secondPointer] = [...activePointersRef.current.values()]
+      const distance = Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y)
+
+      pinchStartRef.current = {
+        distance,
+        scale: imageTransformRef.current.scale,
+      }
+      dragStartRef.current = null
+      swipeStartXRef.current = null
+      swipeStartYRef.current = null
+      swipeHandledRef.current = true
+      return
+    }
 
     swipeStartXRef.current = event.clientX
     swipeStartYRef.current = event.clientY
     swipeHandledRef.current = false
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-  }, [images.length])
+    dragStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      transform: imageTransformRef.current,
+    }
+  }, [])
 
   const handlePointerMove = useCallback((event) => {
+    if (!activePointersRef.current.has(event.pointerId)) return
+
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+    if (activePointersRef.current.size >= 2 && pinchStartRef.current) {
+      const [firstPointer, secondPointer] = [...activePointersRef.current.values()]
+      const distance = Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y)
+      const nextScale = Math.min(4, Math.max(1, (distance / pinchStartRef.current.distance) * pinchStartRef.current.scale))
+
+      applyImageTransform({
+        ...imageTransformRef.current,
+        scale: nextScale,
+        x: nextScale === 1 ? 0 : imageTransformRef.current.x,
+        y: nextScale === 1 ? 0 : imageTransformRef.current.y,
+      })
+      swipeHandledRef.current = true
+      return
+    }
+
+    if (imageTransformRef.current.scale > 1 && dragStartRef.current) {
+      const deltaX = event.clientX - dragStartRef.current.x
+      const deltaY = event.clientY - dragStartRef.current.y
+
+      applyImageTransform({
+        scale: imageTransformRef.current.scale,
+        x: dragStartRef.current.transform.x + deltaX,
+        y: dragStartRef.current.transform.y + deltaY,
+      })
+      return
+    }
+
     if (images.length <= 1 || swipeStartXRef.current === null || swipeStartYRef.current === null || swipeHandledRef.current) return
 
     const deltaX = event.clientX - swipeStartXRef.current
@@ -597,12 +668,19 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
     } else {
       showPrevious()
     }
-  }, [images.length, showNext, showPrevious])
+  }, [applyImageTransform, images.length, showNext, showPrevious])
 
   const handlePointerEnd = useCallback((event) => {
-    swipeStartXRef.current = null
-    swipeStartYRef.current = null
-    swipeHandledRef.current = false
+    activePointersRef.current.delete(event.pointerId)
+    pinchStartRef.current = null
+    dragStartRef.current = null
+
+    if (activePointersRef.current.size === 0) {
+      swipeStartXRef.current = null
+      swipeStartYRef.current = null
+      swipeHandledRef.current = false
+    }
+
     event.currentTarget.releasePointerCapture?.(event.pointerId)
   }, [])
 
@@ -630,6 +708,9 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
             width={1200}
             height={900}
             priority
+            style={{
+              transform: `translate3d(${imageTransform.x}px, ${imageTransform.y}px, 0) scale(${imageTransform.scale})`,
+            }}
           />
         </div>
 
