@@ -13,6 +13,8 @@
   --color-border-control: #d8c9b7;
   --color-border-focus: #f2bc95;
   --color-border-soft: #e3e0dd;
+  --color-border-light: #f9cfb2;
+  --color-border-extra-light: #fde4d2;
   --color-brand: #93653f;
   --color-brand-dark: #7f5635;
   --color-accent: #f1a625;
@@ -45,6 +47,7 @@
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-nav: 0 -4px 8px rgba(0, 0, 0, 0.08);
   --shadow-sticky: 2px 0 2px rgba(0, 0, 0, 0.11);
+  --shadow-filter-panel: 0px 2px 16px 0px #0000000D;
 
   /* typography */
   --font-main: var(--font-barlow), 'Barlow', Arial, sans-serif;

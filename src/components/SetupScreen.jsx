@@ -7,6 +7,7 @@ import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
 import { Header } from './Header'
+import { FilterPanel } from './FilterPanel'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -287,35 +288,12 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                 </button>
               </div>
 
-              {isFilterOpen ? (
-                <div className="filter-panel">
-                  <label className="filter-field">
-                    <span>So người chơi</span>
-                    <select value={playerCountFilter} onChange={(event) => setPlayerCountFilter(event.target.value)}>
-                      <option value="">Tat ca</option>
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
-                        <option key={count} value={count}>{count} nguoi</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <div className="genre-filter">
-                    <div className="filter-label">The loai</div>
-                    <div className="genre-chip-list">
-                      {genreOptions.map((genre) => (
-                        <button
-                          key={genre}
-                          type="button"
-                          className={`genre-chip${selectedGenres.includes(genre) ? ' active' : ''}`}
-                          onClick={() => toggleGenre(genre)}
-                        >
-                          {genre}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              {isFilterOpen && (
+                <FilterPanel
+                  playerCountFilter={playerCountFilter}
+                  setPlayerCountFilter={setPlayerCountFilter}
+                />
+              )}
             </section>
 
             <section className="home-game-section">

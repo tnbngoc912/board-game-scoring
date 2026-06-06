@@ -9,6 +9,8 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
+import { useAuthStore } from '../store/authStore'
+import { HistoryFilterPanel } from './HistoryFilterPanel'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -118,6 +120,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const router = useRouter()
   const pathname = usePathname()
   const [selectedGameName, setSelectedGameName] = useState('')
+  const [selectedPlayerName, setSelectedPlayerName] = useState('')
+  const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
@@ -128,20 +132,27 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const detailScreenRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
+  
+  const currentUser = useAuthStore((state) => state.user)
+
   const {
     history,
     boardGames,
+    users,
     isLoadingHistory,
     fetchHistory,
     fetchBoardGames,
+    fetchUsers,
     removeHistoryMatch,
   } = useAppDataStore(
     useShallow((state) => ({
       history: state.history,
       boardGames: state.boardGames,
+      users: state.users,
       isLoadingHistory: state.isLoadingHistory,
       fetchHistory: state.fetchHistory,
       fetchBoardGames: state.fetchBoardGames,
+      fetchUsers: state.fetchUsers,
       removeHistoryMatch: state.removeHistoryMatch,
     }))
   )
@@ -163,14 +174,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   useEffect(() => {
     async function loadHistory() {
       try {
-        await Promise.all([fetchHistory(), fetchBoardGames()])
+        await Promise.all([fetchHistory(), fetchBoardGames(), fetchUsers()])
       } catch {
         toast('Không tải được lịch sử ván chơi')
       }
     }
 
     loadHistory()
-  }, [fetchBoardGames, fetchHistory, toast])
+  }, [fetchBoardGames, fetchHistory, fetchUsers, toast])
 
   const historyWithThumbnails = useMemo(
     () => history
@@ -183,16 +194,29 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     () => [...new Set(historyWithThumbnails.map((entry) => entry.gameName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
     [historyWithThumbnails]
   )
+
+  const playerOptions = useMemo(
+    () => users.map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'vi')),
+    [users]
+  )
+
   const filteredHistory = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase()
 
     return historyWithThumbnails.filter((entry) => {
       const matchesGame = !selectedGameName || entry.gameName === selectedGameName
       const matchesSearch = !keyword || (entry.description || '').toLowerCase().includes(keyword)
-      return matchesGame && matchesSearch
+      const matchesPlayer = !selectedPlayerName || (entry.players || []).some(
+        (p) => p.name === selectedPlayerName
+      )
+      const matchesMyMatches = !myMatchesOnly || (currentUser && (entry.players || []).some(
+        (p) => p.name === currentUser.name || String(p.id) === String(currentUser.id)
+      ))
+      return matchesGame && matchesSearch && matchesPlayer && matchesMyMatches
     })
-  }, [historyWithThumbnails, searchTerm, selectedGameName])
-  const hasFilters = Boolean(selectedGameName || searchTerm.trim())
+  }, [historyWithThumbnails, searchTerm, selectedGameName, selectedPlayerName, myMatchesOnly, currentUser])
+
+  const hasFilters = Boolean(selectedGameName || selectedPlayerName || myMatchesOnly || searchTerm.trim())
 
   const handleNewGame = useCallback(async () => {
     const ok = await resetBoard()
@@ -243,6 +267,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
+    setSelectedPlayerName('')
+    setMyMatchesOnly(false)
     setSearchTerm('')
     setIsFilterOpen(false)
   }, [])
@@ -443,7 +469,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             ) : null}
             <span className="search-divider" aria-hidden="true" />
             <button
-              className={`filter-button${isFilterOpen || selectedGameName ? ' active' : ''}`}
+              className={`filter-button${isFilterOpen || hasFilters ? ' active' : ''}`}
               type="button"
               onClick={() => setIsFilterOpen((value) => !value)}
               aria-label="Bo loc game"
@@ -453,18 +479,17 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           </div>
 
           {isFilterOpen ? (
-            <div className="filter-panel history-filter-panel">
-              <label className="filter-field">
-                <span>Ten game</span>
-                <select value={selectedGameName} onChange={(event) => setSelectedGameName(event.target.value)}>
-                  <option value="">Tat ca tua game</option>
-                  {gameOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </label>
-              {hasFilters ? <button className="secondary-mini history-clear-btn" onClick={clearFilters}>Bo loc</button> : null}
-            </div>
+            <HistoryFilterPanel
+              selectedGameName={selectedGameName}
+              setSelectedGameName={setSelectedGameName}
+              gameOptions={gameOptions}
+              selectedPlayerName={selectedPlayerName}
+              setSelectedPlayerName={setSelectedPlayerName}
+              playerOptions={playerOptions}
+              myMatchesOnly={myMatchesOnly}
+              setMyMatchesOnly={setMyMatchesOnly}
+              onClear={clearFilters}
+            />
           ) : null}
         </section>
 

@@ -106,11 +106,11 @@
 .filter-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   border: 1px solid rgba(167, 125, 79, 0.12);
   border-radius: var(--radius-lg);
   background: rgba(255, 250, 247, 0.92);
-  padding: var(--space-3);
+  padding: var(--space-4);
 }
 
 .filter-field {
@@ -121,20 +121,90 @@
 
 .filter-field span,
 .filter-label {
-  color: var(--color-subtext);
-  font-size: 13px;
+  font-family: 'Barlow Semi Condensed', var(--font-main), sans-serif;
+  font-style: normal;
   font-weight: 700;
+  font-size: 14px;
+  line-height: 15px;
+  color: var(--color-subtext);
+}
+
+.filter-select-wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 12px 0px 16px;
+  gap: 12px;
+  background: #FFF9F5;
+  border: 1px solid #F2BC95;
+  border-radius: 12px;
+  height: 48px;
+}
+
+.filter-select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url('/down.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
 }
 
 .filter-field select {
   width: 100%;
-  border: 1px solid var(--color-border-control);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: 0;
   background: var(--color-white);
   color: var(--color-text);
   padding: var(--space-3) 14px;
-  font-size: 15px;
+  font-size: 16px;
+}
+
+.filter-select-wrapper select {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0;
+  padding-right: 24px;
+}
+
+.filter-clear-button {
+  width: 100%;
+  border: 1px solid var(--color-border-extra-light);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-border-light);
+  padding: var(--space-3) 14px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.filter-clear-button:hover,
+.filter-clear-button:focus-visible {
+  background: rgba(232, 189, 148, 0.08);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
 }
 
 .home-screen .home-search-panel,
@@ -198,5 +268,199 @@
 .history-filter-panel {
   border-radius: var(--radius-md);
   background: var(--color-card-soft);
+}
+
+.home-screen .filter-panel {
   box-shadow: var(--shadow-card);
+}
+
+.history-filter-panel {
+  box-shadow: var(--shadow-filter-panel);
+}
+
+/* Custom Select Component CSS */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 12px 0px 16px;
+  gap: 12px;
+  background: #FFF9F5;
+  border: 1px solid #F2BC95;
+  border-radius: 12px;
+  height: 48px;
+  font-size: 16px;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.custom-select-trigger span {
+  font-family: 'Barlow Semi Condensed', var(--font-main), sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 16px;
+  line-height: 19px;
+  letter-spacing: 0%;
+  color: #70655C;
+}
+
+.custom-select-trigger.active {
+  border-color: var(--color-brand);
+}
+
+.custom-select-arrow {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.custom-select-trigger.active .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #FFF9F5;
+  border: 1px solid #F2BC95;
+  border-radius: 12px;
+  margin: 0;
+  list-style: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.custom-select-options::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-select-option {
+  padding: var(--space-3) 16px;
+  font-size: 15px;
+  color: #70655C;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.custom-select-option:hover {
+  background: rgba(242, 188, 149, 0.15);
+}
+
+.custom-select-option.selected {
+  background: rgba(242, 188, 149, 0.3);
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+/* History Filter Panel Styles */
+.history-filter-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.history-player-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-toggle-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.history-toggle-field span {
+  white-space: nowrap;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-border-control);
+  transition: all 0.3s ease;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--color-white);
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+  background-color: var(--color-brand);
+}
+
+.toggle-switch input:checked+.toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Solid Clear Filter Button */
+.history-clear-filter-btn {
+  width: 100%;
+  background: var(--color-brand);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) 14px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  line-height: 1.2;
+  margin-top: var(--space-2);
+}
+
+.history-clear-filter-btn:hover,
+.history-clear-filter-btn:focus-visible {
+  background: var(--color-brand-dark);
 }
