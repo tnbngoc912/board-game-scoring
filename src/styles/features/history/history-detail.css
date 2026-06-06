@@ -213,7 +213,7 @@
   position: relative;
   z-index: 1;
   width: min(960px, 100%);
-  height: min(760px, 86dvh);
+  height: 96vh;
   display: grid;
   place-items: center;
 }
