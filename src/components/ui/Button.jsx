@@ -11,7 +11,7 @@ export function Button({
   children,
   className,
   variant = 'primary',
-  size = 'md',
+  size, // Loại bỏ kích thước để đồng nhất 1 size tiêu chuẩn
   leftIcon,
   rightIcon,
   disabled = false,
@@ -25,7 +25,6 @@ export function Button({
       className={clsx(
         'btn-custom',
         `variant-${variant}`,
-        `size-${size}`,
         className
       )}
       {...props}

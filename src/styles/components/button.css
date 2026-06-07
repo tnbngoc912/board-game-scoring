@@ -159,33 +159,17 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   outline: none;
+  box-sizing: border-box;
+  /* Kích thước tiêu chuẩn cố định */
+  height: 48px;
+  padding: 14px var(--space-6, 32px);
+  font-size: 18px;
+  border-radius: var(--radius-md, 12px);
 }
 
 .btn-custom:focus-visible {
   outline: 2px solid var(--color-brand-200);
   outline-offset: 2px;
-}
-
-/* Sizes */
-.btn-custom.size-sm {
-  height: 36px;
-  padding: 0 var(--space-3, 12px);
-  font-size: 14px;
-  border-radius: var(--radius-sm, 8px);
-}
-
-.btn-custom.size-md {
-  height: 48px;
-  padding: 0 var(--space-4, 16px);
-  font-size: 16px;
-  border-radius: var(--radius-md, 12px);
-}
-
-.btn-custom.size-lg {
-  height: 56px;
-  padding: 0 var(--space-5, 24px);
-  font-size: 18px;
-  border-radius: var(--radius-lg, 18px);
 }
 
 /* Variant: Primary */
