@@ -35,6 +35,8 @@ export function HistoryFilterPanel({
             value={selectedGameName}
             onChange={setSelectedGameName}
             options={gameSelectOptions}
+            searchable={true}
+            searchPlaceholder="Tìm tựa game..."
           />
         </div>
 
@@ -45,6 +47,8 @@ export function HistoryFilterPanel({
               value={selectedPlayerName}
               onChange={setSelectedPlayerName}
               options={playerSelectOptions}
+              searchable={true}
+              searchPlaceholder="Tìm người chơi..."
             />
           </div>
 

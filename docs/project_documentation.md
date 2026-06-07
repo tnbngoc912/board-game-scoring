@@ -205,7 +205,33 @@ Component `Button` dùng chung được thiết kế đặc thù tối ưu cho g
     *   **Phản hồi chạm (Active State)**: Khi bấm xuống (`:active`), nút co lại nhẹ (`scale(0.98)`) kết hợp đổi màu nền sẫm/nhạt hơn một chút tùy theo variant để tạo cảm giác xúc giác phản hồi chân thực.
     *   **Đồng bộ Icon**: Hỗ trợ tự động ép màu các icon custom (`.custom-icon`) bên trong nút disabled kế thừa màu chữ `currentColor` tương ứng.
 
+### 6.4. Component Input Tái Sử Dụng ([Input.jsx](file:///Users/luannguyen/BoardGameClient/board-game-scoring/src/components/ui/Input.jsx))
+Component `Input` dùng chung giúp chuẩn hóa các trường nhập liệu trong ứng dụng với các tiêu chí tối ưu cho di động:
+*   **Các Trạng Thái Thiết Kế**:
+    *   **Normal**: Nền kem hồng nhạt (`--color-brand-50` / `#FFF9F5`), viền cam đào (`--color-brand-200` / `#F2BC95`).
+    *   **Focus**: Nền giữ nguyên, viền chuyển sang màu nâu thương hiệu đậm (`--color-brand-600` / `#93653F`).
+    *   **Disabled**: Nền xám nhạt (`--color-gray-8` / `#EDEBE9`), chữ và icon mờ đi (`opacity: 0.5`).
+*   **Tính năng tích hợp**:
+    *   `leftIcon` / `rightIcon` (`ReactNode`): Cho phép chèn icon linh hoạt phía trước hoặc phía sau trường nhập liệu (như icon tìm kiếm, icon email/mật khẩu, v.v.).
+    *   `onClear` (`function`): Khi truyền callback này, một nút tròn xám chứa dấu **✕** sẽ tự động hiển thị bên phải khi trường nhập liệu có dữ liệu (và không bị disabled) giúp người dùng xóa nhanh giá trị chỉ với 1 chạm.
+*   **Tương tác Mobile-first**:
+    *   Loại bỏ hover và viền focus ring dư thừa bên ngoài để đảm bảo nét vẽ sắc nét và tối giản trên màn hình cảm ứng di động.
+
+### 6.5. Component SearchBar Tích Hợp ([SearchBar.jsx](file:///Users/luannguyen/BoardGameClient/board-game-scoring/src/components/ui/SearchBar.jsx))
+Component `SearchBar` tích hợp gom cụm ô nhập tìm kiếm, nút xóa nhanh (Clear) và nút lọc (Filter) thành một thanh nguyên khối đồng bộ theo thiết kế Figma:
+*   **Thiết kế & Layout**:
+    *   **Nền & Bóng đổ**: Sử dụng nền kem đục nhẹ (`var(--color-card-soft)`) và bóng đổ (`var(--shadow-card)`).
+    *   **Bo góc tròn**: Bo góc lớn (`var(--radius-xl)` / `22px`) tạo giao diện nguyên khối mềm mại.
+    *   **Đường kẻ dọc (Divider)**: Một đường kẻ dọc mảnh cao `24px` màu xám nhạt (`var(--color-gray-12)`) ngăn cách giữa phần tìm kiếm/clear và nút lọc bên phải.
+*   **Props hỗ trợ**:
+    *   `value` & `onChange`: Quản lý giá trị nhập liệu.
+    *   `onClear`: Callback reset giá trị, tự động hiển thị nút tròn chứa dấu **✕** khi có dữ liệu.
+    *   `isFilterOpen` & `onFilterToggle`: Trạng thái mở panel lọc và callback toggle.
+    *   `hasFilters`: Trạng thái đang áp dụng lọc (nếu true, nút lọc tự động active).
+
 ---
+
+
 
 
 ## 7. Cấu Trúc Cơ Sở Dữ Liệu Backend (Tham Khảo)

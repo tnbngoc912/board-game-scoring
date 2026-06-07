@@ -8,7 +8,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
-import { Icon } from './ui/Icon'
+import { SearchBar } from './ui/SearchBar'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -255,46 +255,22 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
           <div className="screen-inner home-content">
             <section className="home-search-panel" aria-label="Tim va loc game">
-              <div className="search-bar">
-                <span className="search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M16.5 16.5L21 21" />
-                  </svg>
-                </span>
-                <input
-                  value={gameSearchTerm}
-                  onChange={(event) => setGameSearchTerm(event.target.value)}
-                  placeholder="Tìm trò chơi"
-                  aria-label="Tìm tên game"
-                />
-                {gameSearchTerm ? (
-                  <button
-                    className="search-clear-button search-clear-button--with-filter"
-                    type="button"
-                    onClick={() => setGameSearchTerm('')}
-                    aria-label="Xoa tu khoa tim game"
-                  >
-                    ✕
-                  </button>
-                ) : null}
-                <span className="search-divider" aria-hidden="true" />
-                <button
-                  className={`filter-button${isFilterOpen ? ' active' : ''}`}
-                  type="button"
-                  onClick={() => setIsFilterOpen((value) => !value)}
-                  aria-label="Bo loc"
-                >
-                  <Icon src={isFilterOpen ? "/filter-filled.png" : "/filter-icon.svg"} color={isFilterOpen ? "#93653F" : "#38322E"} size={24} />
-                </button>
-              </div>
-
+              <SearchBar
+                value={gameSearchTerm}
+                onChange={(event) => setGameSearchTerm(event.target.value)}
+                onClear={() => setGameSearchTerm('')}
+                placeholder="Tìm trò chơi"
+                isFilterOpen={isFilterOpen}
+                onFilterToggle={() => setIsFilterOpen((value) => !value)}
+                hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
+              />
               <FilterPanel
                 playerCountFilter={playerCountFilter}
                 setPlayerCountFilter={setPlayerCountFilter}
                 isOpen={isFilterOpen}
               />
             </section>
+
 
             <section className="home-game-section">
               {isLoadingGames ? (

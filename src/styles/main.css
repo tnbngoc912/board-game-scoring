@@ -9,8 +9,12 @@
 
 /* components */
 @import './components/button.css';
+@import './components/input.css';
+@import './components/search-bar.css';
 @import './components/card.css';
 @import './components/loading.css';
+
+
 @import './components/modal.css';
 @import './components/navigation.css';
 @import './components/search.css';

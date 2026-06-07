@@ -1,0 +1,100 @@
+/* ==========================================
+   Custom Input Component Styles
+   ========================================== */
+
+.custom-input-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 48px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-brand-50);
+  border: 1px solid var(--color-brand-200);
+  border-radius: var(--radius-md, 12px);
+  padding: 0 var(--space-4, 16px);
+  gap: var(--space-3, 12px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus State */
+.custom-input-wrapper:focus-within {
+  border-color: var(--color-brand-600);
+}
+
+/* Disabled State */
+.custom-input-wrapper.disabled,
+.custom-input-wrapper:has(input:disabled) {
+  background-color: var(--color-gray-8);
+  border-color: var(--color-gray-12);
+  cursor: not-allowed;
+}
+
+.custom-input-wrapper.disabled .custom-input-icon,
+.custom-input-wrapper:has(input:disabled) .custom-input-icon {
+  opacity: 0.5;
+}
+
+/* Input Control */
+.custom-input-control {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-gray-80);
+  padding: 0;
+}
+
+.custom-input-control::placeholder {
+  color: var(--color-gray-40);
+  opacity: 0.8;
+}
+
+.custom-input-control:disabled {
+  color: var(--color-gray-40);
+  cursor: not-allowed;
+}
+
+/* Icons */
+.custom-input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-gray-60);
+  transition: color 0.2s ease;
+}
+
+.custom-input-wrapper:focus-within .custom-input-icon {
+  color: var(--color-brand-700);
+}
+
+/* Clear Button */
+.custom-input-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-gray-40);
+  color: var(--color-gray-white);
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.custom-input-clear-btn:active {
+  background-color: var(--color-gray-60);
+}
+

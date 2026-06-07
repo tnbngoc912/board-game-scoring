@@ -1,0 +1,90 @@
+/* ==========================================
+   Custom Search Bar Component Styles
+   ========================================== */
+
+.custom-search-bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 48px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-card-soft);
+  border-radius: var(--radius-md);
+  padding: 0 0 0 16px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-search-bar:focus-within {
+  box-shadow: 0 4px 12px rgba(147, 101, 63, 0.08);
+}
+
+/* Search Icon */
+.custom-search-icon-left {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-gray-40);
+}
+
+/* Input Control */
+.custom-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-gray-80);
+  padding: 0 12px;
+}
+
+.custom-search-input::placeholder {
+  font-size: 18px;
+  color: var(--color-gray-40);
+  opacity: 0.8;
+}
+
+
+/* Clear Button */
+.custom-search-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0;
+  margin: 0 8px 0 4px;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+/* Divider Line */
+.custom-search-divider {
+  width: 1px;
+  height: 100%;
+  background-color: var(--color-gray-12);
+  flex-shrink: 0;
+}
+
+/* Filter Button */
+.custom-search-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md, 12px);
+  border: none;
+  background: transparent;
+  color: var(--color-gray-80);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  padding: 12px 16px;
+}

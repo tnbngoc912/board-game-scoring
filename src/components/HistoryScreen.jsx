@@ -11,7 +11,7 @@ import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
 import { useAuthStore } from '../store/authStore'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
-import { Icon } from './ui/Icon'
+import { SearchBar } from './ui/SearchBar'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -445,38 +445,16 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
       <div className="screen-inner history-content">
         <section className="home-search-panel" aria-label="Tim va loc lich su">
-          <div className="search-bar">
-            <span className="search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M16.5 16.5L21 21" />
-              </svg>
-            </span>
-            <input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Tìm ván chơi"
-              aria-label="Tim trong mo ta van choi"
-            />
-            {searchTerm ? (
-              <button
-                className="search-clear-button search-clear-button--with-filter"
-                type="button"
-                onClick={() => setSearchTerm('')}
-                aria-label="Xoa tu khoa tim van choi"
-              >✕
-              </button>
-            ) : null}
-            <span className="search-divider" aria-hidden="true" />
-            <button
-              className={`filter-button${isFilterOpen || hasFilters ? ' active' : ''}`}
-              type="button"
-              onClick={() => setIsFilterOpen((value) => !value)}
-              aria-label="Bo loc game"
-            >
-              <Icon src={isFilterOpen ? "/filter-filled.png" : "/filter-icon.svg"} color={isFilterOpen ? "#93653F" : "#38322E"} size={24} />
-            </button>
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            onClear={() => setSearchTerm('')}
+            placeholder="Tìm ván chơi"
+            isFilterOpen={isFilterOpen}
+            onFilterToggle={() => setIsFilterOpen((value) => !value)}
+            hasFilters={hasFilters}
+          />
+
 
           <HistoryFilterPanel
             selectedGameName={selectedGameName}
