@@ -59,7 +59,7 @@
 }
 
 .score-close-btn,
-.setup-back-btn{
+.setup-back-btn {
   width: 32px;
   height: 32px;
 }
@@ -139,4 +139,149 @@
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* ==========================================
+   Custom Button Component Styles
+   ========================================== */
+
+.btn-custom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  outline: none;
+}
+
+.btn-custom:focus-visible {
+  outline: 2px solid var(--color-brand-200);
+  outline-offset: 2px;
+}
+
+/* Sizes */
+.btn-custom.size-sm {
+  height: 36px;
+  padding: 0 var(--space-3, 12px);
+  font-size: 14px;
+  border-radius: var(--radius-sm, 8px);
+}
+
+.btn-custom.size-md {
+  height: 48px;
+  padding: 0 var(--space-4, 16px);
+  font-size: 16px;
+  border-radius: var(--radius-md, 12px);
+}
+
+.btn-custom.size-lg {
+  height: 56px;
+  padding: 0 var(--space-5, 24px);
+  font-size: 18px;
+  border-radius: var(--radius-lg, 18px);
+}
+
+/* Variant: Primary */
+.btn-custom.variant-primary {
+  background-color: var(--color-brand-600);
+  color: var(--color-gray-white);
+  box-shadow: 0 2px 4px rgba(96, 66, 41, 0.1);
+}
+
+.btn-custom.variant-primary:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: var(--color-brand-700);
+}
+
+/* Variant: Secondary */
+.btn-custom.variant-secondary {
+  background-color: var(--color-brand-100);
+  color: var(--color-brand-700);
+}
+
+.btn-custom.variant-secondary:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: var(--color-brand-150);
+}
+
+/* Variant: Outline */
+.btn-custom.variant-outline {
+  background-color: var(--color-gray-white);
+  border-color: var(--color-gray-12);
+  color: var(--color-gray-80);
+}
+
+.btn-custom.variant-outline:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: var(--color-gray-2);
+}
+
+/* Variant: Ghost */
+.btn-custom.variant-ghost {
+  background-color: transparent;
+  color: var(--color-brand-700);
+  padding-left: var(--space-2, 8px);
+  padding-right: var(--space-2, 8px);
+}
+
+.btn-custom.variant-ghost:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: var(--color-brand-50);
+}
+
+/* Disabled State */
+.btn-custom:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-custom.variant-primary:disabled {
+  background-color: var(--color-brand-100);
+  color: rgba(255, 255, 255, 1);
+  box-shadow: none;
+}
+
+.btn-custom.variant-secondary:disabled {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-200);
+}
+
+.btn-custom.variant-outline:disabled {
+  background-color: var(--color-gray-white);
+  border-color: var(--color-gray-4);
+  color: var(--color-gray-20);
+}
+
+.btn-custom.variant-ghost:disabled {
+  background-color: transparent;
+  color: var(--color-gray-20);
+}
+
+/* Ép màu của custom-icon bên trong button disabled tuân theo màu text currentColor */
+.btn-custom:disabled .custom-icon {
+  background-color: currentColor !important;
+}
+
+
+/* Icon Wrappers */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon-left {
+  margin-right: 2px;
+}
+
+.btn-icon-right {
+  margin-left: 2px;
 }

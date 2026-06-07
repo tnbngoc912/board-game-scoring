@@ -1,5 +1,6 @@
 import React from 'react'
 import { Select } from './ui/Select'
+import { Button } from './ui/Button'
 
 export function FilterPanel({ playerCountFilter, setPlayerCountFilter, isOpen }) {
   const handleClear = () => {
@@ -29,14 +30,16 @@ export function FilterPanel({ playerCountFilter, setPlayerCountFilter, isOpen })
             options={options}
           />
         </div>
-        <button
-          type="button"
+        <Button
+          variant="primary"
           className="filter-clear-button"
           onClick={handleClear}
+          disabled={!playerCountFilter}
         >
           Xóa bộ lọc
-        </button>
+        </Button>
       </div>
     </div>
   )
 }
+

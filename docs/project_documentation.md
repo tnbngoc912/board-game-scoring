@@ -188,7 +188,25 @@ Dự án áp dụng phong cách thiết kế **Rich Aesthetics** với các quy 
 *   Giao diện phải hoàn toàn thích ứng (Responsive) trên màn hình di động, sử dụng grid và flexbox linh hoạt.
 *   Tránh sử dụng các màu cơ bản thô (như thuần đỏ, thuần xanh). Sử dụng hiệu ứng hover mượt mà và chuyển cảnh tinh tế để tăng trải nghiệm người dùng (Wow effect).
 
+### 6.3. Component Button Tái Sử Dụng ([Button.jsx](file:///Users/luannguyen/BoardGameClient/board-game-scoring/src/components/ui/Button.jsx))
+Component `Button` dùng chung được thiết kế đặc thù tối ưu cho giao diện di động (mobile-first), cung cấp trải nghiệm tương tác trực quan cao:
+*   **Các Variants**:
+    *   `primary`: Nền nâu thương hiệu (`--color-brand-600`), chữ trắng. Dùng cho các hành động chính (Lưu kết quả, Đăng nhập, Bắt đầu).
+    *   `secondary`: Nền kem đào ấm (`--color-brand-100`), chữ nâu đậm (`--color-brand-700`). Dùng cho hành động phụ hoặc nổi bật vừa phải.
+    *   `outline`: Nền trắng, viền xám nhạt (`--color-gray-12`), chữ đen xám (`--color-gray-80`). Dùng cho nút phụ hoặc nút trạng thái thường.
+    *   `ghost`: Trong suốt, chữ nâu đậm (`--color-brand-700`). Dùng cho các liên kết hành động dạng văn bản hoặc nút icon tối giản.
+*   **Props quan trọng**:
+    *   `variant` (`'primary' | 'secondary' | 'outline' | 'ghost'`): Kiểu dáng nút.
+    *   `size` (`'sm' | 'md' | 'lg'`): Kích thước nút (độ cao tương ứng `36px`, `48px`, `56px`).
+    *   `leftIcon` / `rightIcon` (`ReactNode`): Icon hiển thị bên trái hoặc bên phải của chữ.
+    *   `disabled` (`boolean`): Chặn click và tự động chuyển sang trạng thái disabled chuẩn Figma (Primary nền kem đào chữ mờ, Secondary nền kem hồng chữ cam đào mờ, Outline viền xám nhạt chữ xám mờ, Ghost chữ xám mờ).
+*   **Tương tác Mobile-first**:
+    *   **Loại bỏ Hover & Focus**: Tránh hiện tượng sticky hover trên di động.
+    *   **Phản hồi chạm (Active State)**: Khi bấm xuống (`:active`), nút co lại nhẹ (`scale(0.98)`) kết hợp đổi màu nền sẫm/nhạt hơn một chút tùy theo variant để tạo cảm giác xúc giác phản hồi chân thực.
+    *   **Đồng bộ Icon**: Hỗ trợ tự động ép màu các icon custom (`.custom-icon`) bên trong nút disabled kế thừa màu chữ `currentColor` tương ứng.
+
 ---
+
 
 ## 7. Cấu Trúc Cơ Sở Dữ Liệu Backend (Tham Khảo)
 

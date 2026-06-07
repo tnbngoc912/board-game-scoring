@@ -1,5 +1,6 @@
 import React from 'react'
 import { Select } from './ui/Select'
+import { Button } from './ui/Button'
 
 export function HistoryFilterPanel({
   selectedGameName,
@@ -22,6 +23,8 @@ export function HistoryFilterPanel({
     { value: '', label: 'Tất cả' },
     ...playerOptions.map((name) => ({ value: name, label: name })),
   ]
+
+  const isClearDisabled = !selectedGameName && !selectedPlayerName && !myMatchesOnly
 
   return (
     <div className={`filter-panel history-filter-panel ${isOpen ? 'open' : ''}`}>
@@ -58,13 +61,14 @@ export function HistoryFilterPanel({
           </div>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="primary"
           className="history-clear-filter-btn"
           onClick={onClear}
+          disabled={isClearDisabled}
         >
           Xóa bộ lọc
-        </button>
+        </Button>
       </div>
     </div>
   )

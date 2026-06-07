@@ -224,13 +224,6 @@
   line-height: 1.2;
 }
 
-.filter-clear-button:hover,
-.filter-clear-button:focus-visible {
-  background: rgba(232, 189, 148, 0.08);
-  border-color: var(--color-brand);
-  color: var(--color-brand);
-}
-
 .home-screen .home-search-panel,
 .history-content .home-search-panel {
   gap: var(--space-1);
@@ -365,7 +358,7 @@
   margin: 0;
   list-style: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  max-height: 200px;
+  max-height: 336px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;

@@ -25,6 +25,36 @@
   --color-action-text: #7e5b38;
   --color-white: #fff;
 
+  /* --- New Color Tokens --- */
+  /* Brand/Primary Colors */
+  --color-brand-50: #FFF9F5;
+  --color-brand-100: #FDE4D2;
+  --color-brand-150: #F9CFB2;
+  --color-brand-200: #F2BC95;
+  --color-brand-300: #E8A97B;
+  --color-brand-400: #DB9763;
+  --color-brand-500: #CC854E;
+  --color-brand-550: #B57440;
+  --color-brand-600: #93653F;
+  --color-brand-700: #604229;
+
+  /* Grayscale */
+  --color-gray-white: #FFFFFF;
+  --color-gray-2: #F9F8F7;
+  --color-gray-4: #F6F5F4;
+  --color-gray-8: #EDEBE9;
+  --color-gray-12: #E3E0DD;
+  --color-gray-20: #D1CBC7;
+  --color-gray-40: #A3988F;
+  --color-gray-60: #70655C;
+  --color-gray-80: #38322E;
+  --color-gray-black: #000000;
+
+  /* System Semantic Colors */
+  --color-page-bg: #F2E6DC;
+  --color-sys-danger: #FF6B6B;
+  --color-sys-success: #50B46C;
+
   /* spacing */
   --space-1: 4px;
   --space-2: 8px;

@@ -271,7 +271,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setSelectedPlayerName('')
     setMyMatchesOnly(false)
     setSearchTerm('')
-    setIsFilterOpen(false)
   }, [])
 
   const confirmDelete = useCallback(async () => {
