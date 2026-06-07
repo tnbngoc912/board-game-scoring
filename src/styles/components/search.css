@@ -211,17 +211,6 @@
 
 .filter-clear-button {
   width: 100%;
-  border: 1px solid var(--color-border-extra-light);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-border-light);
-  padding: var(--space-3) 14px;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  line-height: 1.2;
 }
 
 .home-screen .home-search-panel,
@@ -461,26 +450,10 @@
   transform: translateX(20px);
 }
 
-/* Solid Clear Filter Button */
+/* Solid Clear Filter Button Layout */
 .history-clear-filter-btn {
   width: 100%;
-  background: var(--color-brand);
-  color: var(--color-white);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--space-3) 14px;
-  font-size: 16px;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  line-height: 1.2;
   margin-top: var(--space-2);
-}
-
-.history-clear-filter-btn:hover,
-.history-clear-filter-btn:focus-visible {
-  background: var(--color-brand-dark);
 }
 
 /* Custom Select Search Styles */
