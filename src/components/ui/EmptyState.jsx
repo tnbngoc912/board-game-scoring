@@ -33,7 +33,7 @@ export function EmptyState({
         <div className="custom-empty-state-text">{title}</div>
         {description && <div className="custom-empty-state-description">{description}</div>}
         {actionText && onAction && (
-          <Button variant="primary" onClick={onAction} size="lg">
+          <Button variant="primary" onClick={onAction}>
             {actionText}
           </Button>
         )}
