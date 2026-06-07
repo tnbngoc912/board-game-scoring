@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { Button } from './Button'
 
 /**
  * Component EmptyState hiển thị trạng thái trống (không tìm thấy kết quả, danh sách trống).
@@ -13,8 +14,8 @@ export function EmptyState({
   actionText,
   onAction,
   action,
-  imageWidth = 220,
-  imageHeight = 200,
+  imageWidth = 120,
+  imageHeight = 120,
 }) {
   // Giao diện kiểu mới nếu có ảnh minh họa
   if (imageSrc) {
@@ -32,9 +33,9 @@ export function EmptyState({
         <div className="custom-empty-state-text">{title}</div>
         {description && <div className="custom-empty-state-description">{description}</div>}
         {actionText && onAction && (
-          <button className="custom-empty-state-btn" type="button" onClick={onAction}>
+          <Button variant="primary" className="custom-empty-state-btn" onClick={onAction}>
             {actionText}
-          </button>
+          </Button>
         )}
         {action}
       </div>

@@ -6,10 +6,10 @@
   padding: 60px 20px;
   text-align: center;
   width: 100%;
+  gap: 4px;
 }
 
 .custom-empty-state-image {
-  margin-bottom: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
