@@ -21,13 +21,9 @@ export function SearchBar({
   return (
     <div className={clsx('custom-search-bar', className)}>
       {/* Icon kính lúp tìm kiếm ở bên trái */}
-      <Icon
-        src="/search.png"
-        color="var(--color-gray-40)"
-        size={24}
-        className="custom-search-icon-left"
-      />
-
+      <div className="custom-search-icon-left">
+        <Icon src="/search.png" color="var(--color-gray-40)" size={24} />
+      </div>
 
       {/* Ô nhập liệu tìm kiếm */}
       <input
