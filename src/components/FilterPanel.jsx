@@ -31,8 +31,7 @@ export function FilterPanel({ playerCountFilter, setPlayerCountFilter, isOpen })
           />
         </div>
         <Button
-          variant="outline"
-          className="filter-clear-button"
+          variant="primary"
           onClick={handleClear}
           disabled={!playerCountFilter}
         >

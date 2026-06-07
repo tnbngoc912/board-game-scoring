@@ -209,10 +209,6 @@
   padding-right: 24px;
 }
 
-.filter-clear-button {
-  width: 100%;
-}
-
 .home-screen .home-search-panel,
 .history-content .home-search-panel {
   gap: var(--space-1);
@@ -448,12 +444,6 @@
 
 .toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(20px);
-}
-
-/* Solid Clear Filter Button Layout */
-.history-clear-filter-btn {
-  width: 100%;
-  margin-top: var(--space-2);
 }
 
 /* Custom Select Search Styles */
