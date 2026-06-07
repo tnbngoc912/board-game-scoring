@@ -9,6 +9,7 @@ import Image from "next/image"
 import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
 import { SearchBar } from './ui/SearchBar'
+import { EmptyState } from './ui/EmptyState'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -293,10 +294,12 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               ) : null}
 
               {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
-                <div className="paper-card empty-state home-empty-state">
-                  <div>Khong tim thay game phu hop.</div>
-                  <button className="secondary-mini" onClick={resetFilters}>Xoa bo loc</button>
-                </div>
+                <EmptyState
+                  imageSrc="/not-found.png"
+                  title="Không tìm thấy kết quả nào!"
+                  actionText="Xóa bộ lọc"
+                  onAction={resetFilters}
+                />
               ) : null}
 
               {!isLoadingGames && filteredGames.length > 0 ? (
