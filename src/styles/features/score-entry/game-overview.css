@@ -23,14 +23,6 @@
   padding: 0 var(--space-4);
 }
 
-.overview-topbar--back-title {
-  grid-template-columns: 44px minmax(0, 1fr);
-}
-
-.overview-topbar--title-close {
-  grid-template-columns: minmax(0, 1fr) 44px;
-}
-
 .overview-topbar .title-header {
   justify-self: center;
   width: 100%;

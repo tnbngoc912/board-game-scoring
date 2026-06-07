@@ -5,6 +5,9 @@ import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { ScoreGrid } from './score/ScoreGrid'
 import { Header } from './Header'
+import Image from "next/image"
+
+const MAX_MEMORY_IMAGES = 3
 
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
@@ -29,6 +32,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const router = useRouter()
   const pathname = usePathname()
   const didRedirectRef = useRef(false)
+  const memoryImagesRef = useRef([])
   const {
     gameName,
     scoringType,
@@ -51,6 +55,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
   const [focusedCell, setFocusedCell] = useState(null)
   const [matchDescription, setMatchDescription] = useState('')
+  const [memoryImages, setMemoryImages] = useState([])
   const [winnerPlayerId, setWinnerPlayerId] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
@@ -77,6 +82,14 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
       players.some((player) => player.id === current) ? current : ''
     ))
   }, [players])
+
+  useEffect(() => {
+    memoryImagesRef.current = memoryImages
+  }, [memoryImages])
+
+  useEffect(() => () => {
+    memoryImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+  }, [])
 
   const winningPlayerIds = useMemo(() => {
     const totals = players.map((player) => ({
@@ -144,9 +157,15 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
     }]
     setIsSaving(true)
     try {
-      const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
+      const ok = await publishScores(
+        isWinnerOnly ? winnerOnlyScores : draftScores,
+        matchDescription,
+        memoryImages.map((image) => image.file)
+      )
       toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
       if (ok) {
+        memoryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+        setMemoryImages([])
         clearPlayers()
         onShowHistory()
       }
@@ -158,8 +177,34 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   function handleClose() {
     if (isSaving) return
 
+    memoryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+    setMemoryImages([])
     clearPlayers()
     onShowSetup()
+  }
+
+  function handleAddMemoryImages(files) {
+    const imageFiles = Array.from(files || []).filter((file) => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+
+    setMemoryImages((current) => {
+      const availableSlots = MAX_MEMORY_IMAGES - current.length
+      const nextImages = imageFiles.slice(0, availableSlots).map((file) => ({
+        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }))
+
+      return [...current, ...nextImages]
+    })
+  }
+
+  function handleRemoveMemoryImage(imageId) {
+    setMemoryImages((current) => {
+      const imageToRemove = current.find((image) => image.id === imageId)
+      if (imageToRemove) URL.revokeObjectURL(imageToRemove.previewUrl)
+      return current.filter((image) => image.id !== imageId)
+    })
   }
 
   return (
@@ -210,10 +255,71 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           placeholder="Nhập mô tả ván chơi (tùy chọn)"
         />
 
+        <MemoryImageUploader
+          images={memoryImages}
+          disabled={isSaving}
+          onAddImages={handleAddMemoryImages}
+          onRemoveImage={handleRemoveMemoryImage}
+        />
+
         <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
           {isSaving ? 'Đang lưu...' : 'Lưu kết quả'}
         </button>
       </div>
     </div>
+  )
+}
+
+function MemoryImageUploader({ images, disabled, onAddImages, onRemoveImage }) {
+  const inputRef = useRef(null)
+  const canAddMore = images.length < MAX_MEMORY_IMAGES
+
+  function handleInputChange(event) {
+    onAddImages(event.target.files)
+    event.target.value = ''
+  }
+
+  return (
+    <section className="score-memory-section" aria-label="Hình ảnh kỉ niệm">
+      <h2>Hình ảnh kỉ niệm</h2>
+      <div className="score-memory-grid">
+        {images.map((image) => (
+          <div key={image.id} className="score-memory-card">
+            <img src={image.previewUrl} alt="Hình ảnh kỉ niệm" />
+            <button
+              type="button"
+              className="score-memory-remove"
+              onClick={() => onRemoveImage(image.id)}
+              disabled={disabled}
+              aria-label="Xóa hình ảnh"
+            >
+              <Image src="/black-close-icon.svg" alt="" width={24} height={24} />
+            </button>
+          </div>
+        ))}
+
+        {canAddMore ? (
+          <button
+            type="button"
+            className="score-memory-upload"
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled}
+            aria-label="Tải lên hình ảnh kỉ niệm"
+          >
+            <Image src="/icon-upload.svg" alt="" width={28} height={28} />
+            <span>Tải lên</span>
+          </button>
+        ) : null}
+      </div>
+      <input
+        ref={inputRef}
+        className="score-memory-input"
+        type="file"
+        accept="image/*"
+        multiple
+        disabled={disabled || !canAddMore}
+        onChange={handleInputChange}
+      />
+    </section>
   )
 }

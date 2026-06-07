@@ -53,6 +53,28 @@ async function request(path, options = {}) {
   return payload?.data || payload
 }
 
+async function requestFormData(path, formData, options = {}) {
+  const token = getAuthToken()
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    method: options.method || 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+    body: formData,
+  })
+
+  const text = await response.text()
+  const payload = text ? JSON.parse(text) : null
+
+  if (!response.ok) {
+    throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
+  }
+
+  return payload?.data || payload
+}
+
 function slugify(value) {
   return value
     .normalize('NFD')
@@ -203,7 +225,7 @@ export async function getMatch(matchId) {
   return normalizeMatchDetail(payload)
 }
 
-export async function updateMatchScores(matchId, { description, playerScores, winnerIds }) {
+export async function updateMatchScores(matchId, { description, playerScores, winnerIds, imageAttachments }) {
   const body = {
     description,
   }
@@ -214,10 +236,31 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
     body.player_scores = playerScores
   }
 
+  if (imageAttachments?.length) {
+    body.image_attachments = imageAttachments
+  }
+
   return request(`/matches/${matchId}/scores`, {
     method: 'PUT',
     body: JSON.stringify(body),
   })
+}
+
+export async function uploadMatchImages(files = []) {
+  if (files.length === 0) return []
+
+  return Promise.all(files.map(async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const payload = await requestFormData('/upload', formData)
+
+    return {
+      fileId: payload?.fileId,
+      url: payload?.url,
+      fileName: payload?.fileName || file.name,
+    }
+  }))
 }
 
 export async function deleteMatch(matchId) {

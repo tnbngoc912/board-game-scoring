@@ -6,6 +6,7 @@ import {
   ensureBoardGame,
   syncUserByName,
   updateMatchScores,
+  uploadMatchImages,
 } from '../api/backendService'
 
 const PLAYER_COLORS = ['#ea6556', '#5a98e6', '#6fbe78', '#e3af47', '#b57be7', '#ef8e45']
@@ -240,7 +241,7 @@ export const useGameStore = create(
         return true
       },
 
-      async publishScores(scoreRows, description = '') {
+      async publishScores(scoreRows, description = '', memoryImageFiles = []) {
         const { gameName, scoringType, players, categories } = get()
         const publishedScores = scoringType === 'WINNER_ONLY'
           ? scoreRows
@@ -270,10 +271,14 @@ export const useGameStore = create(
               }
             })
           const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
+          const imageAttachments = memoryImageFiles.length > 0
+            ? await uploadMatchImages(memoryImageFiles)
+            : []
 
           await updateMatchScores(match.id, {
             description: description.trim() || '',
             ...(scoringType === 'WINNER_ONLY' ? { winnerIds } : { playerScores }),
+            imageAttachments,
           })
 
           set({
