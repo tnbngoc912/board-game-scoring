@@ -22,6 +22,7 @@ export const metadata = {
     title: 'ScoreKeeper',
     description: 'Board game score tracker',
     type: 'website',
+    url: appUrl,
     images: [
       {
         url: '/og-image.png',
