@@ -12,6 +12,7 @@ import { Header } from './Header'
 import { useAuthStore } from '../store/authStore'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
 import { SearchBar } from './ui/SearchBar'
+import { EmptyState } from './ui/EmptyState';
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -487,19 +488,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           ) : null}
 
           {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
-            <div className="paper-card history-empty-state">
-              <h2>Chua co van dau nao duoc ghi lai</h2>
-              <p>Luu ket qua van choi dau tien de xem lai bang diem tai day.</p>
-              <button className="score-save-btn history-empty-btn" onClick={handleNewGame}>Tao van moi</button>
-            </div>
+            <EmptyState
+              imageSrc="/not-found.png"
+              title="Chưa có ván đấu nào được ghi lại!"
+              actionText="Tạo ván mới"
+              onAction={handleNewGame}
+            />
           ) : null}
 
           {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
-            <div className="paper-card history-empty-state">
-              <h2>Khong tim thay van dau</h2>
-              <p>Thu tu khoa khac hoac bo loc game khac.</p>
-              <button className="secondary-mini history-clear-btn" onClick={clearFilters}>Bo loc</button>
-            </div>
+            <EmptyState
+              imageSrc="/not-found.png"
+              title="Không tìm thấy ván đấu!"
+              actionText="Xóa bộ lọc"
+              onAction={clearFilters}
+            />
           ) : null}
 
           {filteredHistory.map((entry, index) => {
