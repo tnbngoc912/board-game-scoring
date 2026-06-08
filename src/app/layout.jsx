@@ -10,7 +10,7 @@ const barlow = Barlow_Semi_Condensed({
 })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(`https://board-game-scoring.vercel.app`),
   title: 'ScoreKeeper',
   description: 'Board game score tracker',
   applicationName: 'ScoreKeeper',
