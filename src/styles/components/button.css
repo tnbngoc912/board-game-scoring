@@ -269,39 +269,3 @@
 .btn-icon-right {
   margin-left: 2px;
 }
-
-/* ==========================================
-   Share Button Styles
-   ========================================== */
-
-.score-share-btn {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: none;
-  background: transparent;
-  color: var(--color-white);
-  cursor: pointer;
-  justify-self: end;
-  padding: 0;
-  border-radius: var(--radius-round);
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-
-.score-share-btn:hover {
-  opacity: 0.9;
-}
-
-.score-share-btn:active {
-  transform: scale(0.95);
-  opacity: 0.7;
-}
-
-.score-share-btn svg {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.2;
-}

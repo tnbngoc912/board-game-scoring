@@ -9,11 +9,11 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
-import { Share2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState';
+import { Icon } from './ui/Icon'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -355,14 +355,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             router.push('/history')
           }}
           rightElement={
-            <button
-              className="score-share-btn"
-              type="button"
-              onClick={handleShare}
-              aria-label="Chia sẻ ván đấu"
-            >
-              <Share2 />
-            </button>
+            <Icon  src="/share.png" size={32} color="white" onClick={handleShare} />
           }
         />
 

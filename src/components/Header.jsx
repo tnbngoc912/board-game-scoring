@@ -24,7 +24,9 @@ export function Header({ onBack, onClose, isCloseDisabled = false, title, rightE
         <HeaderBrand title={title} />
 
         {rightElement ? (
-          rightElement
+          <div style={{ justifySelf: 'end', display: 'grid', placeItems: 'center' }}>
+            {rightElement}
+          </div>
         ) : onClose ? (
           <button
             className="score-close-btn"

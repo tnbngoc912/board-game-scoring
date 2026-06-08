@@ -10,19 +10,20 @@ const barlow = Barlow_Semi_Condensed({
 })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'),
   title: 'ScoreKeeper',
   description: 'Board game score tracker',
   applicationName: 'ScoreKeeper',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: '/favicon.svg',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     title: 'ScoreKeeper',
     description: 'Board game score tracker',
     type: 'website',
-    url: appUrl,
+    url: process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000',
     images: [
       {
         url: '/og-image.png',
