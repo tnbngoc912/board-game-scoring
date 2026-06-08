@@ -10,12 +10,32 @@ const barlow = Barlow_Semi_Condensed({
 })
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'ScoreKeeper',
   description: 'Board game score tracker',
   applicationName: 'ScoreKeeper',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: '/favicon.svg',
+  },
+  openGraph: {
+    title: 'ScoreKeeper',
+    description: 'Board game score tracker',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 1200,
+        alt: 'BGScore - Board Game Score Tracker',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ScoreKeeper',
+    description: 'Board game score tracker',
+    images: ['/og-image.png'],
   },
 }
 
