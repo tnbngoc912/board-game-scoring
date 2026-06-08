@@ -9,8 +9,14 @@ const barlow = Barlow_Semi_Condensed({
   // variable: '--font-barlow',
 })
 
+const appUrl = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:3000'
+  : (process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` // Thêm https:// vào đây
+      : 'https://test.com')
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'),
+  metadataBase: new URL(appUrl),
   title: 'ScoreKeeper',
   description: 'Board game score tracker',
   applicationName: 'ScoreKeeper',
@@ -23,7 +29,7 @@ export const metadata = {
     title: 'ScoreKeeper',
     description: 'Board game score tracker',
     type: 'website',
-    url: process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000',
+    url: appUrl,
     images: [
       {
         url: '/og-image.png',
