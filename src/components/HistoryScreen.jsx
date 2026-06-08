@@ -9,6 +9,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
+import { Share2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
 import { SearchBar } from './ui/SearchBar'
@@ -292,6 +293,35 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }, [matchToDelete, removeHistoryMatch, selectedMatch?.id, toast])
 
+  const handleShare = useCallback(async () => {
+    if (!selectedMatch) return
+
+    const shareData = {
+      title: 'Bảng điểm ván đấu - BGScore',
+      text: `Xem kết quả ván đấu ${selectedMatch.gameName} trên BGScore`,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        toast('Đã sao chép liên kết ván đấu!')
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        toast('Đã sao chép liên kết ván đấu!')
+      } catch {
+        toast('Không thể chia sẻ hoặc sao chép liên kết')
+      }
+    }
+  }, [selectedMatch, toast])
+
   if (routeDetailMatchId && !selectedMatch) {
     return (
       <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
@@ -324,6 +354,16 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             setIsDetailMenuOpen(false)
             router.push('/history')
           }}
+          rightElement={
+            <button
+              className="score-share-btn"
+              type="button"
+              onClick={handleShare}
+              aria-label="Chia sẻ ván đấu"
+            >
+              <Share2 />
+            </button>
+          }
         />
 
         <DetailActionMenu

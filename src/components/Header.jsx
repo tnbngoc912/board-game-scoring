@@ -9,7 +9,7 @@ function HeaderBrand({ title }) {
   return <Image src="/logo.svg" className="logo-header" alt="BGScore" width={103} height={17} />
 }
 
-export function Header({ onBack, onClose, isCloseDisabled = false, title }) {
+export function Header({ onBack, onClose, isCloseDisabled = false, title, rightElement }) {
   return (
     <header className="overview-header" aria-label="BGScore">
       <div className="overview-topbar">
@@ -23,7 +23,9 @@ export function Header({ onBack, onClose, isCloseDisabled = false, title }) {
 
         <HeaderBrand title={title} />
 
-        {onClose ? (
+        {rightElement ? (
+          rightElement
+        ) : onClose ? (
           <button
             className="score-close-btn"
             onClick={onClose}
