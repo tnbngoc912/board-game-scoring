@@ -11,6 +11,7 @@ import { LoadingState } from '../components/ui/LoadingState'
 
 export function LoginShell() {
   const router = useRouter()
+  const [redirectUrl, setRedirectUrl] = useState(null)
   const { message, visible, show: showToast } = useToast()
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
 
@@ -26,21 +27,36 @@ export function LoginShell() {
 
   useEffect(() => {
     bootstrap()
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      if (redirect) {
+        setRedirectUrl(redirect)
+      }
+    }
   }, [bootstrap])
 
   useEffect(() => {
     if (isAuthLoading) return
     if (token && user) {
-      router.replace('/')
+      if (redirectUrl) {
+        router.replace(decodeURIComponent(redirectUrl))
+      } else {
+        router.replace('/')
+      }
     }
-  }, [isAuthLoading, token, user, router])
+  }, [isAuthLoading, token, user, router, redirectUrl])
 
   async function handleLogin(email, password) {
     try {
       setIsLoginSubmitting(true)
       await login(email, password)
       showToast('Đăng nhập thành công')
-      router.replace('/')
+      if (redirectUrl) {
+        router.replace(decodeURIComponent(redirectUrl))
+      } else {
+        router.replace('/')
+      }
     } catch (error) {
       showToast(error?.message || 'Đăng nhập thất bại')
     } finally {
