@@ -10,10 +10,8 @@ const barlow = Barlow_Semi_Condensed({
 })
 
 const appUrl = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:3000'
-  : (process.env.NEXT_PUBLIC_VERCEL_URL
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` // Thêm https:// vào đây
-      : 'https://test.com')
+  ? 'https://board-game-scoring.vercel.app/'
+  : `https://board-game-scoring.vercel.app/`
 
 export const metadata = {
   metadataBase: new URL(appUrl),
