@@ -14,6 +14,8 @@ import { HistoryFilterPanel } from './HistoryFilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState';
 import { Icon } from './ui/Icon'
+import { Button } from './ui/Button'
+import { GameScreen } from './GameScreen'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -133,6 +135,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
+  const [isEditingMatch, setIsEditingMatch] = useState(false)
   const detailScreenRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
   
@@ -286,12 +289,13 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)
       toast('Đã xóa bảng điểm')
+      router.push('/history')
     } catch {
       toast('Không thể xóa bảng điểm')
     } finally {
       setIsDeleting(false)
     }
-  }, [matchToDelete, removeHistoryMatch, selectedMatch?.id, toast])
+  }, [matchToDelete, removeHistoryMatch, selectedMatch?.id, toast, router])
 
   const handleShare = useCallback(async () => {
     if (!selectedMatch) return
@@ -331,6 +335,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }
 
   if (selectedMatch) {
+    if (isEditingMatch) {
+      return (
+        <GameScreen
+          toast={toast}
+          matchToEdit={selectedMatch}
+          onCloseEdit={() => setIsEditingMatch(false)}
+          onSaveEdit={async () => {
+            setIsEditingMatch(false)
+            const detail = await getMatch(selectedMatch.id)
+            setSelectedMatch(detail)
+          }}
+        />
+      )
+    }
+
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
     const maxTotal = players.reduce((max, player) => Math.max(max, Number(player.total) || 0), Number.NEGATIVE_INFINITY)
@@ -345,6 +364,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
     const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
+    const isAdmin = currentUser?.role === 'ADMIN'
+    const matchPermissions = currentUser?.permissions?.MATCH || []
+    const canEdit = isAdmin || matchPermissions.includes('EDIT')
+    const canDelete = isAdmin || matchPermissions.includes('DELETE')
+    const canManage = canEdit || canDelete
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
@@ -355,7 +379,25 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             router.push('/history')
           }}
           rightElement={
-            <Icon  src="/share.png" size={32} color="white" onClick={handleShare} />
+            canManage ? (
+              <Icon
+                src="/more-menu.png"
+                size={32}
+                color="white"
+                onClick={() => setIsDetailMenuOpen(!isDetailMenuOpen)}
+                style={{ cursor: 'pointer' }}
+                aria-label="Tùy chọn"
+              />
+            ) : (
+              <Icon
+                src="/share.png"
+                size={32}
+                color="white"
+                onClick={handleShare}
+                style={{ cursor: 'pointer' }}
+                aria-label="Chia sẻ"
+              />
+            )
           }
         />
 
@@ -364,12 +406,15 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           onClose={() => setIsDetailMenuOpen(false)}
           onEdit={() => {
             setIsDetailMenuOpen(false)
-            toast('Tính năng chỉnh sửa sẽ được bổ sung')
+            setIsEditingMatch(true)
           }}
           onDelete={() => {
             setIsDetailMenuOpen(false)
             setMatchToDelete(selectedMatch)
           }}
+          onShare={handleShare}
+          canEdit={canEdit}
+          canDelete={canDelete}
         />
 
         <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
@@ -760,33 +805,35 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
   )
 }
 
-function DetailActionMenu({ isOpen, onEdit, onDelete }) {
+function DetailActionMenu({ isOpen, onEdit, onDelete, onShare, canEdit, canDelete }) {
   if (!isOpen) return null
 
   return (
     <div className="detail-action-menu" role="menu" aria-label="Tuy chon bang diem">
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+      <button type="button" role="menuitem" className="detail-action-item" onClick={onShare}>
         <span className="detail-action-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 16.5V20h3.5L18.1 9.4l-3.5-3.5L4 16.5z" />
-            <path d="M13.5 7 17 10.5" />
-            <path d="M15.4 4.1l1.2-1.2a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.2 1.2" />
-          </svg>
+          <Icon src="/share.png" size={24} color="var(--color-brand)" />
         </span>
-        <span>Chinh sua bang diem</span>
+        <span>Chia sẻ bảng điểm</span>
       </button>
 
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
-        <span className="detail-action-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 7h16" />
-            <path d="M10 11v6M14 11v6" />
-            <path d="M6 7l1 14h10l1-14" />
-            <path d="M9 7V4h6v3" />
-          </svg>
-        </span>
-        <span>Xoa bang diem</span>
-      </button>
+      {canEdit && (
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+          <span className="detail-action-icon" aria-hidden="true">
+            <Icon src="/edit_square_fill.png" size={24} color="var(--color-brand)" />
+          </span>
+          <span>Chỉnh sửa bảng điểm</span>
+        </button>
+      )}
+
+      {canDelete && (
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
+          <span className="detail-action-icon" aria-hidden="true">
+            <Icon src="/trash.png" size={24} color="var(--color-brand)" />
+          </span>
+          <span>Xóa bảng điểm</span>
+        </button>
+      )}
     </div>
   )
 }
@@ -797,12 +844,23 @@ function DeleteConfirmDialog({ entry, isDeleting, onCancel, onConfirm }) {
   return (
     <div className="confirm-backdrop" role="presentation">
       <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-history-title">
-        <h2 id="delete-history-title">Xoa bang diem</h2>
-        <p>Ban co chac muon xoa bang diem cua van choi nay?</p>
-        <p className="confirm-subtext">{entry.gameName} · {formatWinner(entry)}</p>
+        <h2 id="delete-history-title">Xóa bảng điểm</h2>
+        <p>Bạn có chắc muốn xóa bảng điểm của ván chơi này?</p>
         <div className="confirm-actions">
-          <button className="confirm-secondary" onClick={onCancel} disabled={isDeleting}>Giu lai</button>
-          <button className="confirm-danger" onClick={onConfirm} disabled={isDeleting}>{isDeleting ? 'Dang xoa...' : 'Xoa'}</button>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isDeleting}
+          >
+            Giữ lại
+          </Button>
+          <Button
+            variant="danger"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Đang xóa...' : 'Xóa'}
+          </Button>
         </div>
       </div>
     </div>

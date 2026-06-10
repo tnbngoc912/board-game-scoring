@@ -3,7 +3,7 @@ import clsx from 'clsx'
 
 /**
  * Component Button tái sử dụng dùng chung cho hệ thống BoardGameScoring.
- * Hỗ trợ 4 variants: 'primary', 'secondary', 'outline', 'ghost'
+ * Hỗ trợ 5 variants: 'primary', 'secondary', 'outline', 'ghost', 'danger'
  * Hỗ trợ 3 sizes: 'sm', 'md', 'lg'
  * Hỗ trợ icon bên trái (leftIcon) và bên phải (rightIcon)
  */

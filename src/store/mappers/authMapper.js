@@ -9,6 +9,7 @@ export function normalizeAuthUser(user) {
     avatar: user?.avatar || '',
     avatar_url: user?.avatar_url || '',
     stats: user?.stats || null,
+    permissions: user?.permissions || null,
   }
 }
 

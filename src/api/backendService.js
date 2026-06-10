@@ -236,7 +236,7 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
     body.player_scores = playerScores
   }
 
-  if (imageAttachments?.length) {
+  if (Array.isArray(imageAttachments)) {
     body.image_attachments = imageAttachments
   }
 

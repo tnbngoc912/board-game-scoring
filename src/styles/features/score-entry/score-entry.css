@@ -411,9 +411,9 @@
 }
 
 .score-memory-section h2 {
-  margin: 0 0 var(--space-3);
-  color: var(--color-muted);
-  font-size: 18px;
+  margin: 0 0 var(--space-2);
+  color: var(--color-subtext);
+  font-size: 14px;
   line-height: 20px;
   font-weight: 700;
   text-transform: uppercase;
@@ -507,4 +507,50 @@
   line-height: 20px;
   font-weight: 700;
   box-shadow: var(--shadow-card);
+}
+
+.score-entry-screen .score-entry-main-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.score-entry-screen .match-summary-strip {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  border-bottom: 1.5px solid var(--color-border);
+  background: var(--color-card);
+  padding: 12px;
+  margin: 0;
+}
+
+.score-entry-screen .detail-thumb {
+  width: 48px;
+  height: 48px;
+}
+
+.score-entry-screen .detail-thumb img {
+  border-radius: 4px;
+}
+
+.score-entry-screen .match-summary-strip h2 {
+  color: var(--color-heading);
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.score-entry-screen .match-summary-strip p {
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 16px;
+}
+
+.score-entry-screen .match-summary-strip+.winner-picker-card {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 1px solid var(--color-border);
+  box-shadow: none;
 }
