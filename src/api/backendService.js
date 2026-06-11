@@ -18,6 +18,15 @@ function getAuthToken() {
   return authToken
 }
 
+export function getCurrentAuthToken() {
+  return getAuthToken()
+}
+
+export function getRealtimeBaseUrl() {
+  if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL
+  return API_BASE_URL.replace(/\/api\/v1\/?$/, '')
+}
+
 export function setAuthToken(token) {
   authToken = token || null
   if (typeof window === 'undefined') return
@@ -223,6 +232,19 @@ export async function createMatch(boardGameId, playerIds) {
 export async function getMatch(matchId) {
   const payload = await request(`/matches/${matchId}`)
   return normalizeMatchDetail(payload)
+}
+
+export async function getMatchComments(matchId) {
+  const payload = await request(`/matches/${matchId}/comments`)
+  return unwrapList(payload)
+}
+
+export async function createMatchComment(matchId, content) {
+  const payload = await request(`/matches/${matchId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  })
+  return unwrapEntity(payload, ['comment'])
 }
 
 export async function updateMatchScores(matchId, { description, playerScores, winnerIds, imageAttachments }) {

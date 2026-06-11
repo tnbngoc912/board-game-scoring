@@ -3,7 +3,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
-import { deleteMatch, getMatch } from '../api/backendService'
+import { createMatchComment, deleteMatch, getMatch, getMatchComments } from '../api/backendService'
+import { connectMatchComments } from '../api/matchRealtime'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
@@ -491,6 +492,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </div>
             </section>
           ) : null}
+
+          <MatchCommentsSection
+            matchId={selectedMatch.id}
+            currentUser={currentUser}
+            toast={toast}
+          />
         </div>
 
         <MemoryImageLightbox
@@ -627,6 +634,171 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         onConfirm={confirmDelete}
       />
     </div>
+  )
+}
+
+function normalizeComment(comment) {
+  return {
+    id: String(comment.id || comment._id || ''),
+    content: comment.content || '',
+    createdAt: comment.created_at || comment.createdAt || '',
+    user: {
+      id: comment.user?.id || comment.user?._id || comment.user_id || '',
+      name: comment.user?.name || comment.user_name || 'Người chơi',
+      avatarUrl: comment.user?.avatar_url || comment.user?.avatarUrl || '',
+    },
+  }
+}
+
+function formatCommentTime(value) {
+  const date = value ? new Date(value) : null
+  if (!date || Number.isNaN(date.getTime())) return ''
+
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
+function appendUniqueComment(comments, nextComment) {
+  const normalized = normalizeComment(nextComment)
+  if (!normalized.id) return comments
+  if (comments.some((comment) => comment.id === normalized.id)) return comments
+  return [...comments, normalized]
+}
+
+function mergeUniqueComments(primaryComments, secondaryComments) {
+  return secondaryComments.reduce(
+    (mergedComments, comment) => appendUniqueComment(mergedComments, comment),
+    primaryComments.map(normalizeComment)
+  )
+}
+
+function MatchCommentsSection({ matchId, currentUser, toast }) {
+  const [comments, setComments] = useState([])
+  const [draft, setDraft] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [realtimeStatus, setRealtimeStatus] = useState('disconnected')
+
+  useEffect(() => {
+    let isMounted = true
+    setComments([])
+    setDraft('')
+    setIsLoading(true)
+    setRealtimeStatus('disconnected')
+
+    getMatchComments(matchId)
+      .then((items) => {
+        if (!isMounted) return
+        setComments((current) => mergeUniqueComments(items, current))
+      })
+      .catch(() => {
+        if (isMounted) toast('Không tải được bình luận')
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false)
+      })
+
+    const socket = connectMatchComments(
+      matchId,
+      (comment) => setComments((current) => appendUniqueComment(current, comment)),
+      (status) => setRealtimeStatus(status)
+    )
+
+    return () => {
+      isMounted = false
+      socket?.emit('match:leave', matchId)
+      socket?.disconnect()
+    }
+  }, [matchId, toast])
+
+  const handleSubmit = useCallback(async (event) => {
+    event.preventDefault()
+    const content = draft.trim()
+    if (!content || isSending) return
+
+    setIsSending(true)
+    try {
+      const comment = await createMatchComment(matchId, content)
+      setComments((current) => appendUniqueComment(current, comment))
+      setDraft('')
+    } catch (error) {
+      toast(error?.message || 'Không gửi được bình luận')
+    } finally {
+      setIsSending(false)
+    }
+  }, [draft, isSending, matchId, toast])
+
+  const handleDraftKeyDown = useCallback((event) => {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent?.isComposing) return
+
+    event.preventDefault()
+    event.currentTarget.form?.requestSubmit()
+  }, [])
+
+  const isRealtimeConnected = realtimeStatus === 'connected'
+
+  return (
+    <section className="match-comments-section" aria-label="Bình luận trận đấu">
+      <div className="match-comments-heading">
+        <div>
+          <h2>Bình luận</h2>
+          <p>{isRealtimeConnected ? 'Đang cập nhật thời gian thực' : 'Sẽ tự đồng bộ khi kết nối lại'}</p>
+        </div>
+        <span className={`match-comments-status ${isRealtimeConnected ? 'connected' : ''}`}>
+          {isRealtimeConnected ? 'Live' : 'Offline'}
+        </span>
+      </div>
+
+      <div className="match-comments-list" aria-busy={isLoading}>
+        {isLoading ? <p className="match-comments-empty">Đang tải bình luận...</p> : null}
+        {!isLoading && comments.length === 0 ? (
+          <p className="match-comments-empty">Chưa có bình luận nào. Mở màn trước đi.</p>
+        ) : null}
+        {comments.map((comment) => (
+          <article key={comment.id} className="match-comment-item">
+            <div className="match-comment-avatar" aria-hidden="true">
+              {comment.user.avatarUrl ? (
+                <Image src={comment.user.avatarUrl} width={36} height={36} alt="" />
+              ) : (
+                <span>{comment.user.name.slice(0, 1).toUpperCase()}</span>
+              )}
+            </div>
+            <div className="match-comment-body">
+              <div className="match-comment-meta">
+                <strong>{comment.user.name}</strong>
+                <span>{formatCommentTime(comment.createdAt)}</span>
+              </div>
+              <p>{comment.content}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {currentUser ? (
+        <form className="match-comment-form" onSubmit={handleSubmit}>
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={handleDraftKeyDown}
+            placeholder="Viết bình luận về trận này..."
+            maxLength={1000}
+            rows={3}
+          />
+          <div className="match-comment-form-actions">
+            <span>{draft.trim().length}/1000</span>
+            <Button type="submit" disabled={!draft.trim() || isSending}>
+              {isSending ? 'Đang gửi...' : 'Gửi'}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <p className="match-comments-empty">Đăng nhập để bình luận.</p>
+      )}
+    </section>
   )
 }
 
