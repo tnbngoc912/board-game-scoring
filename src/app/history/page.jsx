@@ -1,7 +1,7 @@
 'use client'
 
-import App from '../../App'
+import { HistoryShell } from '../../shells/HistoryShell'
 
 export default function HistoryPage() {
-  return <App />
+  return <HistoryShell />
 }

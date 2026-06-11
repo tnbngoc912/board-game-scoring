@@ -45,11 +45,17 @@ export const useAuthStore = create(
       },
 
       async login(email, password) {
-        const { token, user } = await loginApi({ email, password })
+        const { token } = await loginApi({ email, password })
         if (!token) throw new Error('Khong nhan duoc token')
         setAuthToken(token)
-        set({ token, user })
-        return user
+        try {
+          const user = await getMyProfile()
+          set({ token, user })
+          return user
+        } catch (error) {
+          clearAuthToken()
+          throw new Error(error?.message || 'Không thể tải thông tin tài khoản')
+        }
       },
 
       async forgotPassword(email) {

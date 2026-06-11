@@ -1,10 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
+import { Header } from './Header'
+import { FilterPanel } from './FilterPanel'
+import { SearchBar } from './ui/SearchBar'
+import { EmptyState } from './ui/EmptyState'
+import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -51,8 +58,19 @@ function getGameImageTheme(index) {
   return GAME_IMAGE_THEMES[index % GAME_IMAGE_THEMES.length]
 }
 
+function getCurrentLocalDateTimeValue() {
+  const now = new Date()
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
+
+  useEffect(() => {
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [setupStep])
   const [gameSearchTerm, setGameSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -61,28 +79,47 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [selectedUsersById, setSelectedUsersById] = useState({})
   const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
-  const {
-    gameName,
-    players,
-    categories,
-    selectGame,
-    addPlayer,
-    removePlayer,
-  } = useGameStore()
+  const { gameName, players, categories, selectGame, addPlayer, removePlayer } = useGameStore(
+    useShallow((state) => ({
+      gameName: state.gameName,
+      players: state.players,
+      categories: state.categories,
+      selectGame: state.selectGame,
+      addPlayer: state.addPlayer,
+      removePlayer: state.removePlayer,
+    }))
+  )
 
-  const gameList = useAppDataStore((state) => state.boardGames)
-  const userList = useAppDataStore((state) => state.users)
-  const isLoadingGames = useAppDataStore((state) => state.isLoadingBoardGames)
-  const isLoadingUsers = useAppDataStore((state) => state.isLoadingUsers)
-  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
-  const fetchUsers = useAppDataStore((state) => state.fetchUsers)
+  const {
+    gameList,
+    userList,
+    isLoadingGames,
+    isLoadingUsers,
+    fetchBoardGames,
+    fetchUsers,
+  } = useAppDataStore(
+    useShallow((state) => ({
+      gameList: state.boardGames,
+      userList: state.users,
+      isLoadingGames: state.isLoadingBoardGames,
+      isLoadingUsers: state.isLoadingUsers,
+      fetchBoardGames: state.fetchBoardGames,
+      fetchUsers: state.fetchUsers,
+    }))
+  )
+
+  const { match } = usePermissions()
+  const { canCreate } = match
 
   useEffect(() => {
     async function loadSetupData() {
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       try {
         await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {
-        toast('Khong tai duoc du lieu setup')
+        toast('Không tải được dữ liệu')
       }
     }
 
@@ -139,13 +176,13 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     )
   }, [userList, userSearchTerm])
 
-  function isPlayerSelected(name, exceptPlayerId = null) {
+  const isPlayerSelected = useCallback((name, exceptPlayerId = null) => {
     return players.some((player) => (
       player.id !== exceptPlayerId && player.name.trim().toLowerCase() === name.trim().toLowerCase()
     ))
-  }
+  }, [players])
 
-  function handleChooseGame(game) {
+  const handleChooseGame = useCallback((game) => {
     selectGame(game)
     setSelectedUserIds([])
     if (onChooseGame) {
@@ -153,21 +190,21 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       return
     }
     setSetupStep('config')
-  }
+  }, [onChooseGame, selectGame])
 
-  function toggleGenre(genre) {
+  const toggleGenre = useCallback((genre) => {
     setSelectedGenres((current) => (
       current.includes(genre)
         ? current.filter((item) => item !== genre)
         : [...current, genre]
     ))
-  }
+  }, [])
 
-  function resetFilters() {
+  const resetFilters = useCallback(() => {
     setGameSearchTerm('')
     setPlayerCountFilter('')
     setSelectedGenres([])
-  }
+  }, [])
 
   function formatPlayDateTime(value) {
     if (!value) return ''
@@ -176,15 +213,15 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     return `${timePart}, ${day}/${month}/${year}`
   }
 
-  function handleStart() {
+  const handleStart = useCallback(() => {
     if (!canStart) {
-      toast('Can it nhat 2 người chơi')
+      toast('Cần ít nhất 2 người chơi')
       return
     }
     onStart()
-  }
+  }, [canStart, onStart, toast])
 
-  function toggleUserSelection(user) {
+  const toggleUserSelection = useCallback((user) => {
     const userId = user.id
     setSelectedUserIds((current) => (
       current.includes(userId)
@@ -198,11 +235,11 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       delete next[userId]
       return next
     })
-  }
+  }, [])
 
-  function handleAddSelectedPlayers() {
+  const handleAddSelectedPlayers = useCallback(() => {
     if (selectedUserIds.length === 0) {
-      toast('Vui long chon người chơi')
+      toast('Vui lòng chọn người chơi')
       return
     }
 
@@ -214,90 +251,40 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     setSelectedUsersById({})
     setUserSearchTerm('')
     setSetupStep('config')
-  }
+  }, [addPlayer, isPlayerSelected, selectedUserIds, selectedUsersById, toast, userList])
 
-  function openPlayerPicker() {
+  const openPlayerPicker = useCallback(() => {
     if (players.length >= maxPlayersAllowed) return
     setSelectedUserIds([])
     setSelectedUsersById({})
     setUserSearchTerm('')
     setSetupStep('player-picker')
-  }
+  }, [maxPlayersAllowed, players.length])
 
   return (
     <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
       {setupStep === 'games' ? (
         <>
-          <header className="home-header">
-            <div className="home-logo">BGSCORE</div>
-          </header>
+          <Header />
 
           <div className="screen-inner home-content">
             <section className="home-search-panel" aria-label="Tim va loc game">
-              <div className="search-bar">
-                <span className="search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M16.5 16.5L21 21" />
-                  </svg>
-                </span>
-                <input
-                  value={gameSearchTerm}
-                  onChange={(event) => setGameSearchTerm(event.target.value)}
-                  placeholder="Tìm trò chơi"
-                  aria-label="Tìm tên game"
-                />
-                {gameSearchTerm ? (
-                  <button
-                    className="search-clear-button search-clear-button--with-filter"
-                    type="button"
-                    onClick={() => setGameSearchTerm('')}
-                    aria-label="Xoa tu khoa tim game"
-                  >
-                    ✕
-                  </button>
-                ) : null}
-                <span className="search-divider" aria-hidden="true" />
-                <button
-                  className={`filter-button${isFilterOpen ? ' active' : ''}`}
-                  type="button"
-                  onClick={() => setIsFilterOpen((value) => !value)}
-                  aria-label="Bo loc"
-                >
-                  <Image src='/filter-icon.svg' alt='' width={24} height={24} />
-                </button>
-              </div>
-
-              {isFilterOpen ? (
-                <div className="filter-panel">
-                  <label className="filter-field">
-                    <span>So người chơi</span>
-                    <select value={playerCountFilter} onChange={(event) => setPlayerCountFilter(event.target.value)}>
-                      <option value="">Tat ca</option>
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => (
-                        <option key={count} value={count}>{count} nguoi</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <div className="genre-filter">
-                    <div className="filter-label">The loai</div>
-                    <div className="genre-chip-list">
-                      {genreOptions.map((genre) => (
-                        <button
-                          key={genre}
-                          type="button"
-                          className={`genre-chip${selectedGenres.includes(genre) ? ' active' : ''}`}
-                          onClick={() => toggleGenre(genre)}
-                        >
-                          {genre}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              <SearchBar
+                value={gameSearchTerm}
+                onChange={(event) => setGameSearchTerm(event.target.value)}
+                onClear={() => setGameSearchTerm('')}
+                placeholder="Tìm trò chơi"
+                isFilterOpen={isFilterOpen}
+                onFilterToggle={() => setIsFilterOpen((value) => !value)}
+                hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
+              />
+              <FilterPanel
+                playerCountFilter={playerCountFilter}
+                setPlayerCountFilter={setPlayerCountFilter}
+                isOpen={isFilterOpen}
+              />
             </section>
+
 
             <section className="home-game-section">
               {isLoadingGames ? (
@@ -320,10 +307,12 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               ) : null}
 
               {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
-                <div className="paper-card empty-state home-empty-state">
-                  <div>Khong tim thay game phu hop.</div>
-                  <button className="secondary-mini" onClick={resetFilters}>Xoa bo loc</button>
-                </div>
+                <EmptyState
+                  imageSrc="/not-found.png"
+                  title="Không tìm thấy kết quả nào!"
+                  actionText="Xóa bộ lọc"
+                  onAction={resetFilters}
+                />
               ) : null}
 
               {!isLoadingGames && filteredGames.length > 0 ? (
@@ -341,9 +330,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                         fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
                         background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
                         onClick={() => handleChooseGame(game)}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
                       >
                         <p>{formatPlayerRange(game)}</p>
                         {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
@@ -357,14 +343,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         </>
       ) : setupStep === 'player-picker' ? (
         <>
-          <header className="picker-topbar">
-            <h1>Chọn Người Chơi</h1>
-            <button className="picker-close-btn" onClick={() => setSetupStep('config')} aria-label="Dong">
-              <Image src="/close-icon.svg" alt='' width={32} height={32} />
-            </button>
-          </header>
-
-
+          <Header title="Chọn Người Chơi" onClose={() => setSetupStep('config')} />
 
           <div className="screen-inner player-picker-content">
             <section className="home-search-panel" >
@@ -429,25 +408,16 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         </>
       ) : (
         <>
-          <header className="setup-topbar">
-            <button
-              className="setup-back-btn"
-              onClick={() => {
-                if (onBackFromConfig) {
-                  onBackFromConfig()
-                  return
-                }
-                setSetupStep('games')
-              }}
-              aria-label="Quay lai"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 6 9 12l6 6" />
-                <path d="M10 12h9" />
-              </svg>
-            </button>
-            <h1>{selectedGame?.name || gameName || 'Chưa chọn trò chơi'}</h1>
-          </header>
+          <Header
+            title={selectedGame?.name || gameName || 'Chưa chọn trò chơi'}
+            onBack={() => {
+              if (onBackFromConfig) {
+                onBackFromConfig()
+                return
+              }
+              setSetupStep('games')
+            }}
+          />
 
           <div className="screen-inner setup-flow">
             <section className="setup-section">
@@ -482,7 +452,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
             <section className="setup-section">
               <h2>Ngày giờ</h2>
               <div className="setup-date-row">
-                <span>{formatPlayDateTime(playDateTime)}</span>
+                <span>{formatPlayDateTime(getCurrentLocalDateTimeValue())}</span>
                 <label className="setup-date-button" aria-label="Chon ngay gio">
                   <Image src="/datetime.svg" alt="" width={24} height={24} />
                   <input
@@ -494,9 +464,11 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               </div>
             </section>
 
-            <button className="setup-start-btn" onClick={handleStart}>
-              Tạo bảng điểm
-            </button>
+            {canCreate && (
+              <button className="setup-start-btn" onClick={handleStart}>
+                Tạo bảng điểm
+              </button>
+            )}
           </div>
         </>
       )

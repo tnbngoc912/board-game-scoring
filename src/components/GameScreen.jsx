@@ -1,7 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
+import { ScoreGrid } from './score/ScoreGrid'
+import { Header } from './Header'
+import Image from "next/image"
+import { useAppDataStore } from '../store/appDataStore'
+import { updateMatchScores, uploadMatchImages } from '../api/backendService'
+
+const GAME_IMAGE_THEMES = [
+  ['#b9d8d4', '#7fb0c8'],
+  ['#e2c290', '#a76642'],
+  ['#d7b08e', '#71472f'],
+  ['#bad2a1', '#54855a'],
+  ['#d7c2a4', '#8c613b'],
+]
+
+function getGameImageTheme(index) {
+  return GAME_IMAGE_THEMES[index % GAME_IMAGE_THEMES.length]
+}
+
+const MAX_MEMORY_IMAGES = 3
 
 function buildDraft(categories, players, publishedScores) {
   return categories.map((category) => {
@@ -22,28 +42,83 @@ function buildDraft(categories, players, publishedScores) {
   })
 }
 
-export function GameScreen({ toast, onShowSetup, onShowHistory }) {
+export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onCloseEdit, onSaveEdit }) {
   const router = useRouter()
   const pathname = usePathname()
   const didRedirectRef = useRef(false)
+  const memoryImagesRef = useRef([])
   const {
-    gameName,
-    scoringType,
-    players,
-    categories,
-    publishedScores,
+    gameName: storeGameName,
+    scoringType: storeScoringType,
+    players: storePlayers,
+    categories: storeCategories,
+    publishedScores: storePublishedScores,
     publishScores,
     clearPlayers,
-  } = useGameStore()
-  const [draftScores, setDraftScores] = useState(() => buildDraft(categories, players, publishedScores))
+  } = useGameStore(
+    useShallow((state) => ({
+      gameName: state.gameName,
+      scoringType: state.scoringType,
+      players: state.players,
+      categories: state.categories,
+      publishedScores: state.publishedScores,
+      publishScores: state.publishScores,
+      clearPlayers: state.clearPlayers,
+    }))
+  )
+
+  const isEditMode = Boolean(matchToEdit)
+
+  const gameName = isEditMode ? matchToEdit.gameName : storeGameName
+  const scoringType = isEditMode ? (matchToEdit.scoringType || 'COLUMN_BASED') : storeScoringType
+  const players = isEditMode ? (matchToEdit.players || []) : storePlayers
+
+  const [draftScores, setDraftScores] = useState(() => {
+    if (matchToEdit) {
+      return JSON.parse(JSON.stringify(matchToEdit.scoreRows || []))
+    }
+    return buildDraft(storeCategories, storePlayers, storePublishedScores)
+  })
   const [focusedCell, setFocusedCell] = useState(null)
-  const [matchDescription, setMatchDescription] = useState('')
-  const [winnerPlayerId, setWinnerPlayerId] = useState('')
+  const [matchDescription, setMatchDescription] = useState(() => {
+    if (matchToEdit) {
+      return matchToEdit.description || ''
+    }
+    return ''
+  })
+  const [memoryImages, setMemoryImages] = useState(() => {
+    if (matchToEdit) {
+      return (matchToEdit.imageAttachments || []).map((img) => ({
+        id: img.fileId || img.url || crypto.randomUUID(),
+        previewUrl: img.url,
+        url: img.url,
+        isExisting: true,
+        fileName: img.fileName,
+        fileId: img.fileId,
+      }))
+    }
+    return []
+  })
+  const [winnerPlayerId, setWinnerPlayerId] = useState(() => {
+    if (matchToEdit) {
+      if (matchToEdit.scoringType === 'WINNER_ONLY') {
+        const winnerRow = (matchToEdit.scoreRows || []).find((r) => r.id === 'winner')
+        if (winnerRow) {
+          const winnerId = Object.keys(winnerRow.scores || {}).find(
+            (pId) => Number(winnerRow.scores[pId]) === 1
+          )
+          return winnerId || ''
+        }
+      }
+    }
+    return ''
+  })
   const [isSaving, setIsSaving] = useState(false)
   const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
   const isWinnerOnly = scoringType === 'WINNER_ONLY'
 
   useEffect(() => {
+    if (isEditMode) return
     if (pathname !== '/game') {
       didRedirectRef.current = false
       return
@@ -53,17 +128,71 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
       didRedirectRef.current = true
       router.replace('/')
     }
-  }, [pathname, gameName, router])
+  }, [pathname, gameName, router, isEditMode])
 
   useEffect(() => {
-    setDraftScores(buildDraft(categories, players, publishedScores))
-  }, [categories, players, publishedScores])
+    if (isEditMode && matchToEdit) {
+      setDraftScores(JSON.parse(JSON.stringify(matchToEdit.scoreRows || [])))
+      setMatchDescription(matchToEdit.description || '')
+      setMemoryImages(
+        (matchToEdit.imageAttachments || []).map((img) => ({
+          id: img.fileId || img.url || crypto.randomUUID(),
+          previewUrl: img.url,
+          url: img.url,
+          isExisting: true,
+          fileName: img.fileName,
+          fileId: img.fileId,
+        }))
+      )
+      if (matchToEdit.scoringType === 'WINNER_ONLY') {
+        const winnerRow = (matchToEdit.scoreRows || []).find((r) => r.id === 'winner')
+        if (winnerRow) {
+          const winnerId = Object.keys(winnerRow.scores || {}).find(
+            (pId) => Number(winnerRow.scores[pId]) === 1
+          )
+          setWinnerPlayerId(winnerId || '')
+        }
+      } else {
+        setWinnerPlayerId('')
+      }
+    } else if (!isEditMode) {
+      setDraftScores(buildDraft(storeCategories, storePlayers, storePublishedScores))
+      setMatchDescription('')
+      setMemoryImages([])
+      setWinnerPlayerId('')
+    }
+  }, [isEditMode, matchToEdit, storeCategories, storePlayers, storePublishedScores])
 
   useEffect(() => {
+    if (isEditMode) return
     setWinnerPlayerId((current) => (
       players.some((player) => player.id === current) ? current : ''
     ))
-  }, [players])
+  }, [players, isEditMode])
+
+  useEffect(() => {
+    memoryImagesRef.current = memoryImages
+  }, [memoryImages])
+
+  useEffect(() => () => {
+    memoryImagesRef.current.forEach((image) => {
+      if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+    })
+  }, [])
+
+  const winningPlayerIds = useMemo(() => {
+    const totals = players.map((player) => ({
+      id: player.id,
+      total: draftScores.reduce((sum, row) => {
+        if (row.type === 'text') return sum
+        const score = Number(row.scores[player.id] ?? 0)
+        return sum + (Number.isNaN(score) ? 0 : score)
+      }, 0),
+    }))
+    if (totals.length === 0) return new Set()
+    const max = Math.max(...totals.map((item) => item.total))
+    return new Set(totals.filter((item) => item.total === max).map((item) => item.id))
+  }, [players, draftScores])
 
   function updateCell(categoryId, playerId, value, type) {
     const nextValue = type === 'text'
@@ -102,28 +231,87 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
     if (isSaving) return
 
     if (isWinnerOnly && !winnerPlayerId) {
-      toast('Vui long chon nguoi thang')
+      toast('Vui lòng chọn người thắng')
       return
     }
 
-    const winnerOnlyScores = [{
-      id: 'winner',
-      name: 'Winner',
-      type: 'number',
-      scores: players.reduce((scores, player) => {
-        scores[player.id] = player.id === winnerPlayerId ? 1 : 0
-        return scores
-      }, {}),
-    }]
     setIsSaving(true)
     try {
-      const ok = await publishScores(isWinnerOnly ? winnerOnlyScores : draftScores, matchDescription)
-      toast(ok ? 'Da luu ket qua' : 'Khong the luu ket qua')
-      if (ok) {
-        clearPlayers()
-        onShowHistory()
-        return
+      if (isEditMode) {
+        const newImages = memoryImages.filter((image) => !image.isExisting)
+        let uploadedImages = []
+        if (newImages.length > 0) {
+          uploadedImages = await uploadMatchImages(newImages.map((image) => image.file))
+        }
+
+        const existingImages = memoryImages
+          .filter((image) => image.isExisting)
+          .map((image) => ({
+            fileId: image.fileId,
+            url: image.url,
+            fileName: image.fileName,
+          }))
+        const finalImageAttachments = [...existingImages, ...uploadedImages]
+
+        let playerScores = null
+        if (!isWinnerOnly) {
+          playerScores = players.map((player) => ({
+            user_id: player.id,
+            scores: draftScores.reduce((scores, row) => {
+              if (row.type === 'text') return scores
+              scores[row.id] = Number(row.scores?.[player.id] ?? 0)
+              return scores
+            }, {}),
+          }))
+        }
+
+        const winnerIds = isWinnerOnly ? [winnerPlayerId] : null
+
+        await updateMatchScores(matchToEdit.id, {
+          description: matchDescription.trim(),
+          ...(isWinnerOnly ? { winnerIds } : { playerScores }),
+          imageAttachments: finalImageAttachments,
+        })
+
+        toast('Đã cập nhật kết quả bảng điểm')
+
+        useAppDataStore.getState().invalidateHistory()
+        useAppDataStore.getState().invalidateBoardGames()
+        useAppDataStore.getState().invalidateUsers()
+        useAppDataStore.getState().invalidateUserGameStats()
+
+        memoryImages.forEach((image) => {
+          if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+        })
+
+        if (onSaveEdit) {
+          await onSaveEdit()
+        }
+      } else {
+        const winnerOnlyScores = [{
+          id: 'winner',
+          name: 'Winner',
+          type: 'number',
+          scores: players.reduce((scores, player) => {
+            scores[player.id] = player.id === winnerPlayerId ? 1 : 0
+            return scores
+          }, {}),
+        }]
+        const ok = await publishScores(
+          isWinnerOnly ? winnerOnlyScores : draftScores,
+          matchDescription,
+          memoryImages.map((image) => image.file)
+        )
+        toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
+        if (ok) {
+          memoryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl))
+          setMemoryImages([])
+          clearPlayers()
+          onShowHistory()
+        }
       }
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Không thể lưu kết quả')
     } finally {
       setIsSaving(false)
     }
@@ -132,95 +320,108 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
   function handleClose() {
     if (isSaving) return
 
+    memoryImages.forEach((image) => {
+      if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+    })
+    setMemoryImages([])
     clearPlayers()
     onShowSetup()
+  }
+
+  function handleCloseEdit() {
+    if (isSaving) return
+
+    memoryImages.forEach((image) => {
+      if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+    })
+    onCloseEdit()
+  }
+
+  function handleAddMemoryImages(files) {
+    const imageFiles = Array.from(files || []).filter((file) => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+
+    setMemoryImages((current) => {
+      const availableSlots = MAX_MEMORY_IMAGES - current.length
+      const nextImages = imageFiles.slice(0, availableSlots).map((file) => ({
+        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }))
+
+      return [...current, ...nextImages]
+    })
+  }
+
+  function handleRemoveMemoryImage(imageId) {
+    setMemoryImages((current) => {
+      const imageToRemove = current.find((image) => image.id === imageId)
+      if (imageToRemove && !imageToRemove.isExisting) URL.revokeObjectURL(imageToRemove.previewUrl)
+      return current.filter((image) => image.id !== imageId)
+    })
   }
 
   return (
     <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
       {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
-      <header className="history-phone-header score-entry-header" aria-label="BGScore">
-        <div className="history-detail-topbar score-entry-topbar">
-          <div className="score-entry-spacer" aria-hidden="true" />
-          <div className="home-logo">BGSCORE</div>
-          <button className="score-close-btn" onClick={handleClose} aria-label="Dong" disabled={isSaving}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      <Header
+        title={isEditMode ? 'Chỉnh Sửa Bảng Điểm' : 'Nhập Điểm'}
+        onClose={isEditMode ? handleCloseEdit : handleClose}
+        isCloseDisabled={isSaving}
+      />
 
       <div className="score-content">
-        {isWinnerOnly ? (
-          <section className="winner-picker-card" aria-label="Chon nguoi thang">
-            {players.map((player) => (
-              <label key={player.id} className="winner-picker-row">
-                <span>{player.name}</span>
-                <input
-                  type="checkbox"
-                  checked={winnerPlayerId === player.id}
-                  onChange={() => setWinnerPlayerId((current) => (
-                    current === player.id ? '' : player.id
-                  ))}
-                />
-              </label>
-            ))}
-          </section>
-        ) : (
-          <section className="score-board">
-            <div className="score-grid-wrap score-board-scroll">
-              <div
-                className="score-grid score-entry-grid"
-                style={{
-                  gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
-                  minWidth: `${104 + players.length * 70}px`,
-                }}
-              >
-                <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-                <div className="grid-spacer"></div>
-                {players.map((player) => (
-                  <div key={player.id} className="score-grid-header player-header">
-                    <span>{player.name}</span>
-                  </div>
-                ))}
-                <div className="grid-spacer"></div>
-
-                {draftScores.map((row) => (
-                  <React.Fragment key={row.id}>
-                    <div className={`score-grid-label score-grid-sticky${isTotalScoreOnly ? ' total-score-only' : ''}`}>{row.name || row.id}</div>
-                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
-                    {players.map((player) => (
-                      <div key={player.id} className={`score-grid-cell${isTotalScoreOnly ? ' total-score-only' : ''}`}>
-                        <input
-                          className={`score-box${row.type === 'text' ? ' score-box-text' : ''}`}
-                          type={row.type === 'text' ? 'text' : 'number'}
-                          value={getInputValue(row, player.id)}
-                          onChange={(e) => updateCell(row.id, player.id, e.target.value, row.type)}
-                          onFocus={() => setFocusedCell(`${row.id}:${player.id}`)}
-                          onBlur={() => setFocusedCell(null)}
-                        />
-                      </div>
-                    ))}
-                    <div className={`grid-spacer${isTotalScoreOnly ? ' border' : ''}`}></div>
-                  </React.Fragment>
-                ))}
-
-                {!isTotalScoreOnly ? (
-                  <>
-                    <div className="score-grid-total score-grid-sticky">Tổng</div>
-                    <div className="grid-spacer border"></div>
-                    {players.map((player) => (
-                      <div key={player.id} className="score-grid-winner">
-                        <strong>{getDraftTotal(player.id)}</strong>
-                      </div>
-                    ))}
-                  </>
-                ) : null}
+        <div className="score-entry-main-block">
+          {isEditMode && matchToEdit && (
+            <section className="match-summary-strip">
+              <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
+                {matchToEdit.thumbnailUrl ? (
+                  <Image loading="lazy" alt="" width={78} height={78} src={matchToEdit.thumbnailUrl} />
+                ) : (
+                  <span>{matchToEdit.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                )}
               </div>
-            </div>
-          </section>
-        )}
+              <div>
+                <h2>{matchToEdit.gameName}</h2>
+                <p>{matchToEdit.playedAt}</p>
+              </div>
+            </section>
+          )}
+
+          {isWinnerOnly ? (
+            <section className="winner-picker-card" aria-label="Chon nguoi thang">
+              {players.map((player) => (
+                <label key={player.id} className="winner-picker-row">
+                  <span>{player.name}</span>
+                  <input
+                    type="checkbox"
+                    checked={winnerPlayerId === player.id}
+                    onChange={() => setWinnerPlayerId((current) => (
+                      current === player.id ? '' : player.id
+                    ))}
+                  />
+                </label>
+              ))}
+            </section>
+          ) : (
+            <section className="score-board">
+              <ScoreGrid
+                players={players}
+                rows={draftScores}
+                mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
+                stickyHeader
+                showTotal={!isTotalScoreOnly}
+                editable
+                winningPlayerIds={winningPlayerIds}
+                getTotal={getDraftTotal}
+                getInputValue={getInputValue}
+                onCellChange={updateCell}
+                onCellFocus={setFocusedCell}
+                onCellBlur={() => setFocusedCell(null)}
+              />
+            </section>
+          )}
+        </div>
 
 
         <textarea
@@ -230,10 +431,71 @@ export function GameScreen({ toast, onShowSetup, onShowHistory }) {
           placeholder="Nhập mô tả ván chơi (tùy chọn)"
         />
 
+        <MemoryImageUploader
+          images={memoryImages}
+          disabled={isSaving}
+          onAddImages={handleAddMemoryImages}
+          onRemoveImage={handleRemoveMemoryImage}
+        />
+
         <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
           {isSaving ? 'Đang lưu...' : 'Lưu kết quả'}
         </button>
       </div>
     </div>
+  )
+}
+
+function MemoryImageUploader({ images, disabled, onAddImages, onRemoveImage }) {
+  const inputRef = useRef(null)
+  const canAddMore = images.length < MAX_MEMORY_IMAGES
+
+  function handleInputChange(event) {
+    onAddImages(event.target.files)
+    event.target.value = ''
+  }
+
+  return (
+    <section className="score-memory-section" aria-label="Hình ảnh kỉ niệm">
+      <h2>Hình ảnh kỉ niệm</h2>
+      <div className="score-memory-grid">
+        {images.map((image) => (
+          <div key={image.id} className="score-memory-card">
+            <img src={image.previewUrl} alt="Hình ảnh kỉ niệm" />
+            <button
+              type="button"
+              className="score-memory-remove"
+              onClick={() => onRemoveImage(image.id)}
+              disabled={disabled}
+              aria-label="Xóa hình ảnh"
+            >
+              <Image src="/black-close-icon.svg" alt="" width={24} height={24} />
+            </button>
+          </div>
+        ))}
+
+        {canAddMore ? (
+          <button
+            type="button"
+            className="score-memory-upload"
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled}
+            aria-label="Tải lên hình ảnh kỉ niệm"
+          >
+            <Image src="/icon-upload.svg" alt="" width={28} height={28} />
+            <span>Tải lên</span>
+          </button>
+        ) : null}
+      </div>
+      <input
+        ref={inputRef}
+        className="score-memory-input"
+        type="file"
+        accept="image/*"
+        multiple
+        disabled={disabled || !canAddMore}
+        onChange={handleInputChange}
+      />
+    </section>
   )
 }

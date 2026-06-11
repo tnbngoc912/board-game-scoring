@@ -1,5 +1,6 @@
 import Image from "next/image"
 import React, { useState } from 'react'
+import { Header } from './Header'
 
 export function ForgotPasswordScreen({ onSubmit, onBack, isSubmitting }) {
   const [email, setEmail] = useState('')
@@ -11,9 +12,7 @@ export function ForgotPasswordScreen({ onSubmit, onBack, isSubmitting }) {
 
   return (
     <div className="screen login-screen">
-      <header className="home-header">
-        <div className="home-logo">BGSCORE</div>
-      </header>
+      <Header />
 
       <div className="screen-inner login-content">
         <section className="paper-card login-card forgot">

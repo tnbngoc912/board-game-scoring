@@ -8,7 +8,10 @@
 
 .app-shell.screen-setup,
 .app-shell.screen-history,
-.app-shell.screen-game {
+.app-shell.screen-game,
+.app-shell.screen-achievements,
+.app-shell.screen-account,
+.app-shell.change-password-screen {
   max-width: 600px;
   min-height: 100%;
   background: var(--color-bg);
@@ -17,7 +20,6 @@
 .screen {
   min-height: 100%;
   overflow-y: auto;
-  padding-bottom: 88px;
 }
 
 .screen-inner {
@@ -28,8 +30,6 @@
 .history-screen,
 .history-detail-screen,
 .score-entry-screen {
-  min-height: 852px;
-  overflow-x: hidden;
   background: var(--color-bg);
   font-family: var(--font-main);
 }

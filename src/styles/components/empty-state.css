@@ -1,0 +1,30 @@
+.custom-empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  text-align: center;
+  width: 100%;
+  gap: 4px;
+}
+
+.custom-empty-state-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-empty-state-image img {
+  max-width: 100%;
+  height: auto;
+  opacity: 0.85;
+}
+
+.custom-empty-state-text {
+  font-family: 'Barlow Semi Condensed', var(--font-main), sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #70655C;
+  margin-bottom: 24px;
+}

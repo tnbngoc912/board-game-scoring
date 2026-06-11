@@ -1,7 +1,7 @@
 'use client'
 
-import App from '../../App'
+import { GameFlowShell } from '../../shells/GameFlowShell'
 
 export default function GamePage() {
-  return <App />
+  return <GameFlowShell />
 }

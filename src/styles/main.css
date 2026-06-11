@@ -9,8 +9,13 @@
 
 /* components */
 @import './components/button.css';
+@import './components/input.css';
+@import './components/search-bar.css';
 @import './components/card.css';
 @import './components/loading.css';
+@import './components/empty-state.css';
+
+
 @import './components/modal.css';
 @import './components/navigation.css';
 @import './components/search.css';
@@ -21,9 +26,13 @@
 @import './features/home/home-list.css';
 @import './features/setup/setup-flow.css';
 @import './features/score-entry/score-entry.css';
+@import './features/score-entry/game-overview.css';
 @import './features/history/history-list.css';
 @import './features/history/history-detail.css';
 @import './features/history/history-scoreboard.css';
+@import './features/achievements.css';
+@import './features/account.css';
+@import './features/change-password.css';
 
 /* utils */
 @import './utils/helpers.css';

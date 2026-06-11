@@ -1,6 +1,6 @@
 .setup-topbar,
 .picker-topbar {
-  min-height: 56px;
+  min-height: 40px;
   display: grid;
   align-items: center;
   background: var(--color-brand);
@@ -20,15 +20,10 @@
 .picker-topbar h1 {
   grid-column: 2;
   color: var(--color-white);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.15;
   font-weight: 700;
   text-align: center;
-}
-
-.picker-topbar h1 {
-  font-size: 20px;
-  line-height: 1.1;
 }
 
 .setup-topbar .setup-back-btn {
@@ -202,7 +197,7 @@
   left: 50%;
   bottom: 0;
   z-index: 30;
-  width: min(430px, 100vw);
+  width: min(600px, 100vw);
   transform: translateX(-50%);
   background: rgba(255, 250, 247, 0.94);
   padding: var(--space-3) var(--space-4);

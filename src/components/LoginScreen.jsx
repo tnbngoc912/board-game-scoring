@@ -1,5 +1,7 @@
 import Image from "next/image"
 import React, { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { Header } from './Header'
 
 export function LoginScreen({ onLogin, onGoForgotPassword, isSubmitting }) {
   const [email, setEmail] = useState('')
@@ -13,9 +15,7 @@ export function LoginScreen({ onLogin, onGoForgotPassword, isSubmitting }) {
 
   return (
     <div className="screen login-screen">
-      <header className="home-header">
-        <div className="home-logo">BGSCORE</div>
-      </header>
+      <Header />
 
       <div className="screen-inner login-content">
         <section className="paper-card login-card">
@@ -56,19 +56,7 @@ export function LoginScreen({ onLogin, onGoForgotPassword, isSubmitting }) {
                 onClick={() => setShowPassword((value) => !value)}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
-                {showPassword ? (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M3 3l18 18" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M10.6 10.7a2 2 0 0 0 2.8 2.8" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M9.9 5.1A10.8 10.8 0 0 1 12 5c4.9 0 8.7 3 10 7-0.4 1.2-1.1 2.4-2 3.4" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M6.2 8.2C5 9.2 4 10.5 3.4 12c1.3 4 5.1 7 10 7 1 0 2-.1 2.9-.4" fill="none" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                )}
+                {showPassword ? <Eye size={20} strokeWidth={1.8} /> : <EyeOff size={20} strokeWidth={1.8} />}
               </button>
             </label>
 

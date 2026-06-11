@@ -3,7 +3,7 @@
 .history-detail-header,
 .score-entry-screen .score-topbar {
   height: 56px;
-  min-height: 56px;
+  min-height: 40px;
   background: var(--color-brand);
   color: var(--color-white);
   box-shadow: 0 2px 2px rgba(105, 105, 105, 0.08);
@@ -20,12 +20,19 @@
   text-align: center;
 }
 
-.home-logo {
+.title-header {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-white);
   font-size: 24px;
-  line-height: 20px;
   font-weight: 700;
-  letter-spacing: 2px;
+}
+
+.logo-header {
+  margin: 0 auto;
 }
 
 .home-content,

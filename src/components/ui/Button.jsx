@@ -1,0 +1,37 @@
+import React from 'react'
+import clsx from 'clsx'
+
+/**
+ * Component Button tái sử dụng dùng chung cho hệ thống BoardGameScoring.
+ * Hỗ trợ 5 variants: 'primary', 'secondary', 'outline', 'ghost', 'danger'
+ * Hỗ trợ 3 sizes: 'sm', 'md', 'lg'
+ * Hỗ trợ icon bên trái (leftIcon) và bên phải (rightIcon)
+ */
+export function Button({
+  children,
+  className,
+  variant = 'primary',
+  size, // Loại bỏ kích thước để đồng nhất 1 size tiêu chuẩn
+  leftIcon,
+  rightIcon,
+  disabled = false,
+  type = 'button',
+  ...props
+}) {
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      className={clsx(
+        'btn-custom',
+        `variant-${variant}`,
+        className
+      )}
+      {...props}
+    >
+      {leftIcon && <span className="btn-icon btn-icon-left">{leftIcon}</span>}
+      {children}
+      {rightIcon && <span className="btn-icon btn-icon-right">{rightIcon}</span>}
+    </button>
+  )
+}

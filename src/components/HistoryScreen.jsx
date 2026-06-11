@@ -1,11 +1,22 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
+import { ScoreGrid } from "./score/ScoreGrid"
+import { Header } from './Header'
+import { useAuthStore } from '../store/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { HistoryFilterPanel } from './HistoryFilterPanel'
+import { SearchBar } from './ui/SearchBar'
+import { EmptyState } from './ui/EmptyState';
+import { Icon } from './ui/Icon'
+import { Button } from './ui/Button'
+import { GameScreen } from './GameScreen'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -115,6 +126,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const router = useRouter()
   const pathname = usePathname()
   const [selectedGameName, setSelectedGameName] = useState('')
+  const [selectedPlayerName, setSelectedPlayerName] = useState('')
+  const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
@@ -122,15 +135,36 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
+  const [isEditingMatch, setIsEditingMatch] = useState(false)
   const detailScreenRef = useRef(null)
-  const detailGridRef = useRef(null)
-  const { resetBoard } = useGameStore()
-  const history = useAppDataStore((state) => state.history)
-  const boardGames = useAppDataStore((state) => state.boardGames)
-  const isLoadingHistory = useAppDataStore((state) => state.isLoadingHistory)
-  const fetchHistory = useAppDataStore((state) => state.fetchHistory)
-  const fetchBoardGames = useAppDataStore((state) => state.fetchBoardGames)
-  const removeHistoryMatch = useAppDataStore((state) => state.removeHistoryMatch)
+  const resetBoard = useGameStore((state) => state.resetBoard)
+  
+  const currentUser = useAuthStore((state) => state.user)
+  const { match } = usePermissions()
+  const { canEdit, canDelete } = match
+
+  const {
+    history,
+    boardGames,
+    users,
+    isLoadingHistory,
+    fetchHistory,
+    fetchBoardGames,
+    fetchUsers,
+    removeHistoryMatch,
+  } = useAppDataStore(
+    useShallow((state) => ({
+      history: state.history,
+      boardGames: state.boardGames,
+      users: state.users,
+      isLoadingHistory: state.isLoadingHistory,
+      fetchHistory: state.fetchHistory,
+      fetchBoardGames: state.fetchBoardGames,
+      fetchUsers: state.fetchUsers,
+      removeHistoryMatch: state.removeHistoryMatch,
+    }))
+  )
   const routeDetailMatchId = useMemo(() => {
     const match = pathname.match(/^\/history\/(.+)$/)
     return match?.[1] || ''
@@ -142,21 +176,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     requestAnimationFrame(() => {
       detailScreenRef.current?.scrollTo({ top: 0, left: 0 })
       window.scrollTo({ top: 0, left: 0 })
-      if (detailGridRef.current) detailGridRef.current.scrollLeft = 0
     })
+    setLightboxImageIndex(null)
   }, [selectedMatch])
 
   useEffect(() => {
     async function loadHistory() {
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       try {
-        await Promise.all([fetchHistory(), fetchBoardGames()])
+        await Promise.all([fetchHistory(), fetchBoardGames(), fetchUsers()])
       } catch {
-        toast('Khong tai duoc lich su')
+        toast('Không tải được lịch sử ván chơi')
       }
     }
 
     loadHistory()
-  }, [fetchBoardGames, fetchHistory, toast])
+  }, [fetchBoardGames, fetchHistory, fetchUsers, toast])
 
   const historyWithThumbnails = useMemo(
     () => history
@@ -169,28 +206,41 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     () => [...new Set(historyWithThumbnails.map((entry) => entry.gameName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
     [historyWithThumbnails]
   )
+
+  const playerOptions = useMemo(
+    () => users.map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'vi')),
+    [users]
+  )
+
   const filteredHistory = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase()
 
     return historyWithThumbnails.filter((entry) => {
       const matchesGame = !selectedGameName || entry.gameName === selectedGameName
       const matchesSearch = !keyword || (entry.description || '').toLowerCase().includes(keyword)
-      return matchesGame && matchesSearch
+      const matchesPlayer = !selectedPlayerName || (entry.players || []).some(
+        (p) => p.name === selectedPlayerName
+      )
+      const matchesMyMatches = !myMatchesOnly || (currentUser && (entry.players || []).some(
+        (p) => p.name === currentUser.name || String(p.id) === String(currentUser.id)
+      ))
+      return matchesGame && matchesSearch && matchesPlayer && matchesMyMatches
     })
-  }, [historyWithThumbnails, searchTerm, selectedGameName])
-  const hasFilters = Boolean(selectedGameName || searchTerm.trim())
+  }, [historyWithThumbnails, searchTerm, selectedGameName, selectedPlayerName, myMatchesOnly, currentUser])
 
-  async function handleNewGame() {
+  const hasFilters = Boolean(selectedGameName || selectedPlayerName || myMatchesOnly || searchTerm.trim())
+
+  const handleNewGame = useCallback(async () => {
     const ok = await resetBoard()
     if (ok) {
-      toast('Da tao van moi')
+      toast('Đã tạo ván mới')
       onNewGame()
     } else {
-      toast('Khong the tao van moi')
+      toast('Không thể tạo ván mới')
     }
-  }
+  }, [onNewGame, resetBoard, toast])
 
-  async function openMatchDetail(entry, options = {}) {
+  const openMatchDetail = useCallback(async (entry, options = {}) => {
     const { syncRoute = true } = options
     if (syncRoute) router.push(`/history/${entry.id}`)
     setIsDetailMenuOpen(false)
@@ -208,7 +258,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     } finally {
       setIsLoadingMatchDetail(false)
     }
-  }
+  }, [fetchBoardGames, router, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
@@ -227,13 +277,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     openMatchDetail(entry, { syncRoute: false })
   }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
 
-  function clearFilters() {
+  const clearFilters = useCallback(() => {
     setSelectedGameName('')
+    setSelectedPlayerName('')
+    setMyMatchesOnly(false)
     setSearchTerm('')
-    setIsFilterOpen(false)
-  }
+  }, [])
 
-  async function confirmDelete() {
+  const confirmDelete = useCallback(async () => {
     if (!matchToDelete) return
 
     setIsDeleting(true)
@@ -243,13 +294,43 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       if (selectedMatch?.id === matchToDelete.id) setSelectedMatch(null)
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)
-      toast('Da xoa bang diem')
+      toast('Đã xóa bảng điểm')
+      router.push('/history')
     } catch {
-      toast('Khong the xoa bang diem')
+      toast('Không thể xóa bảng điểm')
     } finally {
       setIsDeleting(false)
     }
-  }
+  }, [matchToDelete, removeHistoryMatch, selectedMatch?.id, toast, router])
+
+  const handleShare = useCallback(async () => {
+    if (!selectedMatch) return
+
+    const shareData = {
+      title: 'Bảng điểm ván đấu - BGScore',
+      text: `Xem kết quả ván đấu ${selectedMatch.gameName} trên BGScore`,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        toast('Đã sao chép liên kết ván đấu!')
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        toast('Đã sao chép liên kết ván đấu!')
+      } catch {
+        toast('Không thể chia sẻ hoặc sao chép liên kết')
+      }
+    }
+  }, [selectedMatch, toast])
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
@@ -260,6 +341,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }
 
   if (selectedMatch) {
+    if (isEditingMatch) {
+      return (
+        <GameScreen
+          toast={toast}
+          matchToEdit={selectedMatch}
+          onCloseEdit={() => setIsEditingMatch(false)}
+          onSaveEdit={async () => {
+            setIsEditingMatch(false)
+            const detail = await getMatch(selectedMatch.id)
+            setSelectedMatch(detail)
+          }}
+        />
+      )
+    }
+
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
     const maxTotal = players.reduce((max, player) => Math.max(max, Number(player.total) || 0), Number.NEGATIVE_INFINITY)
@@ -273,48 +369,54 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
+    const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
+    const canManage = canEdit || canDelete
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
-        <header className="history-phone-header history-detail-header" aria-label="BGScore">
-          <div className="history-detail-topbar">
-            <button className="score-back-btn" onClick={() => {
-              setIsDetailMenuOpen(false)
-              router.push('/history')
-            }} aria-label="Quay lai">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 6 9 12l6 6" />
-                <path d="M10 12h9" />
-              </svg>
-            </button>
-            <div className="home-logo">BGSCORE</div>
-            <button
-              className="score-menu-btn"
-              onClick={() => setIsDetailMenuOpen((value) => !value)}
-              aria-label="Mo tuy chon"
-              aria-expanded={isDetailMenuOpen}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="5" r="1.8" />
-                <circle cx="12" cy="12" r="1.8" />
-                <circle cx="12" cy="19" r="1.8" />
-              </svg>
-            </button>
-          </div>
-        </header>
+        <Header title="Bảng Điểm"
+          onBack={() => {
+            setIsDetailMenuOpen(false)
+            router.push('/history')
+          }}
+          rightElement={
+            canManage ? (
+              <Icon
+                src="/more-menu.png"
+                size={32}
+                color="white"
+                onClick={() => setIsDetailMenuOpen(!isDetailMenuOpen)}
+                style={{ cursor: 'pointer' }}
+                aria-label="Tùy chọn"
+              />
+            ) : (
+              <Icon
+                src="/share.png"
+                size={32}
+                color="white"
+                onClick={handleShare}
+                style={{ cursor: 'pointer' }}
+                aria-label="Chia sẻ"
+              />
+            )
+          }
+        />
 
         <DetailActionMenu
           isOpen={isDetailMenuOpen}
           onClose={() => setIsDetailMenuOpen(false)}
           onEdit={() => {
             setIsDetailMenuOpen(false)
-            toast('Tinh nang chinh sua se duoc bo sung')
+            setIsEditingMatch(true)
           }}
           onDelete={() => {
             setIsDetailMenuOpen(false)
             setMatchToDelete(selectedMatch)
           }}
+          onShare={handleShare}
+          canEdit={canEdit}
+          canDelete={canDelete}
         />
 
         <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
@@ -349,67 +451,54 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </section>
           ) : (
             <section className="score-board history-score-board">
-              <div ref={detailGridRef} className="score-grid-wrap score-board-scroll">
-                <div
-                  className="score-grid score-entry-grid"
-                  style={{
-                    gridTemplateColumns: `95px 8px repeat(${players.length}, minmax(70px, 1fr)) 8px`,
-                    minWidth: `${104 + players.length * 70}px`,
-                  }}
-                >
-                  <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
-                  <div className="grid-spacer"></div>
-                  {players.map((player) => (
-                    <div key={player.id} className="score-grid-header player-header">
-                      <span>{player.name}</span>
-                    </div>
-                  ))}
-                  <div className="grid-spacer"></div>
-
-                  {displayedScoreRows.map((row) => (
-                    <React.Fragment key={row.id}>
-                      <div className={`score-grid-label score-grid-sticky ${isTotalScoreOnly ? 'total-score-only' : ''}`}>{row.name}</div>
-                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
-                      {players.map((player) => (
-                        isTotalScoreOnly ? (
-                          <div key={player.id} className="score-grid-winner">
-                            <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>
-                              {row.scores?.[player.id] ?? 0}
-                            </strong>
-                          </div>
-                        ) : (
-                          <div key={player.id} className="score-grid-cell">
-                            <div className={`readonly-score-box${row.type === 'text' ? ' text' : ''}`}>
-                              {row.scores?.[player.id] ?? (row.type === 'text' ? '' : 0)}
-                            </div>
-                          </div>
-                        )
-                      ))}
-                      <div className={`grid-spacer ${isTotalScoreOnly ? 'border' : ''}`}></div>
-
-                    </React.Fragment>
-                  ))}
-
-                  {!isTotalScoreOnly ? (
-                    <>
-                      <div className="score-grid-total score-grid-sticky">Tổng</div>
-                      <div className="grid-spacer border"></div>
-                      {players.map((player) => (
-                        <div key={player.id} className="score-grid-winner">
-                          <strong className={winningPlayerIds.has(player.id) ? 'winning-total' : ''}>{player.total}</strong>
-                        </div>
-                      ))}
-                    </>
-                  ) : null}
-                </div>
-              </div>
+              <ScoreGrid
+                players={players}
+                rows={displayedScoreRows}
+                mode={isTotalScoreOnly ? "TOTAL_SCORE_ONLY" : "COLUMN_BASED"}
+                stickyHeader
+                showTotal={!isTotalScoreOnly}
+                winningPlayerIds={winningPlayerIds}
+                editable={false}
+              />
             </section>
           )}
 
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>
           ) : null}
+
+          {memoryImages.length ? (
+            <section className="history-memory-section" aria-label="Hình ảnh kỉ niệm">
+              <h2>Hình ảnh kỉ niệm</h2>
+              <div className="history-memory-grid">
+                {memoryImages.map((image, index) => (
+                  <button
+                    key={image.fileId || image.url || index}
+                    className="history-memory-card"
+                    type="button"
+                    onClick={() => setLightboxImageIndex(index)}
+                    aria-label={`Mở hình ảnh kỉ niệm ${index + 1}`}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={image.fileName || 'Hình ảnh kỉ niệm'}
+                      width={320}
+                      height={320}
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
+
+        <MemoryImageLightbox
+          images={memoryImages}
+          activeIndex={lightboxImageIndex}
+          onClose={() => setLightboxImageIndex(null)}
+          onChange={setLightboxImageIndex}
+        />
 
         {isDetailMenuOpen ? (
           <button
@@ -433,63 +522,33 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   return (
     <div className="screen history-screen">
-      <header className="history-phone-header" aria-label="BGScore">
-        <div className="history-brandbar">
-          <div className="home-logo">BGSCORE</div>
-        </div>
-      </header>
+      <Header />
 
       <div className="screen-inner history-content">
         <section className="home-search-panel" aria-label="Tim va loc lich su">
-          <div className="search-bar">
-            <span className="search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M16.5 16.5L21 21" />
-              </svg>
-            </span>
-            <input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Tìm ván chơi"
-              aria-label="Tim trong mo ta van choi"
-            />
-            {searchTerm ? (
-              <button
-                className="search-clear-button search-clear-button--with-filter"
-                type="button"
-                onClick={() => setSearchTerm('')}
-                aria-label="Xoa tu khoa tim van choi"
-              >✕
-              </button>
-            ) : null}
-            <span className="search-divider" aria-hidden="true" />
-            <button
-              className={`filter-button${isFilterOpen || selectedGameName ? ' active' : ''}`}
-              type="button"
-              onClick={() => setIsFilterOpen((value) => !value)}
-              aria-label="Bo loc game"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5h16l-6.4 7.4v5.2L10.4 19v-6.6L4 5z" />
-              </svg>
-            </button>
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            onClear={() => setSearchTerm('')}
+            placeholder="Tìm ván chơi"
+            isFilterOpen={isFilterOpen}
+            onFilterToggle={() => setIsFilterOpen((value) => !value)}
+            hasFilters={hasFilters}
+          />
 
-          {isFilterOpen ? (
-            <div className="filter-panel history-filter-panel">
-              <label className="filter-field">
-                <span>Ten game</span>
-                <select value={selectedGameName} onChange={(event) => setSelectedGameName(event.target.value)}>
-                  <option value="">Tat ca tua game</option>
-                  {gameOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </label>
-              {hasFilters ? <button className="secondary-mini history-clear-btn" onClick={clearFilters}>Bo loc</button> : null}
-            </div>
-          ) : null}
+
+          <HistoryFilterPanel
+            selectedGameName={selectedGameName}
+            setSelectedGameName={setSelectedGameName}
+            gameOptions={gameOptions}
+            selectedPlayerName={selectedPlayerName}
+            setSelectedPlayerName={setSelectedPlayerName}
+            playerOptions={playerOptions}
+            myMatchesOnly={myMatchesOnly}
+            setMyMatchesOnly={setMyMatchesOnly}
+            onClear={clearFilters}
+            isOpen={isFilterOpen}
+          />
         </section>
 
         <div className="history-list" aria-busy={isLoadingHistory}>
@@ -509,19 +568,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           ) : null}
 
           {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
-            <div className="paper-card history-empty-state">
-              <h2>Chua co van dau nao duoc ghi lai</h2>
-              <p>Luu ket qua van choi dau tien de xem lai bang diem tai day.</p>
-              <button className="score-save-btn history-empty-btn" onClick={handleNewGame}>Tao van moi</button>
-            </div>
+            <EmptyState
+              imageSrc="/not-found.png"
+              title="Chưa có ván đấu nào được ghi lại!"
+              actionText="Tạo ván mới"
+              onAction={handleNewGame}
+            />
           ) : null}
 
           {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
-            <div className="paper-card history-empty-state">
-              <h2>Khong tim thay van dau</h2>
-              <p>Thu tu khoa khac hoac bo loc game khac.</p>
-              <button className="secondary-mini history-clear-btn" onClick={clearFilters}>Bo loc</button>
-            </div>
+            <EmptyState
+              imageSrc="/not-found.png"
+              title="Không tìm thấy ván đấu!"
+              actionText="Xóa bộ lọc"
+              onAction={clearFilters}
+            />
           ) : null}
 
           {filteredHistory.map((entry, index) => {
@@ -569,33 +630,212 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   )
 }
 
-function DetailActionMenu({ isOpen, onEdit, onDelete }) {
+function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
+  const hasImages = images.length > 0
+  const isOpen = activeIndex !== null && hasImages
+  const activeImage = isOpen ? images[activeIndex] : null
+  const [imageTransform, setImageTransform] = useState({ scale: 1, x: 0, y: 0 })
+  const imageTransformRef = useRef(imageTransform)
+  const activePointersRef = useRef(new Map())
+  const pinchStartRef = useRef(null)
+  const dragStartRef = useRef(null)
+  const swipeStartXRef = useRef(null)
+  const swipeStartYRef = useRef(null)
+  const swipeHandledRef = useRef(false)
+
+  const applyImageTransform = useCallback((nextTransform) => {
+    imageTransformRef.current = nextTransform
+    setImageTransform(nextTransform)
+  }, [])
+
+  const showPrevious = useCallback(() => {
+    onChange((activeIndex - 1 + images.length) % images.length)
+  }, [activeIndex, images.length, onChange])
+
+  const showNext = useCallback(() => {
+    onChange((activeIndex + 1) % images.length)
+  }, [activeIndex, images.length, onChange])
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') onClose()
+      if (event.key === 'ArrowLeft') showPrevious()
+      if (event.key === 'ArrowRight') showNext()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose, showNext, showPrevious])
+
+  useEffect(() => {
+    activePointersRef.current.clear()
+    pinchStartRef.current = null
+    dragStartRef.current = null
+    swipeStartXRef.current = null
+    swipeStartYRef.current = null
+    swipeHandledRef.current = false
+    applyImageTransform({ scale: 1, x: 0, y: 0 })
+  }, [activeIndex, applyImageTransform])
+
+  const handlePointerDown = useCallback((event) => {
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+
+    if (activePointersRef.current.size >= 2) {
+      const [firstPointer, secondPointer] = [...activePointersRef.current.values()]
+      const distance = Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y)
+
+      pinchStartRef.current = {
+        distance,
+        scale: imageTransformRef.current.scale,
+      }
+      dragStartRef.current = null
+      swipeStartXRef.current = null
+      swipeStartYRef.current = null
+      swipeHandledRef.current = true
+      return
+    }
+
+    swipeStartXRef.current = event.clientX
+    swipeStartYRef.current = event.clientY
+    swipeHandledRef.current = false
+    dragStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      transform: imageTransformRef.current,
+    }
+  }, [])
+
+  const handlePointerMove = useCallback((event) => {
+    if (!activePointersRef.current.has(event.pointerId)) return
+
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+    if (activePointersRef.current.size >= 2 && pinchStartRef.current) {
+      const [firstPointer, secondPointer] = [...activePointersRef.current.values()]
+      const distance = Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y)
+      const nextScale = Math.min(4, Math.max(1, (distance / pinchStartRef.current.distance) * pinchStartRef.current.scale))
+
+      applyImageTransform({
+        ...imageTransformRef.current,
+        scale: nextScale,
+        x: nextScale === 1 ? 0 : imageTransformRef.current.x,
+        y: nextScale === 1 ? 0 : imageTransformRef.current.y,
+      })
+      swipeHandledRef.current = true
+      return
+    }
+
+    if (imageTransformRef.current.scale > 1 && dragStartRef.current) {
+      const deltaX = event.clientX - dragStartRef.current.x
+      const deltaY = event.clientY - dragStartRef.current.y
+
+      applyImageTransform({
+        scale: imageTransformRef.current.scale,
+        x: dragStartRef.current.transform.x + deltaX,
+        y: dragStartRef.current.transform.y + deltaY,
+      })
+      return
+    }
+
+    if (images.length <= 1 || swipeStartXRef.current === null || swipeStartYRef.current === null || swipeHandledRef.current) return
+
+    const deltaX = event.clientX - swipeStartXRef.current
+    const deltaY = event.clientY - swipeStartYRef.current
+
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return
+
+    swipeHandledRef.current = true
+    if (deltaX < 0) {
+      showNext()
+    } else {
+      showPrevious()
+    }
+  }, [applyImageTransform, images.length, showNext, showPrevious])
+
+  const handlePointerEnd = useCallback((event) => {
+    activePointersRef.current.delete(event.pointerId)
+    pinchStartRef.current = null
+    dragStartRef.current = null
+
+    if (activePointersRef.current.size === 0) {
+      swipeStartXRef.current = null
+      swipeStartYRef.current = null
+      swipeHandledRef.current = false
+    }
+
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+  }, [])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="memory-lightbox" role="dialog" aria-modal="true" aria-label="Xem hình ảnh kỉ niệm">
+      <button className="memory-lightbox-backdrop" type="button" onClick={onClose} aria-label="Đóng hình ảnh" />
+      <div className="memory-lightbox-content">
+        <button className="memory-lightbox-close" type="button" onClick={onClose} aria-label="Đóng">
+          <Image src="/close-icon.svg" alt="" width={32} height={32} />
+        </button>
+
+        <div
+          className="memory-lightbox-image-wrap"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onPointerLeave={handlePointerEnd}
+        >
+          <Image
+            src={activeImage.url}
+            alt={activeImage.fileName || 'Hình ảnh kỉ niệm'}
+            width={1200}
+            height={900}
+            priority
+            style={{
+              transform: `translate3d(${imageTransform.x}px, ${imageTransform.y}px, 0) scale(${imageTransform.scale})`,
+            }}
+          />
+        </div>
+
+        {images.length > 1 ? (
+          <div className="memory-lightbox-count">{activeIndex + 1}/{images.length}</div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function DetailActionMenu({ isOpen, onEdit, onDelete, onShare, canEdit, canDelete }) {
   if (!isOpen) return null
 
   return (
     <div className="detail-action-menu" role="menu" aria-label="Tuy chon bang diem">
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+      <button type="button" role="menuitem" className="detail-action-item" onClick={onShare}>
         <span className="detail-action-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 16.5V20h3.5L18.1 9.4l-3.5-3.5L4 16.5z" />
-            <path d="M13.5 7 17 10.5" />
-            <path d="M15.4 4.1l1.2-1.2a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.2 1.2" />
-          </svg>
+          <Icon src="/share.png" size={24} color="var(--color-brand)" />
         </span>
-        <span>Chinh sua bang diem</span>
+        <span>Chia sẻ bảng điểm</span>
       </button>
 
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
-        <span className="detail-action-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 7h16" />
-            <path d="M10 11v6M14 11v6" />
-            <path d="M6 7l1 14h10l1-14" />
-            <path d="M9 7V4h6v3" />
-          </svg>
-        </span>
-        <span>Xoa bang diem</span>
-      </button>
+      {canEdit && (
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+          <span className="detail-action-icon" aria-hidden="true">
+            <Icon src="/edit_square_fill.png" size={24} color="var(--color-brand)" />
+          </span>
+          <span>Chỉnh sửa bảng điểm</span>
+        </button>
+      )}
+
+      {canDelete && (
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
+          <span className="detail-action-icon" aria-hidden="true">
+            <Icon src="/trash.png" size={24} color="var(--color-brand)" />
+          </span>
+          <span>Xóa bảng điểm</span>
+        </button>
+      )}
     </div>
   )
 }
@@ -606,12 +846,23 @@ function DeleteConfirmDialog({ entry, isDeleting, onCancel, onConfirm }) {
   return (
     <div className="confirm-backdrop" role="presentation">
       <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-history-title">
-        <h2 id="delete-history-title">Xoa bang diem</h2>
-        <p>Ban co chac muon xoa bang diem cua van choi nay?</p>
-        <p className="confirm-subtext">{entry.gameName} · {formatWinner(entry)}</p>
+        <h2 id="delete-history-title">Xóa bảng điểm</h2>
+        <p>Bạn có chắc muốn xóa bảng điểm của ván chơi này?</p>
         <div className="confirm-actions">
-          <button className="confirm-secondary" onClick={onCancel} disabled={isDeleting}>Giu lai</button>
-          <button className="confirm-danger" onClick={onConfirm} disabled={isDeleting}>{isDeleting ? 'Dang xoa...' : 'Xoa'}</button>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isDeleting}
+          >
+            Giữ lại
+          </Button>
+          <Button
+            variant="danger"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Đang xóa...' : 'Xóa'}
+          </Button>
         </div>
       </div>
     </div>
