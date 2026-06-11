@@ -18,6 +18,15 @@ function getAuthToken() {
   return authToken
 }
 
+export function getCurrentAuthToken() {
+  return getAuthToken()
+}
+
+export function getRealtimeBaseUrl() {
+  if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL
+  return API_BASE_URL.replace(/\/api\/v1\/?$/, '')
+}
+
 export function setAuthToken(token) {
   authToken = token || null
   if (typeof window === 'undefined') return

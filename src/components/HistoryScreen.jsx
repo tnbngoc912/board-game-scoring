@@ -3,7 +3,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
-import { deleteMatch, getMatch } from '../api/backendService'
+import { createMatchComment, deleteMatch, getMatch, getMatchComments } from '../api/backendService'
+import { connectMatchComments } from '../api/matchRealtime'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
@@ -491,6 +492,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </div>
             </section>
           ) : null}
+
+          <MatchCommentsSection
+            matchId={selectedMatch.id}
+            currentUser={currentUser}
+            toast={toast}
+          />
         </div>
 
         <MemoryImageLightbox
@@ -732,10 +739,18 @@ function MatchCommentsSection({ matchId, currentUser, toast }) {
     event.currentTarget.form?.requestSubmit()
   }, [])
 
+  const isRealtimeConnected = realtimeStatus === 'connected'
+
   return (
     <section className="match-comments-section" aria-label="Bình luận trận đấu">
       <div className="match-comments-heading">
-        <h2>Bình luận <span>{comments.length}</span></h2>
+        <div>
+          <h2>Bình luận <span>{comments.length}</span></h2>
+          <p>{isRealtimeConnected ? 'Đang cập nhật thời gian thực' : 'Sẽ tự đồng bộ khi kết nối lại'}</p>
+        </div>
+        <span className={`match-comments-status ${isRealtimeConnected ? 'connected' : ''}`}>
+          {isRealtimeConnected ? 'Live' : 'Offline'}
+        </span>
       </div>
 
       <div className="match-comments-list" aria-busy={isLoading}>
