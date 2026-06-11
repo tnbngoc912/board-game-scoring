@@ -66,6 +66,11 @@ function getCurrentLocalDateTimeValue() {
 
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
+
+  useEffect(() => {
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [setupStep])
   const [gameSearchTerm, setGameSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
