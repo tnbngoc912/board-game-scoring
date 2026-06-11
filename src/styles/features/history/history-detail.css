@@ -104,6 +104,7 @@
 
 .detail-content {
   transition: filter 0.14s ease, opacity 0.14s ease;
+  padding-bottom: 32px;
 }
 
 .detail-content.dimmed {
