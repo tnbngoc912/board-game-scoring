@@ -3,8 +3,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
-import { createMatchComment, deleteMatch, getMatch, getMatchComments } from '../api/backendService'
-import { connectMatchComments } from '../api/matchRealtime'
+import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
 import Image from "next/image"
@@ -492,12 +491,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </div>
             </section>
           ) : null}
-
-          <MatchCommentsSection
-            matchId={selectedMatch.id}
-            currentUser={currentUser}
-            toast={toast}
-          />
         </div>
 
         <MemoryImageLightbox
