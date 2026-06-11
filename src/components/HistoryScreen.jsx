@@ -10,6 +10,7 @@ import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
 import { useAuthStore } from '../store/authStore'
+import { usePermissions } from '../hooks/usePermissions'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState';
@@ -140,6 +141,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const resetBoard = useGameStore((state) => state.resetBoard)
   
   const currentUser = useAuthStore((state) => state.user)
+  const { match } = usePermissions()
+  const { canEdit, canDelete } = match
 
   const {
     history,
@@ -179,6 +182,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   useEffect(() => {
     async function loadHistory() {
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       try {
         await Promise.all([fetchHistory(), fetchBoardGames(), fetchUsers()])
       } catch {
@@ -364,10 +370,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
     const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
-    const isAdmin = currentUser?.role === 'ADMIN'
-    const matchPermissions = currentUser?.permissions?.MATCH || []
-    const canEdit = isAdmin || matchPermissions.includes('EDIT')
-    const canDelete = isAdmin || matchPermissions.includes('DELETE')
     const canManage = canEdit || canDelete
 
     return (

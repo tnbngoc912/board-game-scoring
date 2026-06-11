@@ -10,6 +10,8 @@ import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
+import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -101,8 +103,14 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }))
   )
 
+  const { match } = usePermissions()
+  const { canCreate } = match
+
   useEffect(() => {
     async function loadSetupData() {
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       try {
         await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {
@@ -451,9 +459,11 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               </div>
             </section>
 
-            <button className="setup-start-btn" onClick={handleStart}>
-              Tạo bảng điểm
-            </button>
+            {canCreate && (
+              <button className="setup-start-btn" onClick={handleStart}>
+                Tạo bảng điểm
+              </button>
+            )}
           </div>
         </>
       )

@@ -19,7 +19,7 @@ export default function App() {
   const router = useRouter()
   const pathname = usePathname()
   const { darkMode, boardGameId, gameFlow, setGameFlow, clearPlayers } = useGameStore()
-  const { token, user, isAuthLoading, bootstrap, login, forgotPassword, logout } = useAuthStore()
+  const { token, user, isAuthLoading, bootstrap, login, forgotPassword, logout, refreshProfile } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
   const screen = pathname === '/game' ? 'game' : pathname.startsWith('/history') ? 'history' : 'setup'
   const isForgotPasswordRoute = pathname === '/forgot-password'
@@ -46,6 +46,13 @@ export default function App() {
       })
     })
   }, [screen])
+
+  useEffect(() => {
+    if (!token || !user) return
+    refreshProfile().catch(() => {
+      // Bỏ qua lỗi ngầm nếu có sự cố mạng
+    })
+  }, [screen, pathname, gameFlow, token, user, refreshProfile])
 
   useEffect(() => {
     if (screen !== 'game') return

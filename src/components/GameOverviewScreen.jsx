@@ -8,6 +8,8 @@ import { LoadingOverlay } from './LoadingOverlay'
 import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
 import { Icon } from './ui/Icon';
+import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -20,6 +22,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const applyBoardGameOverview = useGameStore((state) => state.applyBoardGameOverview)
   const hydrateOverviewIfNeeded = useGameSessionStore((state) => state.hydrateOverviewIfNeeded)
   const setOverview = useGameSessionStore((state) => state.setOverview)
+  const { match } = usePermissions()
+  const { canCreate } = match
 
   const [overview, setLocalOverview] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -29,6 +33,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
     async function load() {
       if (!boardGameId) return
+
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
 
       const cached = hydrateOverviewIfNeeded(boardGameId)
       if (cached) {
@@ -155,10 +162,12 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
           </div>
         </section>
 
-        <button className="overview-action-btn" onClick={onCreateScore}>
-          <Icon src="/add_icon.png" color="#FFFF" size={24} />
-          <p className="overview-action-btn-text">Tạo bảng điểm</p>
-        </button>
+        {canCreate && (
+          <button className="overview-action-btn" onClick={onCreateScore}>
+            <Icon src="/add_icon.png" color="#FFFF" size={24} />
+            <p className="overview-action-btn-text">Tạo bảng điểm</p>
+          </button>
+        )}
       </main>
     </div>
   )
