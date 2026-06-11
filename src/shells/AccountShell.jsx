@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store/authStore'
@@ -8,16 +8,43 @@ import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
 import { Icon } from '../components/ui/Icon'
+import { disableFcmNotifications, enableFcmNotifications, hasEnabledFcmNotifications } from '../api/firebaseNotifications'
 
 export function AccountShell() {
   const router = useRouter()
   const { user, logout, changePassword } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
+  const [isPushEnabled, setIsPushEnabled] = useState(false)
+  const [isUpdatingPush, setIsUpdatingPush] = useState(false)
 
+  useEffect(() => {
+    setIsPushEnabled(hasEnabledFcmNotifications())
+  }, [])
 
   function handleLogout() {
     logout()
     router.replace('/')
+  }
+
+  async function handleTogglePush() {
+    if (isUpdatingPush) return
+
+    setIsUpdatingPush(true)
+    try {
+      if (isPushEnabled) {
+        await disableFcmNotifications()
+        setIsPushEnabled(false)
+        showToast('Đã tắt thông báo')
+      } else {
+        await enableFcmNotifications()
+        setIsPushEnabled(true)
+        showToast('Đã bật thông báo')
+      }
+    } catch (error) {
+      showToast(error?.message || 'Không cập nhật được thông báo')
+    } finally {
+      setIsUpdatingPush(false)
+    }
   }
 
   return (
@@ -63,6 +90,19 @@ export function AccountShell() {
             )}
 
             <div className="account-actions">
+              <button 
+                className="btn-account-action btn-account-action-with-meta" 
+                type="button"
+                onClick={handleTogglePush}
+                disabled={isUpdatingPush}
+              >
+                <Icon src="/send-icon.svg" size={24} color="#38322E" />
+                <span>
+                  <strong>{isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Tắt thông báo' : 'Bật thông báo'}</strong>
+                  <small>{isPushEnabled ? 'Bạn đang nhận thông báo bình luận mới' : 'Nhận thông báo khi có bình luận mới trong trận của bạn'}</small>
+                </span>
+              </button>
+
               <button 
                 className="btn-account-action" 
                 type="button"

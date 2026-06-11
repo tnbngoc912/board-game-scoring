@@ -247,6 +247,20 @@ export async function createMatchComment(matchId, content) {
   return unwrapEntity(payload, ['comment'])
 }
 
+export async function saveFcmToken(token) {
+  return request('/notifications/fcm-token', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export async function deleteFcmToken(token) {
+  return request('/notifications/fcm-token', {
+    method: 'DELETE',
+    body: JSON.stringify({ token }),
+  })
+}
+
 export async function updateMatchScores(matchId, { description, playerScores, winnerIds, imageAttachments }) {
   const body = {
     description,

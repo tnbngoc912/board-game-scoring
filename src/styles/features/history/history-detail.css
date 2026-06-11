@@ -203,30 +203,24 @@
 }
 
 .match-comments-heading h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--color-heading);
   font-size: 18px;
   line-height: 1.2;
   font-weight: 700;
 }
 
-.match-comments-heading p {
-  margin-top: 4px;
-  color: var(--color-subtext);
-  font-size: 13px;
-}
-
-.match-comments-status {
+.match-comments-heading h2 span {
+  min-width: 24px;
   border-radius: var(--radius-pill);
-  background: #f0eee9;
+  background: var(--color-bg);
   color: var(--color-subtext);
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.match-comments-status.connected {
-  background: #e8f6ed;
-  color: #25824a;
+  padding: 2px 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .match-comments-list {
