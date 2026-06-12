@@ -223,26 +223,6 @@
   text-align: center;
 }
 
-.match-comments-heading p {
-  margin-top: 4px;
-  color: var(--color-subtext);
-  font-size: 13px;
-}
-
-.match-comments-status {
-  border-radius: var(--radius-pill);
-  background: #f0eee9;
-  color: var(--color-subtext);
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.match-comments-status.connected {
-  background: #e8f6ed;
-  color: #25824a;
-}
-
 .match-comments-list {
   display: grid;
   gap: 12px;

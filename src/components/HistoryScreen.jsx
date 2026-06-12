@@ -739,18 +739,10 @@ function MatchCommentsSection({ matchId, currentUser, toast }) {
     event.currentTarget.form?.requestSubmit()
   }, [])
 
-  const isRealtimeConnected = realtimeStatus === 'connected'
-
   return (
     <section className="match-comments-section" aria-label="Bình luận trận đấu">
       <div className="match-comments-heading">
-        <div>
-          <h2>Bình luận <span>{comments.length}</span></h2>
-          <p>{isRealtimeConnected ? 'Đang cập nhật thời gian thực' : 'Sẽ tự đồng bộ khi kết nối lại'}</p>
-        </div>
-        <span className={`match-comments-status ${isRealtimeConnected ? 'connected' : ''}`}>
-          {isRealtimeConnected ? 'Live' : 'Offline'}
-        </span>
+        <h2>Bình luận <span>{comments.length}</span></h2>
       </div>
 
       <div className="match-comments-list" aria-busy={isLoading}>
