@@ -1,4 +1,8 @@
 import withPWAInit from 'next-pwa'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const withPWA = withPWAInit({
   dest: 'public',
@@ -9,6 +13,9 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig = {
+  experimental: {
+    outputFileTracingRoot: __dirname,
+  },
   images: {
     remotePatterns: [
       {
@@ -44,3 +51,4 @@ const nextConfig = {
 }
 
 export default withPWA(nextConfig)
+

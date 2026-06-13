@@ -20,9 +20,9 @@ messaging.onBackgroundMessage((payload) => {
   const notification = payload.notification || {}
   const data = payload.data || {}
 
-  self.registration.showNotification(notification.title || data.title || 'BGScore', {
+  self.registration.showNotification(notification.title || data.title || 'BG Score', {
     body: notification.body || data.body || 'Bạn có thông báo mới',
-    icon: '/apple-touch-icon.svg',
+    icon: '/apple-touch-icon.png',
     data: {
       url: data.url || '/',
     },

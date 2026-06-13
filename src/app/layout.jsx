@@ -2,6 +2,7 @@ import { Barlow_Semi_Condensed } from 'next/font/google'
 import '../index.css'
 import { ScrollRestorer } from '../components/navigation/ScrollRestorer'
 import { FcmForegroundListener } from '../components/notifications/FcmForegroundListener'
+import { IosInstallPrompt } from '../components/IosInstallPrompt'
 
 const barlow = Barlow_Semi_Condensed({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -16,13 +17,13 @@ const appUrl = process.env.NODE_ENV === 'development'
 
 export const metadata = {
     metadataBase: new URL(appUrl),
-    title: "ScoreKeeper",
+    title: "BG Score",
     description: "Board game score tracker",
-    applicationName: "ScoreKeeper",
+    applicationName: "BGScore",
     manifest: "/manifest.webmanifest",
     icons: {
         icon: "/favicon.svg",
-        apple: "/apple-touch-icon.svg",
+        apple: "/apple-touch-icon.png",
     },
     openGraph: {
         title: "ScoreKeeper",
@@ -52,6 +53,7 @@ export const viewport = {
   maximumScale: 1,
   themeColor: '#f5eedf',
   minimumScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
@@ -61,6 +63,7 @@ export default function RootLayout({ children }) {
       <body className={barlow.className} suppressHydrationWarning>
         <FcmForegroundListener />
         {children}
+        <IosInstallPrompt />
       </body>
     </html>
   )

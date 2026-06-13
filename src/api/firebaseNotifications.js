@@ -127,11 +127,11 @@ export function showFcmNotification(payload) {
 
   const notification = payload.notification || {}
   const data = payload.data || {}
-  const title = notification.title || data.title || 'BGScore'
+  const title = notification.title || data.title || 'BG Score'
   const body = notification.body || data.body || 'Bạn có thông báo mới'
   const browserNotification = new notificationApi(title, {
     body,
-    icon: '/apple-touch-icon.svg',
+    icon: '/apple-touch-icon.png',
     data: {
       url: data.url || '/',
     },
