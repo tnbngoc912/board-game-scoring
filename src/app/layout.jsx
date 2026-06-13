@@ -40,7 +40,7 @@ export const metadata = {
     twitter: {
         card: "summary_large_image",
         title: "BG Score",
-        description: "Board game score tracker",
+        description: "BGScore - Ứng dụng lưu điểm BoardGame",
         images: ["/og-image.png"],
     },
 };
@@ -66,6 +66,7 @@ export default function RootLayout({ children }) {
     </html>
   )
 }
+
 
 
 
