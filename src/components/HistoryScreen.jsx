@@ -18,6 +18,7 @@ import { EmptyState } from './ui/EmptyState';
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
 import { GameScreen } from './GameScreen'
+import { NotificationPrompt } from './notifications/NotificationPrompt'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -493,6 +494,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </section>
           ) : null}
 
+          <NotificationPrompt toast={toast} activeStep="history-detail" />
           <MatchCommentsSection
             matchId={selectedMatch.id}
             currentUser={currentUser}

@@ -11,11 +11,10 @@ import { FilterPanel } from './FilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
 import { usePermissions } from '../hooks/usePermissions'
+import { Icon } from './ui/Icon'
+import { Button } from './ui/Button'
 import { useAuthStore } from '../store/authStore'
-import { enableFcmNotifications, hasEnabledFcmNotifications } from '../api/firebaseNotifications'
-
-const NOTIFICATION_PROMPT_DISMISSED_KEY = 'scorekeeper_fcm_prompt_dismissed'
-const NOTIFICATION_PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000
+import { NotificationPrompt } from './notifications/NotificationPrompt'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -70,19 +69,12 @@ function getCurrentLocalDateTimeValue() {
 
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
-  const [isPushPromptVisible, setIsPushPromptVisible] = useState(false)
-  const [isEnablingPush, setIsEnablingPush] = useState(false)
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
   }, [setupStep])
 
-  useEffect(() => {
-    if (setupStep !== 'games') return
-    const dismissedUntil = Number(window.localStorage.getItem(NOTIFICATION_PROMPT_DISMISSED_KEY)) || 0
-    setIsPushPromptVisible(Date.now() > dismissedUntil && !hasEnabledFcmNotifications())
-  }, [setupStep])
   const [gameSearchTerm, setGameSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -273,25 +265,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     setSetupStep('player-picker')
   }, [maxPlayersAllowed, players.length])
 
-  const handleEnablePushNotifications = useCallback(async () => {
-    if (isEnablingPush) return
-
-    setIsEnablingPush(true)
-    try {
-      await enableFcmNotifications()
-      setIsPushPromptVisible(false)
-      toast('Đã bật thông báo')
-    } catch (error) {
-      toast(error?.message || 'Không bật được thông báo')
-    } finally {
-      setIsEnablingPush(false)
-    }
-  }, [isEnablingPush, toast])
-
-  const handleDismissPushPrompt = useCallback(() => {
-    window.localStorage.setItem(NOTIFICATION_PROMPT_DISMISSED_KEY, String(Date.now() + NOTIFICATION_PROMPT_SNOOZE_MS))
-    setIsPushPromptVisible(false)
-  }, [])
 
   return (
     <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
@@ -300,20 +273,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
           <Header />
 
           <div className="screen-inner home-content">
-            {isPushPromptVisible ? (
-              <section className="home-notification-banner" aria-label="Bật thông báo">
-                <div>
-                  <h2>Bật thông báo?</h2>
-                  <p>Nhận thông báo khi có bình luận mới trong trận của bạn.</p>
-                </div>
-                <div className="home-notification-actions">
-                  <button type="button" onClick={handleDismissPushPrompt}>Để sau</button>
-                  <button type="button" onClick={handleEnablePushNotifications} disabled={isEnablingPush}>
-                    {isEnablingPush ? 'Đang bật...' : 'Bật'}
-                  </button>
-                </div>
-              </section>
-            ) : null}
+            <NotificationPrompt toast={toast} activeStep={setupStep} />
 
             <section className="home-search-panel" aria-label="Tim va loc game">
               <SearchBar
