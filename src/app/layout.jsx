@@ -11,7 +11,7 @@ const barlow = Barlow_Semi_Condensed({
   // variable: '--font-barlow',
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL
+const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
 
 export const metadata = {
     metadataBase: new URL(appUrl),
@@ -66,5 +66,6 @@ export default function RootLayout({ children }) {
     </html>
   )
 }
+
 
 
