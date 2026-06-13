@@ -187,6 +187,145 @@
   object-fit: cover;
 }
 
+.match-comments-section {
+  margin: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  padding: 14px;
+}
+
+.match-comments-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.match-comments-heading h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-heading);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.match-comments-heading h2 span {
+  min-width: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-subtext);
+  padding: 2px 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.match-comments-list {
+  display: grid;
+  gap: 12px;
+}
+
+.match-comments-empty {
+  color: var(--color-subtext);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.match-comment-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.match-comment-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: #ead9c3;
+  color: var(--color-heading);
+  font-weight: 800;
+}
+
+.match-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.match-comment-body {
+  min-width: 0;
+  border-radius: 8px;
+  background: var(--color-bg);
+  padding: 9px 10px;
+}
+
+.match-comment-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.match-comment-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-strong);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-comment-meta span {
+  flex: 0 0 auto;
+  color: var(--color-subtext);
+  font-size: 12px;
+}
+
+.match-comment-body p {
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.match-comment-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.match-comment-form textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text-strong);
+  padding: 10px;
+  font: inherit;
+  line-height: 1.35;
+}
+
+.match-comment-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.match-comment-form-actions span {
+  color: var(--color-subtext);
+  font-size: 12px;
+}
+
 .memory-lightbox {
   position: fixed;
   inset: 0;

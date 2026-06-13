@@ -150,6 +150,35 @@
   background: #faf6f0;
 }
 
+.btn-account-action:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.btn-account-action-with-meta {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.btn-account-action-with-meta > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.btn-account-action-with-meta strong {
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.btn-account-action-with-meta small {
+  color: var(--color-subtext);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
 .account-footer {
   margin-top: auto;
   text-align: center;
