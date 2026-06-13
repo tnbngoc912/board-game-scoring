@@ -144,3 +144,19 @@
   border-bottom-right-radius: 2px;
 }
 
+/* Standalone PWA Mode (Add to Home Screen) style adjustments */
+@media (display-mode: standalone) {
+  .bottom-nav {
+    padding-bottom: calc(10px + var(--space-4) + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-shell.screen-setup .bottom-nav,
+  .app-shell.screen-history .bottom-nav,
+  .app-shell.screen-achievements .bottom-nav,
+  .app-shell.screen-account .bottom-nav {
+    height: calc(56px + var(--space-4) + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+
