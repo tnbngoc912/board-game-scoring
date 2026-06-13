@@ -10,9 +10,7 @@ const barlow = Barlow_Semi_Condensed({
   // variable: '--font-barlow',
 })
 
-const appUrl = process.env.NODE_ENV === 'development'
-  ? 'https://board-game-scoring.vercel.app/'
-  : `https://board-game-scoring.vercel.app/`
+const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 
 export const metadata = {
     metadataBase: new URL(appUrl),
