@@ -18,7 +18,7 @@ const appUrl = process.env.NODE_ENV === 'development'
 export const metadata = {
     metadataBase: new URL(appUrl),
     title: "BG Score",
-    description: "Board game score tracker",
+    description: "Ứng dụng lưu điểm BoardGame",
     applicationName: "BGScore",
     manifest: "/manifest.webmanifest",
     icons: {
@@ -27,7 +27,7 @@ export const metadata = {
     },
     openGraph: {
         title: "BG Score",
-        description: "Board game score tracker",
+        description: "Ứng dụng lưu điểm BoardGame",
         type: "website",
         url: appUrl,
         images: [
@@ -35,7 +35,7 @@ export const metadata = {
                 url: "/og-image.png",
                 width: 1200,
                 height: 1200,
-                alt: "BGScore - Board Game Score Tracker",
+                alt: "BGScore - Ứng dụng lưu điểm BoardGame",
             },
         ],
     },
