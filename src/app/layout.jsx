@@ -26,7 +26,7 @@ export const metadata = {
         apple: "/apple-touch-icon.png",
     },
     openGraph: {
-        title: "ScoreKeeper",
+        title: "BG Score",
         description: "Board game score tracker",
         type: "website",
         url: appUrl,
@@ -41,7 +41,7 @@ export const metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "ScoreKeeper",
+        title: "BG Score",
         description: "Board game score tracker",
         images: ["/og-image.png"],
     },
@@ -68,4 +68,5 @@ export default function RootLayout({ children }) {
     </html>
   )
 }
+
 
