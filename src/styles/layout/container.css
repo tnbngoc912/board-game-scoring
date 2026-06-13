@@ -22,6 +22,15 @@
   overflow-y: auto;
 }
 
+.screen.has-ptr,
+.account-screen.has-ptr,
+.achievements-screen.has-ptr {
+  overflow-y: hidden !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .screen-inner {
   padding: 16px;
 }

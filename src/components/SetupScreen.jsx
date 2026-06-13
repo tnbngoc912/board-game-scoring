@@ -10,6 +10,7 @@ import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
+import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
@@ -69,6 +70,16 @@ function getCurrentLocalDateTimeValue() {
 
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
@@ -267,86 +278,97 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
 
   return (
-    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
+    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}${setupStep === 'games' && isStandalone ? ' has-ptr' : ''}`}>
       {setupStep === 'games' ? (
         <>
           <Header />
 
-          <div className="screen-inner home-content">
-            <NotificationPrompt toast={toast} activeStep={setupStep} />
+          <PullToRefresh onRefresh={async () => {
+            try {
+              await Promise.all([
+                fetchBoardGames({ force: true }),
+                fetchUsers({ force: true })
+              ])
+            } catch (err) {
+              toast('Không thể làm mới dữ liệu')
+            }
+          }}>
+            <div className="screen-inner home-content">
+              <NotificationPrompt toast={toast} activeStep={setupStep} />
 
-            <section className="home-search-panel" aria-label="Tim va loc game">
-              <SearchBar
-                value={gameSearchTerm}
-                onChange={(event) => setGameSearchTerm(event.target.value)}
-                onClear={() => setGameSearchTerm('')}
-                placeholder="Tìm trò chơi"
-                isFilterOpen={isFilterOpen}
-                onFilterToggle={() => setIsFilterOpen((value) => !value)}
-                hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
-              />
-              <FilterPanel
-                playerCountFilter={playerCountFilter}
-                setPlayerCountFilter={setPlayerCountFilter}
-                isOpen={isFilterOpen}
-              />
-            </section>
-
-
-            <section className="home-game-section">
-              {isLoadingGames ? (
-                <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="game-card game-card-skeleton">
-                      <div className="game-card-thumb" aria-hidden="true" />
-                      <div className="game-card-info">
-                        <span className="game-card-skeleton-line title" />
-                        <span className="game-card-skeleton-line" />
-                        <span className="game-card-skeleton-line short" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {!isLoadingGames && gameList.length === 0 ? (
-                <div className="paper-card empty-state">Chua co game nao.</div>
-              ) : null}
-
-              {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
-                <EmptyState
-                  imageSrc="/not-found.png"
-                  title="Không tìm thấy kết quả nào!"
-                  actionText="Xóa bộ lọc"
-                  onAction={resetFilters}
+              <section className="home-search-panel" aria-label="Tim va loc game">
+                <SearchBar
+                  value={gameSearchTerm}
+                  onChange={(event) => setGameSearchTerm(event.target.value)}
+                  onClear={() => setGameSearchTerm('')}
+                  placeholder="Tìm trò chơi"
+                  isFilterOpen={isFilterOpen}
+                  onFilterToggle={() => setIsFilterOpen((value) => !value)}
+                  hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
                 />
-              ) : null}
+                <FilterPanel
+                  playerCountFilter={playerCountFilter}
+                  setPlayerCountFilter={setPlayerCountFilter}
+                  isOpen={isFilterOpen}
+                />
+              </section>
 
-              {!isLoadingGames && filteredGames.length > 0 ? (
-                <div className="home-game-list">
-                  {filteredGames.map((game, index) => {
-                    const [startColor, endColor] = getGameImageTheme(index)
-                    const genres = getGenreLabels(game)
 
-                    return (
-                      <GameCard
-                        type="button"
-                        key={game.id || game.name}
-                        title={game.name}
-                        thumbnailUrl={game.thumbnail_url}
-                        fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
-                        background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
-                        onClick={() => handleChooseGame(game)}
-                      >
-                        <p>{formatPlayerRange(game)}</p>
-                        {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
-                      </GameCard>
-                    )
-                  })}
-                </div>
-              ) : null}
-            </section>
-          </div>
+              <section className="home-game-section">
+                {isLoadingGames ? (
+                  <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="game-card game-card-skeleton">
+                        <div className="game-card-thumb" aria-hidden="true" />
+                        <div className="game-card-info">
+                          <span className="game-card-skeleton-line title" />
+                          <span className="game-card-skeleton-line" />
+                          <span className="game-card-skeleton-line short" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {!isLoadingGames && gameList.length === 0 ? (
+                  <div className="paper-card empty-state">Chua co game nao.</div>
+                ) : null}
+
+                {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
+                  <EmptyState
+                    imageSrc="/not-found.png"
+                    title="Không tìm thấy kết quả nào!"
+                    actionText="Xóa bộ lọc"
+                    onAction={resetFilters}
+                  />
+                ) : null}
+
+                {!isLoadingGames && filteredGames.length > 0 ? (
+                  <div className="home-game-list">
+                    {filteredGames.map((game, index) => {
+                      const [startColor, endColor] = getGameImageTheme(index)
+                      const genres = getGenreLabels(game)
+
+                      return (
+                        <GameCard
+                          type="button"
+                          key={game.id || game.name}
+                          title={game.name}
+                          thumbnailUrl={game.thumbnail_url}
+                          fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
+                          background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
+                          onClick={() => handleChooseGame(game)}
+                        >
+                          <p>{formatPlayerRange(game)}</p>
+                          {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
+                        </GameCard>
+                      )
+                    })}
+                  </div>
+                ) : null}
+              </section>
+            </div>
+          </PullToRefresh>
         </>
       ) : setupStep === 'player-picker' ? (
         <>

@@ -10,6 +10,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
+import { PullToRefresh } from './ui/PullToRefresh'
 import { useAuthStore } from '../store/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { HistoryFilterPanel } from './HistoryFilterPanel'
@@ -139,9 +140,19 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const [isEditingMatch, setIsEditingMatch] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
   const detailScreenRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
   
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
+
   const currentUser = useAuthStore((state) => state.user)
   const { match } = usePermissions()
   const { canEdit, canDelete } = match
@@ -530,104 +541,112 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
 
   return (
-    <div className="screen history-screen">
+    <div className={`screen history-screen${isStandalone ? ' has-ptr' : ''}`}>
       <Header />
 
-      <div className="screen-inner history-content">
-        <section className="home-search-panel" aria-label="Tim va loc lich su">
-          <SearchBar
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            onClear={() => setSearchTerm('')}
-            placeholder="Tìm ván chơi"
-            isFilterOpen={isFilterOpen}
-            onFilterToggle={() => setIsFilterOpen((value) => !value)}
-            hasFilters={hasFilters}
-          />
+      <PullToRefresh onRefresh={async () => {
+        try {
+          await fetchHistory({ force: true })
+        } catch (err) {
+          toast('Không thể làm mới lịch sử đấu')
+        }
+      }}>
+        <div className="screen-inner history-content">
+          <section className="home-search-panel" aria-label="Tim va loc lich su">
+            <SearchBar
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              onClear={() => setSearchTerm('')}
+              placeholder="Tìm ván chơi"
+              isFilterOpen={isFilterOpen}
+              onFilterToggle={() => setIsFilterOpen((value) => !value)}
+              hasFilters={hasFilters}
+            />
 
 
-          <HistoryFilterPanel
-            selectedGameName={selectedGameName}
-            setSelectedGameName={setSelectedGameName}
-            gameOptions={gameOptions}
-            selectedPlayerName={selectedPlayerName}
-            setSelectedPlayerName={setSelectedPlayerName}
-            playerOptions={playerOptions}
-            myMatchesOnly={myMatchesOnly}
-            setMyMatchesOnly={setMyMatchesOnly}
-            onClear={clearFilters}
-            isOpen={isFilterOpen}
-          />
-        </section>
+            <HistoryFilterPanel
+              selectedGameName={selectedGameName}
+              setSelectedGameName={setSelectedGameName}
+              gameOptions={gameOptions}
+              selectedPlayerName={selectedPlayerName}
+              setSelectedPlayerName={setSelectedPlayerName}
+              playerOptions={playerOptions}
+              myMatchesOnly={myMatchesOnly}
+              setMyMatchesOnly={setMyMatchesOnly}
+              onClear={clearFilters}
+              isOpen={isFilterOpen}
+            />
+          </section>
 
-        <div className="history-list" aria-busy={isLoadingHistory}>
-          {isLoadingHistory ? (
-            <>
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
-                  <div className="game-card-thumb" />
-                  <div className="game-card-info">
-                    <span className="game-card-skeleton-line title" />
-                    <span className="game-card-skeleton-line" />
-                    <span className="game-card-skeleton-line short" />
+          <div className="history-list" aria-busy={isLoadingHistory}>
+            {isLoadingHistory ? (
+              <>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
+                    <div className="game-card-thumb" />
+                    <div className="game-card-info">
+                      <span className="game-card-skeleton-line title" />
+                      <span className="game-card-skeleton-line" />
+                      <span className="game-card-skeleton-line short" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </>
-          ) : null}
+                ))}
+              </>
+            ) : null}
 
-          {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
-            <EmptyState
-              imageSrc="/not-found.png"
-              title="Chưa có ván đấu nào được ghi lại!"
-              actionText="Tạo ván mới"
-              onAction={handleNewGame}
-            />
-          ) : null}
+            {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
+              <EmptyState
+                imageSrc="/not-found.png"
+                title="Chưa có ván đấu nào được ghi lại!"
+                actionText="Tạo ván mới"
+                onAction={handleNewGame}
+              />
+            ) : null}
 
-          {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
-            <EmptyState
-              imageSrc="/not-found.png"
-              title="Không tìm thấy ván đấu!"
-              actionText="Xóa bộ lọc"
-              onAction={clearFilters}
-            />
-          ) : null}
+            {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
+              <EmptyState
+                imageSrc="/not-found.png"
+                title="Không tìm thấy ván đấu!"
+                actionText="Xóa bộ lọc"
+                onAction={clearFilters}
+              />
+            ) : null}
 
-          {filteredHistory.map((entry, index) => {
-            const [startColor, endColor] = getGameImageTheme(index)
-            const topWinners = getTopWinners(entry)
-            const winnerNames = topWinners.map((player) => player.name).join(', ')
+            {filteredHistory.map((entry, index) => {
+              const [startColor, endColor] = getGameImageTheme(index)
+              const topWinners = getTopWinners(entry)
+              const winnerNames = topWinners.map((player) => player.name).join(', ')
 
-            return (
-              <GameCard
-                as="article"
-                key={entry.id}
-                title={formatHistoryTitle(entry)}
-                thumbnailUrl={entry.thumbnailUrl}
-                fallbackText={entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}
-                background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
-                className="game-card--history"
-                role="button"
-                tabIndex={0}
-                onClick={() => openMatchDetail(entry)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
-                }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
-              >
-                <p>{entry.playedAt}</p>
-                <div className="history-winner-line">
-                  <Image src="/crown.svg" width={16} height={14} alt='' />
-                  <span>{winnerNames || 'Chua co nguoi thang'}</span>
-                </div>
-              </GameCard>
-            )
-          })}
+              return (
+                <GameCard
+                  as="article"
+                  key={entry.id}
+                  title={formatHistoryTitle(entry)}
+                  thumbnailUrl={entry.thumbnailUrl}
+                  fallbackText={entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}
+                  background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
+                  className="game-card--history"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openMatchDetail(entry)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
+                  }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                >
+                  <p>{entry.playedAt}</p>
+                  <div className="history-winner-line">
+                    <Image src="/crown.svg" width={16} height={14} alt='' />
+                    <span>{winnerNames || 'Chua co nguoi thang'}</span>
+                  </div>
+                </GameCard>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </PullToRefresh>
 
       <DeleteConfirmDialog
         entry={matchToDelete}

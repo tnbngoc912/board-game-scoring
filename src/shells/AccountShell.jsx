@@ -7,15 +7,26 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
+import { PullToRefresh } from '../components/ui/PullToRefresh'
 import { Icon } from '../components/ui/Icon'
 import { disableFcmNotifications, enableFcmNotifications, hasEnabledFcmNotifications } from '../api/firebaseNotifications'
 
 export function AccountShell() {
   const router = useRouter()
-  const { user, logout, changePassword } = useAuthStore()
+  const { user, logout, changePassword, refreshProfile } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -50,10 +61,18 @@ export function AccountShell() {
   return (
     <ProtectedScreen>
       <div className="app-shell screen-account">
-        <div className="account-screen">
+        <div className={`account-screen${isStandalone ? ' has-ptr' : ''}`}>
           <Header />
 
-          <div className="account-content">
+          <PullToRefresh onRefresh={async () => {
+            try {
+              await refreshProfile()
+              showToast('Đã làm mới thông tin tài khoản')
+            } catch (err) {
+              showToast('Không thể làm mới dữ liệu')
+            }
+          }}>
+            <div className="account-content">
             {user && (
               <>
                 <div className="account-profile-card">
@@ -127,6 +146,7 @@ export function AccountShell() {
               <div className="account-footer-version">Version 1.0.0 (Build 100)</div>
             </div>
           </div>
+          </PullToRefresh>
         </div>
 
         <BottomNav />

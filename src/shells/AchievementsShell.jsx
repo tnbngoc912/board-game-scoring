@@ -7,6 +7,7 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { Header } from '../components/Header'
+import { PullToRefresh } from '../components/ui/PullToRefresh'
 import Image from 'next/image'
 
 // Skeleton cho mỗi card game stats (đồng bộ visual với History nhưng giữ kích thước nhỏ gọn của Achievements)
@@ -26,6 +27,16 @@ export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const { userGameStats, fetchUserGameStats, userGameStatsFetchedAt } = useAppDataStore()
   const [isInitializing, setIsInitializing] = useState(userGameStatsFetchedAt === 0)
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
 
   useEffect(() => {
     async function loadData() {
@@ -59,10 +70,21 @@ export function AchievementsShell() {
   return (
     <ProtectedScreen>
       <div className="app-shell screen-achievements">
-        <div className="achievements-screen">
+        <div className={`achievements-screen${isStandalone ? ' has-ptr' : ''}`}>
           <Header />
 
-          <div className="achievements-content">
+          <PullToRefresh onRefresh={async () => {
+            try {
+              const freshUser = await refreshProfile()
+              const userId = freshUser?.id || freshUser?._id || user?.id || user?._id
+              if (userId) {
+                await fetchUserGameStats(userId, { force: true })
+              }
+            } catch (err) {
+              console.error(err)
+            }
+          }}>
+            <div className="achievements-content">
             <div className="achievements-header">
               <h1>Thành tựu</h1>
               <div className="achievements-subtitle">Thống kê thành tích chơi của bạn</div>
@@ -134,6 +156,7 @@ export function AchievementsShell() {
               )}
             </div>
           </div>
+          </PullToRefresh>
         </div>
         <BottomNav />
       </div>
