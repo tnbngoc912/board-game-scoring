@@ -2,7 +2,7 @@ export default function manifest() {
   return {
       name: "BG Score",
       short_name: "BG Score",
-      description: "Ứng dụng lưu điểm BoardGamer",
+      description: "Ứng dụng lưu điểm BoardGame",
       start_url: "/",
       scope: "/",
       display: "standalone",

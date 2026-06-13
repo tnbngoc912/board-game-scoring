@@ -33,14 +33,14 @@ export const metadata = {
                 url: "/og-image.png",
                 width: 1200,
                 height: 1200,
-                alt: "BGScore - Ứng dụng lưu điểm BoardGame",
+                alt: "Ứng dụng lưu điểm BoardGame",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
         title: "BG Score",
-        description: "BGScore - Ứng dụng lưu điểm BoardGame",
+        description: "Ứng dụng lưu điểm BoardGame",
         images: ["/og-image.png"],
     },
 };
