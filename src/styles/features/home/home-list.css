@@ -60,12 +60,7 @@
   border: 1px solid #CC854E;
   border-radius: var(--radius-md);
   /* 12px tương ứng radius-sm của figma */
-}
-
-/* Align margins with the rest of the history detail components */
-.screen-history .home-notification-banner {
-  margin-left: 16px;
-  margin-right: 16px;
+  width: 100%;
 }
 
 .home-notification-header {

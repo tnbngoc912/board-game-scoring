@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 import { getCurrentAuthToken, getRealtimeBaseUrl } from './backendService'
 
-export function connectMatchComments(matchId, onCommentCreated, onStatusChange) {
+export function connectMatchComments(matchId, onCommentCreated, onCommentDeleted, onStatusChange) {
   const token = getCurrentAuthToken()
   if (!matchId || !token) return null
 
@@ -25,6 +25,10 @@ export function connectMatchComments(matchId, onCommentCreated, onStatusChange) 
 
   socket.on('match:comment-created', (comment) => {
     onCommentCreated?.(comment)
+  })
+
+  socket.on('match:comment-deleted', (data) => {
+    onCommentDeleted?.(data.commentId || data.comment_id)
   })
 
   return socket

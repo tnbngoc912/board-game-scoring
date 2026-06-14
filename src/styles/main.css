@@ -15,6 +15,7 @@
 @import './components/loading.css';
 @import './components/empty-state.css';
 @import './components/pull-to-refresh.css';
+@import './components/match-comments.css';
 
 
 @import './components/modal.css';

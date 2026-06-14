@@ -247,6 +247,13 @@ export async function createMatchComment(matchId, content) {
   return unwrapEntity(payload, ['comment'])
 }
 
+export async function deleteMatchComment(matchId, commentId) {
+  return request(`/matches/${matchId}/comments/${commentId}`, {
+    method: 'DELETE',
+  })
+}
+
+
 export async function saveFcmToken(token) {
   return request('/notifications/fcm-token', {
     method: 'POST',
