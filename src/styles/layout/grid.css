@@ -17,9 +17,37 @@
   box-shadow: 10px 0 12px -14px rgba(93, 65, 40, 0.65);
 }
 
+.score-grid-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(255, 252, 244, 0.98);
+}
+
+.score-grid-sticky-intersection {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 4;
+}
+
+.score-grid-sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  background: rgba(255, 252, 244, 0.98);
+}
+
+.score-grid-sticky-bottom-intersection {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+}
+
 .score-board-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
+  max-height: 60vh;
   padding: 0;
 }
 

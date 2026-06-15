@@ -36,13 +36,13 @@ export function ScoreGrid({
         }}
       >
         <ScoreGridHeaderCell sticky={stickyHeader} />
-        <ScoreGridSpacer />
+        <ScoreGridSpacer sticky={stickyHeader} />
         {players.map((player) => (
-          <ScoreGridHeaderCell key={player.id} player>
+          <ScoreGridHeaderCell key={player.id} player sticky={stickyHeader}>
             <span>{player.name}</span>
           </ScoreGridHeaderCell>
         ))}
-        <ScoreGridSpacer />
+        <ScoreGridSpacer sticky={stickyHeader} />
 
         {displayRows.map((row) => (
           <React.Fragment key={row.id}>
@@ -84,9 +84,9 @@ export function ScoreGrid({
         {!isTotalScoreOnly && showTotal ? (
           <>
             <ScoreGridTotalLabelCell sticky={stickyHeader}>Tổng</ScoreGridTotalLabelCell>
-            <ScoreGridSpacer bordered />
+            <ScoreGridSpacer bordered stickyBottom={stickyHeader} />
             {players.map((player) => (
-              <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
+              <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)} sticky={stickyHeader}>
                 {getTotal ? getTotal(player.id) : player.total}
               </ScoreGridWinnerCell>
             ))}

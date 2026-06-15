@@ -9,7 +9,11 @@
 
 .history-score-board,
 .history-score-board .score-board-scroll,
-.history-score-board .score-grid-sticky {
+.history-score-board .score-grid-sticky,
+.history-score-board .score-grid-sticky-top,
+.history-score-board .score-grid-sticky-intersection,
+.history-score-board .score-grid-sticky-bottom,
+.history-score-board .score-grid-sticky-bottom-intersection {
   background: var(--color-bg);
 }
 
@@ -20,8 +24,8 @@
 }
 
 .history-score-board .score-board-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
+  max-height: 60vh;
 }
 
 .history-score-board .score-entry-grid {
@@ -38,6 +42,17 @@
   color: var(--color-text-strong);
   font-size: 14px;
   padding: 0 var(--space-2);
+}
+
+.history-score-board .score-grid-sticky-top,
+.history-score-board .score-grid-sticky-bottom {
+  z-index: 5;
+}
+
+.history-score-board .score-grid-sticky-intersection,
+.history-score-board .score-grid-sticky-bottom-intersection {
+  z-index: 6;
+  box-shadow: var(--shadow-sticky);
 }
 
 .history-score-board .score-grid-sticky {

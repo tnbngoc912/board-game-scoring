@@ -41,7 +41,8 @@
 }
 
 .score-board-scroll {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 60vh;
   padding: 0;
   scrollbar-width: none;
 }
@@ -73,8 +74,13 @@
   text-align: center;
 }
 
-.score-screen .score-grid-sticky-header {
+.score-screen .score-grid-sticky-header,
+.score-screen .score-grid-sticky-top {
   z-index: 5;
+}
+
+.score-screen .score-grid-sticky-intersection {
+  z-index: 6;
 }
 
 .score-screen .player-header {
@@ -256,7 +262,11 @@
 
 .score-entry-screen .score-board,
 .score-entry-screen .score-board-scroll,
-.score-entry-screen .score-grid-sticky {
+.score-entry-screen .score-grid-sticky,
+.score-entry-screen .score-grid-sticky-top,
+.score-entry-screen .score-grid-sticky-intersection,
+.score-entry-screen .score-grid-sticky-bottom,
+.score-entry-screen .score-grid-sticky-bottom-intersection {
   background: var(--color-bg);
 }
 
@@ -278,8 +288,20 @@
   padding: 0 var(--space-2);
 }
 
-.score-entry-screen .score-grid-sticky-header {
+.score-entry-screen .score-grid-sticky-header,
+.score-entry-screen .score-grid-sticky-top {
   min-height: 40px;
+}
+
+.score-entry-screen .score-grid-sticky-top,
+.score-entry-screen .score-grid-sticky-bottom {
+  z-index: 5;
+}
+
+.score-entry-screen .score-grid-sticky-intersection,
+.score-entry-screen .score-grid-sticky-bottom-intersection {
+  z-index: 6;
+  box-shadow: var(--shadow-sticky);
 }
 
 .score-entry-screen .score-grid-sticky {
