@@ -34,6 +34,8 @@ export function ScoreGrid({
 
     let startX = 0
     let startY = 0
+    let lockedScrollTop = 0
+    let lockedScrollLeft = 0
     let scrollDirection = null
     let isTouchActive = false
 
@@ -41,6 +43,8 @@ export function ScoreGrid({
       if (e.touches.length > 1) return
       startX = e.touches[0].clientX
       startY = e.touches[0].clientY
+      lockedScrollTop = container.scrollTop
+      lockedScrollLeft = container.scrollLeft
       scrollDirection = null
       isTouchActive = true
     }
@@ -56,26 +60,27 @@ export function ScoreGrid({
       if (!scrollDirection) {
         const absDiffX = Math.abs(diffX)
         const absDiffY = Math.abs(diffY)
-        const threshold = 8
+        const threshold = 6
 
         if (absDiffX > threshold || absDiffY > threshold) {
           if (absDiffX > absDiffY) {
             scrollDirection = 'horizontal'
-            container.classList.add('lock-scroll-y')
-            container.classList.remove('lock-scroll-x')
           } else {
             scrollDirection = 'vertical'
-            container.classList.add('lock-scroll-x')
-            container.classList.remove('lock-scroll-y')
           }
         }
+      }
+
+      if (scrollDirection === 'horizontal') {
+        container.scrollTop = lockedScrollTop
+      } else if (scrollDirection === 'vertical') {
+        container.scrollLeft = lockedScrollLeft
       }
     }
 
     const handleTouchEnd = () => {
       isTouchActive = false
       scrollDirection = null
-      container.classList.remove('lock-scroll-x', 'lock-scroll-y')
     }
 
     container.addEventListener('touchstart', handleTouchStart, { passive: true })
