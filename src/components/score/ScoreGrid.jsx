@@ -60,7 +60,7 @@ export function ScoreGrid({
       if (!scrollDirection) {
         const absDiffX = Math.abs(diffX)
         const absDiffY = Math.abs(diffY)
-        const threshold = 6
+        const threshold = 5
 
         if (absDiffX > threshold || absDiffY > threshold) {
           if (absDiffX > absDiffY) {
@@ -72,7 +72,10 @@ export function ScoreGrid({
       }
 
       if (scrollDirection === 'horizontal') {
-        container.scrollTop = lockedScrollTop
+        if (e.cancelable) {
+          e.preventDefault()
+        }
+        container.scrollLeft = lockedScrollLeft - diffX
       } else if (scrollDirection === 'vertical') {
         container.scrollLeft = lockedScrollLeft
       }
@@ -84,7 +87,7 @@ export function ScoreGrid({
     }
 
     container.addEventListener('touchstart', handleTouchStart, { passive: true })
-    container.addEventListener('touchmove', handleTouchMove, { passive: true })
+    container.addEventListener('touchmove', handleTouchMove, { passive: false })
     container.addEventListener('touchend', handleTouchEnd, { passive: true })
     container.addEventListener('touchcancel', handleTouchEnd, { passive: true })
 

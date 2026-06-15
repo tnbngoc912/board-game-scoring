@@ -1,5 +1,7 @@
-.score-screen {
+.score-screen,
+.score-entry-screen {
   padding-bottom: 34px;
+  overscroll-behavior: none;
 }
 
 .score-topbar {
@@ -45,6 +47,7 @@
   max-height: 60vh;
   padding: 0;
   scrollbar-width: none;
+  overscroll-behavior: none;
 }
 
 .score-board-scroll::-webkit-scrollbar {

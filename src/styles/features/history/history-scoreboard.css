@@ -7,6 +7,10 @@
   background: var(--color-bg-strong);
 }
 
+.history-score-board {
+  overscroll-behavior: none;
+}
+
 .history-score-board,
 .history-score-board .score-board-scroll,
 .history-score-board .score-grid-sticky,
@@ -26,6 +30,7 @@
 .history-score-board .score-board-scroll {
   overflow: auto;
   max-height: 60vh;
+  overscroll-behavior: none;
 }
 
 .history-score-board .score-entry-grid {

@@ -49,6 +49,7 @@
   overflow: auto;
   max-height: 60vh;
   padding: 0;
+  overscroll-behavior: none;
 }
 
 
