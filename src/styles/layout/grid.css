@@ -97,6 +97,14 @@
   font-size: 24px;
 }
 
+.score-board-scroll.lock-scroll-y {
+  overflow-y: hidden !important;
+}
+
+.score-board-scroll.lock-scroll-x {
+  overflow-x: hidden !important;
+}
+
 @media (max-width: 420px) {
   .score-grid {
     grid-template-columns: minmax(92px, 1fr) repeat(auto-fit, minmax(70px, 1fr));

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   ScoreGridHeaderCell,
   ScoreGridInputCell,
@@ -26,8 +26,73 @@ export function ScoreGrid({
   const isTotalScoreOnly = mode === 'TOTAL_SCORE_ONLY'
   const displayRows = isTotalScoreOnly ? rows.slice(0, 1) : rows
 
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let startX = 0
+    let startY = 0
+    let scrollDirection = null
+    let isTouchActive = false
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length > 1) return
+      startX = e.touches[0].clientX
+      startY = e.touches[0].clientY
+      scrollDirection = null
+      isTouchActive = true
+    }
+
+    const handleTouchMove = (e) => {
+      if (!isTouchActive || e.touches.length > 1) return
+
+      const currentX = e.touches[0].clientX
+      const currentY = e.touches[0].clientY
+      const diffX = currentX - startX
+      const diffY = currentY - startY
+
+      if (!scrollDirection) {
+        const absDiffX = Math.abs(diffX)
+        const absDiffY = Math.abs(diffY)
+        const threshold = 8
+
+        if (absDiffX > threshold || absDiffY > threshold) {
+          if (absDiffX > absDiffY) {
+            scrollDirection = 'horizontal'
+            container.classList.add('lock-scroll-y')
+            container.classList.remove('lock-scroll-x')
+          } else {
+            scrollDirection = 'vertical'
+            container.classList.add('lock-scroll-x')
+            container.classList.remove('lock-scroll-y')
+          }
+        }
+      }
+    }
+
+    const handleTouchEnd = () => {
+      isTouchActive = false
+      scrollDirection = null
+      container.classList.remove('lock-scroll-x', 'lock-scroll-y')
+    }
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true })
+    container.addEventListener('touchmove', handleTouchMove, { passive: true })
+    container.addEventListener('touchend', handleTouchEnd, { passive: true })
+    container.addEventListener('touchcancel', handleTouchEnd, { passive: true })
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart)
+      container.removeEventListener('touchmove', handleTouchMove)
+      container.removeEventListener('touchend', handleTouchEnd)
+      container.removeEventListener('touchcancel', handleTouchEnd)
+    }
+  }, [])
+
   return (
-    <div className="score-grid-wrap score-board-scroll">
+    <div ref={containerRef} className="score-grid-wrap score-board-scroll">
       <div
         className="score-grid score-entry-grid"
         style={{
