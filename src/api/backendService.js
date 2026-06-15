@@ -2,6 +2,7 @@ import { normalizeAuthUser, normalizeUser } from '../store/mappers/authMapper'
 import { normalizeBoardGame, normalizeBoardGameOverview } from '../store/mappers/boardGameMapper'
 import { getEntityId, unwrapEntity, unwrapList } from '../store/mappers/entityMapper'
 import { normalizeMatch, normalizeMatchDetail } from '../store/mappers/matchMapper'
+import { compressImage } from '../utils/imageCompressor'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || `https://boardgame-scorer-backend.onrender.com/api/v1`
 const AUTH_TOKEN_KEY = 'scorekeeper_auth_token'
@@ -293,8 +294,17 @@ export async function uploadMatchImages(files = []) {
   if (files.length === 0) return []
 
   return Promise.all(files.map(async (file) => {
+    let fileToUpload = file
+    const originalSize = file.size
+    const LIMIT_1MB = 1024 * 1024
+
+    if (file.size > LIMIT_1MB) {
+      fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.8 })
+    }
+
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', fileToUpload)
+    formData.append('originalSize', originalSize.toString())
 
     const payload = await requestFormData('/upload', formData)
 
