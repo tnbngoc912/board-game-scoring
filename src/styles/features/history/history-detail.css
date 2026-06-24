@@ -104,7 +104,11 @@
 
 .detail-content {
   transition: filter 0.14s ease, opacity 0.14s ease;
-  padding-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 56px);
+  box-sizing: border-box;
+  padding-bottom: 0;
 }
 
 .detail-content.dimmed {
