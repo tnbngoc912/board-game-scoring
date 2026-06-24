@@ -217,20 +217,24 @@ export function MatchCommentsSection({ matchId, currentUser, toast }) {
 
       {currentUser ? (
         <form className="match-comment-form" onSubmit={handleSubmit}>
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleDraftKeyDown}
-            placeholder="Viết bình luận về trận này..."
-            maxLength={1000}
-            rows={3}
-          />
-          <div className="match-comment-form-actions">
-            <span>{draft.trim().length}/1000</span>
-            <Button type="submit" disabled={!draft.trim() || isSending}>
-              {isSending ? 'Đang gửi...' : 'Gửi'}
-            </Button>
+          <div className="match-comment-input-wrapper">
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleDraftKeyDown}
+              placeholder="Để lại bình luận về ván chơi này..."
+              maxLength={1000}
+              rows={1}
+            />
           </div>
+          <button
+            type="submit"
+            className="match-comment-send-btn"
+            disabled={!draft.trim() || isSending}
+            aria-label="Gửi bình luận"
+          >
+            <Icon src="/send.png" color="#FFFFFF" size={24} />
+          </button>
         </form>
       ) : (
         <p className="match-comments-empty">Đăng nhập để bình luận.</p>
