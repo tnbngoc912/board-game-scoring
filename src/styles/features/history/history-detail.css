@@ -148,7 +148,7 @@
 
 .history-detail-note {
   min-height: 80px;
-  margin: 16px 16px 16px 16px;
+  margin: 16px 16px 0px 16px;
   border-radius: var(--radius-md);
   background: var(--color-card);
   padding: 8px 16px;
@@ -157,7 +157,7 @@
 }
 
 .history-memory-section {
-  margin: 16px;
+  margin: 16px 16px 0px 16px;
 }
 
 .history-memory-section h2 {
