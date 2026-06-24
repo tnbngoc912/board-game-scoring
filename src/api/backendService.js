@@ -42,6 +42,18 @@ export function clearAuthToken() {
   setAuthToken(null)
 }
 
+let tokenExpiredListener = null
+
+export function registerTokenExpiredListener(listener) {
+  tokenExpiredListener = listener
+}
+
+function triggerTokenExpired() {
+  if (tokenExpiredListener) {
+    tokenExpiredListener()
+  }
+}
+
 async function request(path, options = {}) {
   const token = getAuthToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -57,6 +69,9 @@ async function request(path, options = {}) {
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
+    if (response.status === 401) {
+      triggerTokenExpired()
+    }
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
@@ -79,6 +94,9 @@ async function requestFormData(path, formData, options = {}) {
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
+    if (response.status === 401) {
+      triggerTokenExpired()
+    }
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
