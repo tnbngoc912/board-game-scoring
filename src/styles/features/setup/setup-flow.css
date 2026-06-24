@@ -131,6 +131,7 @@
 
 .setup-date-row {
   position: relative;
+  cursor: pointer;
 }
 
 .setup-date-button {

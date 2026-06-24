@@ -9,6 +9,12 @@ import {
   uploadMatchImages,
 } from '../api/backendService'
 
+function getCurrentLocalDateTimeValue() {
+  const now = new Date()
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 const PLAYER_COLORS = ['#ea6556', '#5a98e6', '#6fbe78', '#e3af47', '#b57be7', '#ef8e45']
 const DEFAULT_CATEGORIES = [
   'Diem tai nguyen',
@@ -118,6 +124,7 @@ export const useGameStore = create(
       publishedScores: [],
       darkMode: false,
       syncStatus: 'idle',
+      playDateTime: getCurrentLocalDateTimeValue(),
 
       getTotals() {
         return calculateTotals(get().players, get().publishedScores)
@@ -128,7 +135,12 @@ export const useGameStore = create(
         set({ gameName })
       },
 
+      setPlayDateTime(playDateTime) {
+        set({ playDateTime })
+      },
+
       selectGame(game) {
+        const playDateTime = getCurrentLocalDateTimeValue()
         if (!game) {
           const nextScores = ensureScoreRows([], get().players, [])
           set({
@@ -138,7 +150,8 @@ export const useGameStore = create(
             boardGameOverview: null,
             scoringType: 'COLUMN_BASED',
             categories: [],
-            publishedScores: nextScores
+            publishedScores: nextScores,
+            playDateTime
           })
           return
         }
@@ -159,7 +172,8 @@ export const useGameStore = create(
           boardGameOverview: null,
           scoringType,
           categories,
-          publishedScores
+          publishedScores,
+          playDateTime
         })
       },
 
@@ -242,7 +256,7 @@ export const useGameStore = create(
       },
 
       async publishScores(scoreRows, description = '', memoryImageFiles = []) {
-        const { gameName, scoringType, players, categories } = get()
+        const { gameName, scoringType, players, categories, playDateTime } = get()
         const publishedScores = scoringType === 'WINNER_ONLY'
           ? scoreRows
           : ensureScoreRows(categories, players, scoreRows)
@@ -254,7 +268,7 @@ export const useGameStore = create(
             return syncUserByName(player.name)
           }))
           const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
-          const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id))
+          const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id), playDateTime)
 
           const playersWithApiIds = players.map((player, index) => ({
             ...player,
@@ -308,6 +322,7 @@ export const useGameStore = create(
           categories,
           publishedScores: [],
           syncStatus: 'idle',
+          playDateTime: getCurrentLocalDateTimeValue(),
         })
         return true
       },

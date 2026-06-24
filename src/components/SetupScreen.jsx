@@ -93,8 +93,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   const [selectedGenres, setSelectedGenres] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [selectedUsersById, setSelectedUsersById] = useState({})
-  const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
-  const { gameName, players, categories, selectGame, addPlayer, removePlayer } = useGameStore(
+  const { gameName, players, categories, selectGame, addPlayer, removePlayer, playDateTime, setPlayDateTime } = useGameStore(
     useShallow((state) => ({
       gameName: state.gameName,
       players: state.players,
@@ -102,6 +101,8 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       selectGame: state.selectGame,
       addPlayer: state.addPlayer,
       removePlayer: state.removePlayer,
+      playDateTime: state.playDateTime,
+      setPlayDateTime: state.setPlayDateTime,
     }))
   )
 
@@ -480,17 +481,17 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
             <section className="setup-section">
               <h2>Ngày giờ</h2>
-              <div className="setup-date-row">
-                <span>{formatPlayDateTime(getCurrentLocalDateTimeValue())}</span>
-                <label className="setup-date-button" aria-label="Chon ngay gio">
+              <label className="setup-date-row">
+                <span>{formatPlayDateTime(playDateTime || getCurrentLocalDateTimeValue())}</span>
+                <div className="setup-date-button" aria-label="Chon ngay gio">
                   <Image src="/datetime.svg" alt="" width={24} height={24} />
                   <input
                     type="datetime-local"
                     value={playDateTime}
                     onChange={(event) => setPlayDateTime(event.target.value)}
                   />
-                </label>
-              </div>
+                </div>
+              </label>
             </section>
 
             {canCreate && (

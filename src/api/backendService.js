@@ -214,12 +214,26 @@ export async function ensureBoardGame(gameName, categories) {
   return normalizeBoardGame(created)
 }
 
-export async function createMatch(boardGameId, playerIds) {
+export async function createMatch(boardGameId, playerIds, playDate = null) {
+  let formattedPlayDate = null
+  if (playDate) {
+    const [datePart, timePart] = playDate.split('T')
+    if (datePart && timePart) {
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hours, minutes] = timePart.split(':').map(Number)
+      const localDate = new Date(year, month - 1, day, hours, minutes)
+      if (!Number.isNaN(localDate.getTime())) {
+        formattedPlayDate = localDate.toISOString()
+      }
+    }
+  }
+
   const payload = await request('/matches', {
     method: 'POST',
     body: JSON.stringify({
       board_game_id: boardGameId,
       player_ids: playerIds,
+      ...(formattedPlayDate ? { play_date: formattedPlayDate } : {}),
     }),
   })
   const match = unwrapEntity(payload, ['match'])
