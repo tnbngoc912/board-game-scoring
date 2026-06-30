@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store/authStore'
@@ -7,26 +7,72 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
+import { PullToRefresh } from '../components/ui/PullToRefresh'
 import { Icon } from '../components/ui/Icon'
+import { disableFcmNotifications, enableFcmNotifications, hasEnabledFcmNotifications } from '../api/firebaseNotifications'
 
 export function AccountShell() {
   const router = useRouter()
-  const { user, logout, changePassword } = useAuthStore()
+  const { user, logout, changePassword, refreshProfile } = useAuthStore()
   const { message, visible, show: showToast } = useToast()
+  const [isPushEnabled, setIsPushEnabled] = useState(false)
+  const [isUpdatingPush, setIsUpdatingPush] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
+
+  useEffect(() => {
+    setIsPushEnabled(hasEnabledFcmNotifications())
+  }, [])
 
   function handleLogout() {
     logout()
     router.replace('/')
   }
 
+  async function handleTogglePush() {
+    if (isUpdatingPush) return
+
+    setIsUpdatingPush(true)
+    try {
+      if (isPushEnabled) {
+        await disableFcmNotifications()
+        setIsPushEnabled(false)
+        showToast('Đã tắt thông báo')
+      } else {
+        await enableFcmNotifications()
+        setIsPushEnabled(true)
+        showToast('Đã bật thông báo')
+      }
+    } catch (error) {
+      showToast(error?.message || 'Không cập nhật được thông báo')
+    } finally {
+      setIsUpdatingPush(false)
+    }
+  }
+
   return (
     <ProtectedScreen>
       <div className="app-shell screen-account">
-        <div className="account-screen">
+        <div className={`account-screen${isStandalone ? ' has-ptr' : ''}`}>
           <Header />
 
-          <div className="account-content">
+          <PullToRefresh onRefresh={async () => {
+            try {
+              await refreshProfile()
+              showToast('Đã làm mới thông tin tài khoản')
+            } catch (err) {
+              showToast('Không thể làm mới dữ liệu')
+            }
+          }}>
+            <div className="account-content">
             {user && (
               <>
                 <div className="account-profile-card">
@@ -64,6 +110,19 @@ export function AccountShell() {
 
             <div className="account-actions">
               <button 
+                className="btn-account-action btn-account-action-with-meta" 
+                type="button"
+                onClick={handleTogglePush}
+                disabled={isUpdatingPush}
+              >
+                <Icon src="/send-icon.svg" size={24} color="#38322E" />
+                <span>
+                  <strong>{isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Tắt thông báo' : 'Bật thông báo'}</strong>
+                  <small>{isPushEnabled ? 'Bạn đang nhận thông báo bình luận mới' : 'Nhận thông báo khi có bình luận mới trong trận của bạn'}</small>
+                </span>
+              </button>
+
+              <button 
                 className="btn-account-action" 
                 type="button"
                 onClick={() => router.push('/change-password')}
@@ -87,6 +146,7 @@ export function AccountShell() {
               <div className="account-footer-version">Version 1.0.0 (Build 100)</div>
             </div>
           </div>
+          </PullToRefresh>
         </div>
 
         <BottomNav />

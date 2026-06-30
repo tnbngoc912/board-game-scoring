@@ -2,6 +2,7 @@ import { normalizeAuthUser, normalizeUser } from '../store/mappers/authMapper'
 import { normalizeBoardGame, normalizeBoardGameOverview } from '../store/mappers/boardGameMapper'
 import { getEntityId, unwrapEntity, unwrapList } from '../store/mappers/entityMapper'
 import { normalizeMatch, normalizeMatchDetail } from '../store/mappers/matchMapper'
+import { compressImage } from '../utils/imageCompressor'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || `https://boardgame-scorer-backend.onrender.com/api/v1`
 const AUTH_TOKEN_KEY = 'scorekeeper_auth_token'
@@ -18,6 +19,15 @@ function getAuthToken() {
   return authToken
 }
 
+export function getCurrentAuthToken() {
+  return getAuthToken()
+}
+
+export function getRealtimeBaseUrl() {
+  if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL
+  return API_BASE_URL.replace(/\/api\/v1\/?$/, '')
+}
+
 export function setAuthToken(token) {
   authToken = token || null
   if (typeof window === 'undefined') return
@@ -30,6 +40,18 @@ export function setAuthToken(token) {
 
 export function clearAuthToken() {
   setAuthToken(null)
+}
+
+let tokenExpiredListener = null
+
+export function registerTokenExpiredListener(listener) {
+  tokenExpiredListener = listener
+}
+
+function triggerTokenExpired() {
+  if (tokenExpiredListener) {
+    tokenExpiredListener()
+  }
 }
 
 async function request(path, options = {}) {
@@ -47,6 +69,9 @@ async function request(path, options = {}) {
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
+    if (response.status === 401) {
+      triggerTokenExpired()
+    }
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
@@ -69,6 +94,9 @@ async function requestFormData(path, formData, options = {}) {
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
+    if (response.status === 401) {
+      triggerTokenExpired()
+    }
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
@@ -204,12 +232,26 @@ export async function ensureBoardGame(gameName, categories) {
   return normalizeBoardGame(created)
 }
 
-export async function createMatch(boardGameId, playerIds) {
+export async function createMatch(boardGameId, playerIds, playDate = null) {
+  let formattedPlayDate = null
+  if (playDate) {
+    const [datePart, timePart] = playDate.split('T')
+    if (datePart && timePart) {
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hours, minutes] = timePart.split(':').map(Number)
+      const localDate = new Date(year, month - 1, day, hours, minutes)
+      if (!Number.isNaN(localDate.getTime())) {
+        formattedPlayDate = localDate.toISOString()
+      }
+    }
+  }
+
   const payload = await request('/matches', {
     method: 'POST',
     body: JSON.stringify({
       board_game_id: boardGameId,
       player_ids: playerIds,
+      ...(formattedPlayDate ? { play_date: formattedPlayDate } : {}),
     }),
   })
   const match = unwrapEntity(payload, ['match'])
@@ -223,6 +265,40 @@ export async function createMatch(boardGameId, playerIds) {
 export async function getMatch(matchId) {
   const payload = await request(`/matches/${matchId}`)
   return normalizeMatchDetail(payload)
+}
+
+export async function getMatchComments(matchId) {
+  const payload = await request(`/matches/${matchId}/comments`)
+  return unwrapList(payload)
+}
+
+export async function createMatchComment(matchId, content) {
+  const payload = await request(`/matches/${matchId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  })
+  return unwrapEntity(payload, ['comment'])
+}
+
+export async function deleteMatchComment(matchId, commentId) {
+  return request(`/matches/${matchId}/comments/${commentId}`, {
+    method: 'DELETE',
+  })
+}
+
+
+export async function saveFcmToken(token) {
+  return request('/notifications/fcm-token', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export async function deleteFcmToken(token) {
+  return request('/notifications/fcm-token', {
+    method: 'DELETE',
+    body: JSON.stringify({ token }),
+  })
 }
 
 export async function updateMatchScores(matchId, { description, playerScores, winnerIds, imageAttachments }) {
@@ -250,8 +326,17 @@ export async function uploadMatchImages(files = []) {
   if (files.length === 0) return []
 
   return Promise.all(files.map(async (file) => {
+    let fileToUpload = file
+    const originalSize = file.size
+    const LIMIT_1MB = 1024 * 1024
+
+    if (file.size > LIMIT_1MB) {
+      fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.8 })
+    }
+
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', fileToUpload)
+    formData.append('originalSize', originalSize.toString())
 
     const payload = await requestFormData('/upload', formData)
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Image from "next/image"
 
 function HeaderBrand({ title }) {
@@ -10,8 +10,28 @@ function HeaderBrand({ title }) {
 }
 
 export function Header({ onBack, onClose, isCloseDisabled = false, title, rightElement }) {
+  const headerRef = useRef(null)
+
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    const handleTouchMove = (e) => {
+      // Ngăn chặn hành vi cuộn (rubber-band) mặc định khi vuốt trên header
+      if (e.cancelable) {
+        e.preventDefault()
+      }
+    }
+
+    header.addEventListener('touchmove', handleTouchMove, { passive: false })
+
+    return () => {
+      header.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [])
+
   return (
-    <header className="overview-header" aria-label="BGScore">
+    <header ref={headerRef} className="overview-header" aria-label="BGScore">
       <div className="overview-topbar">
         {onBack ? (
           <button className="overview-back-btn" onClick={onBack} aria-label="Quay lại">

@@ -47,6 +47,108 @@
   padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
+.home-notification-banner {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12px 16px;
+  gap: 4px;
+  background: var(--color-brand-100);
+  /* #FDE4D2 */
+  border: 1px solid #CC854E;
+  border-radius: var(--radius-md);
+  /* 12px tương ứng radius-sm của figma */
+  width: 100%;
+}
+
+.home-notification-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  align-self: stretch;
+}
+
+.home-notification-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-text);
+  /* #38322E */
+  flex-shrink: 0;
+}
+
+.home-notification-title {
+  font-family: var(--font-main);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 19px;
+  color: var(--color-text);
+  /* #38322E */
+  margin: 0;
+}
+
+.home-notification-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  align-self: stretch;
+}
+
+.home-notification-btn-dismiss {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px !important;
+  height: 36px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  font-family: var(--font-main) !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  line-height: 15px !important;
+  color: var(--color-brand) !important;
+  /* #93653F */
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-notification-btn-confirm {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 16px !important;
+  height: 36px !important;
+  background: var(--color-brand) !important;
+  /* #93653F */
+  border: 0 !important;
+  border-radius: 12px !important;
+  font-family: var(--font-main) !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  line-height: 15px !important;
+  color: var(--color-white) !important;
+  /* #FFFFFF */
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-notification-btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .home-empty-state {
   display: flex;
   flex-direction: column;
@@ -81,4 +183,10 @@
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+@media (max-width: 420px) {
+  .home-notification-actions {
+    justify-content: flex-end;
+  }
 }

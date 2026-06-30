@@ -1,0 +1,61 @@
+.pull-to-refresh-container {
+  position: relative;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.pull-to-refresh-container.normal-scroll {
+  overscroll-behavior-y: auto; /* Giữ hành vi cuộn mặc định của trình duyệt thường */
+}
+
+.pull-to-refresh-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  margin-top: -60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+  pointer-events: none;
+}
+
+.pull-indicator-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-card);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(220, 199, 174, 0.3);
+  color: var(--color-brand);
+}
+
+.pull-indicator-icon {
+  transition: transform 0.1s linear;
+}
+
+.pull-indicator-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+.pull-to-refresh-content {
+  will-change: transform;
+  height: 100%;
+  width: 100%;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

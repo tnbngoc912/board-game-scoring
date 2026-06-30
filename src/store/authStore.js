@@ -6,6 +6,7 @@ import {
   forgotPassword,
   getMyProfile,
   login as loginApi,
+  registerTokenExpiredListener,
   setAuthToken,
 } from '../api/backendService'
 
@@ -84,3 +85,7 @@ export const useAuthStore = create(
     },
   ),
 )
+
+registerTokenExpiredListener(() => {
+  useAuthStore.getState().logout()
+})

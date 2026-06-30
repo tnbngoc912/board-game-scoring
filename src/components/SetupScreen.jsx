@@ -10,8 +10,12 @@ import { Header } from './Header'
 import { FilterPanel } from './FilterPanel'
 import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
+import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
+import { Icon } from './ui/Icon'
+import { Button } from './ui/Button'
 import { useAuthStore } from '../store/authStore'
+import { NotificationPrompt } from './notifications/NotificationPrompt'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -66,11 +70,22 @@ function getCurrentLocalDateTimeValue() {
 
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
   }, [setupStep])
+
   const [gameSearchTerm, setGameSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -78,8 +93,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   const [selectedGenres, setSelectedGenres] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [selectedUsersById, setSelectedUsersById] = useState({})
-  const [playDateTime, setPlayDateTime] = useState('2026-04-30T20:00')
-  const { gameName, players, categories, selectGame, addPlayer, removePlayer } = useGameStore(
+  const { gameName, players, categories, selectGame, addPlayer, removePlayer, playDateTime, setPlayDateTime } = useGameStore(
     useShallow((state) => ({
       gameName: state.gameName,
       players: state.players,
@@ -87,6 +101,8 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       selectGame: state.selectGame,
       addPlayer: state.addPlayer,
       removePlayer: state.removePlayer,
+      playDateTime: state.playDateTime,
+      setPlayDateTime: state.setPlayDateTime,
     }))
   )
 
@@ -261,85 +277,99 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     setSetupStep('player-picker')
   }, [maxPlayersAllowed, players.length])
 
+
   return (
-    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}`}>
+    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}${setupStep === 'games' && isStandalone ? ' has-ptr' : ''}`}>
       {setupStep === 'games' ? (
         <>
           <Header />
 
-          <div className="screen-inner home-content">
-            <section className="home-search-panel" aria-label="Tim va loc game">
-              <SearchBar
-                value={gameSearchTerm}
-                onChange={(event) => setGameSearchTerm(event.target.value)}
-                onClear={() => setGameSearchTerm('')}
-                placeholder="Tìm trò chơi"
-                isFilterOpen={isFilterOpen}
-                onFilterToggle={() => setIsFilterOpen((value) => !value)}
-                hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
-              />
-              <FilterPanel
-                playerCountFilter={playerCountFilter}
-                setPlayerCountFilter={setPlayerCountFilter}
-                isOpen={isFilterOpen}
-              />
-            </section>
+          <PullToRefresh onRefresh={async () => {
+            try {
+              await Promise.all([
+                fetchBoardGames({ force: true }),
+                fetchUsers({ force: true })
+              ])
+            } catch (err) {
+              toast('Không thể làm mới dữ liệu')
+            }
+          }}>
+            <div className="screen-inner home-content">
+              <NotificationPrompt toast={toast} activeStep={setupStep} />
 
-
-            <section className="home-game-section">
-              {isLoadingGames ? (
-                <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="game-card game-card-skeleton">
-                      <div className="game-card-thumb" aria-hidden="true" />
-                      <div className="game-card-info">
-                        <span className="game-card-skeleton-line title" />
-                        <span className="game-card-skeleton-line" />
-                        <span className="game-card-skeleton-line short" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              {!isLoadingGames && gameList.length === 0 ? (
-                <div className="paper-card empty-state">Chua co game nao.</div>
-              ) : null}
-
-              {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
-                <EmptyState
-                  imageSrc="/not-found.png"
-                  title="Không tìm thấy kết quả nào!"
-                  actionText="Xóa bộ lọc"
-                  onAction={resetFilters}
+              <section className="home-search-panel" aria-label="Tim va loc game">
+                <SearchBar
+                  value={gameSearchTerm}
+                  onChange={(event) => setGameSearchTerm(event.target.value)}
+                  onClear={() => setGameSearchTerm('')}
+                  placeholder="Tìm trò chơi"
+                  isFilterOpen={isFilterOpen}
+                  onFilterToggle={() => setIsFilterOpen((value) => !value)}
+                  hasFilters={Boolean(playerCountFilter || selectedGenres.length > 0)}
                 />
-              ) : null}
+                <FilterPanel
+                  playerCountFilter={playerCountFilter}
+                  setPlayerCountFilter={setPlayerCountFilter}
+                  isOpen={isFilterOpen}
+                />
+              </section>
 
-              {!isLoadingGames && filteredGames.length > 0 ? (
-                <div className="home-game-list">
-                  {filteredGames.map((game, index) => {
-                    const [startColor, endColor] = getGameImageTheme(index)
-                    const genres = getGenreLabels(game)
 
-                    return (
-                      <GameCard
-                        type="button"
-                        key={game.id || game.name}
-                        title={game.name}
-                        thumbnailUrl={game.thumbnail_url}
-                        fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
-                        background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
-                        onClick={() => handleChooseGame(game)}
-                      >
-                        <p>{formatPlayerRange(game)}</p>
-                        {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
-                      </GameCard>
-                    )
-                  })}
-                </div>
-              ) : null}
-            </section>
-          </div>
+              <section className="home-game-section">
+                {isLoadingGames ? (
+                  <div className="home-game-list" aria-busy="true" aria-label="Đang tải...">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="game-card game-card-skeleton">
+                        <div className="game-card-thumb" aria-hidden="true" />
+                        <div className="game-card-info">
+                          <span className="game-card-skeleton-line title" />
+                          <span className="game-card-skeleton-line" />
+                          <span className="game-card-skeleton-line short" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {!isLoadingGames && gameList.length === 0 ? (
+                  <div className="paper-card empty-state">Chua co game nao.</div>
+                ) : null}
+
+                {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
+                  <EmptyState
+                    imageSrc="/not-found.png"
+                    title="Không tìm thấy kết quả nào!"
+                    actionText="Xóa bộ lọc"
+                    onAction={resetFilters}
+                  />
+                ) : null}
+
+                {!isLoadingGames && filteredGames.length > 0 ? (
+                  <div className="home-game-list">
+                    {filteredGames.map((game, index) => {
+                      const [startColor, endColor] = getGameImageTheme(index)
+                      const genres = getGenreLabels(game)
+
+                      return (
+                        <GameCard
+                          type="button"
+                          key={game.id || game.name}
+                          title={game.name}
+                          thumbnailUrl={game.thumbnail_url}
+                          fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
+                          background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
+                          onClick={() => handleChooseGame(game)}
+                        >
+                          <p>{formatPlayerRange(game)}</p>
+                          {genres.length > 0 ? <p>{genres.join(', ')}</p> : null}
+                        </GameCard>
+                      )
+                    })}
+                  </div>
+                ) : null}
+              </section>
+            </div>
+          </PullToRefresh>
         </>
       ) : setupStep === 'player-picker' ? (
         <>
@@ -451,17 +481,17 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
             <section className="setup-section">
               <h2>Ngày giờ</h2>
-              <div className="setup-date-row">
-                <span>{formatPlayDateTime(getCurrentLocalDateTimeValue())}</span>
-                <label className="setup-date-button" aria-label="Chon ngay gio">
+              <label className="setup-date-row">
+                <span>{formatPlayDateTime(playDateTime || getCurrentLocalDateTimeValue())}</span>
+                <div className="setup-date-button" aria-label="Chon ngay gio">
                   <Image src="/datetime.svg" alt="" width={24} height={24} />
                   <input
                     type="datetime-local"
                     value={playDateTime}
                     onChange={(event) => setPlayDateTime(event.target.value)}
                   />
-                </label>
-              </div>
+                </div>
+              </label>
             </section>
 
             {canCreate && (

@@ -1,6 +1,8 @@
 import { Barlow_Semi_Condensed } from 'next/font/google'
 import '../index.css'
 import { ScrollRestorer } from '../components/navigation/ScrollRestorer'
+import { FcmForegroundListener } from '../components/notifications/FcmForegroundListener'
+import { IosInstallPrompt } from '../components/IosInstallPrompt'
 
 const barlow = Barlow_Semi_Condensed({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -9,41 +11,39 @@ const barlow = Barlow_Semi_Condensed({
   // variable: '--font-barlow',
 })
 
-const appUrl = process.env.NODE_ENV === 'development'
-  ? 'https://board-game-scoring.vercel.app/'
-  : `https://board-game-scoring.vercel.app/`
+const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
 
 export const metadata = {
-  metadataBase: new URL(appUrl),
-  title: 'ScoreKeeper',
-  description: 'Board game score tracker',
-  applicationName: 'ScoreKeeper',
-  manifest: '/manifest.webmanifest',
-  icons: {
-    icon: '/favicon.svg',
-    apple: '/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: 'ScoreKeeper',
-    description: 'Board game score tracker',
-    type: 'website',
-    url: appUrl,
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 1200,
-        alt: 'BGScore - Board Game Score Tracker',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'ScoreKeeper',
-    description: 'Board game score tracker',
-    images: ['/og-image.png'],
-  },
-}
+    metadataBase: new URL(appUrl),
+    title: "BG Score",
+    description: "Ứng dụng lưu điểm BoardGame",
+    applicationName: "BGScore",
+    manifest: "/manifest.webmanifest",
+    icons: {
+        icon: "/favicon.svg",
+        apple: "/apple-touch-icon.png",
+    },
+    openGraph: {
+        title: "BG Score",
+        description: "Ứng dụng lưu điểm BoardGame",
+        type: "website",
+        url: appUrl,
+        images: [
+            {
+                url: "/og-image.png",
+                width: 1200,
+                height: 1200,
+                alt: "Ứng dụng lưu điểm BoardGame",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "BG Score",
+        description: "Ứng dụng lưu điểm BoardGame",
+        images: ["/og-image.png"],
+    },
+};
 
 export const viewport = {
   width: 'device-width',
@@ -51,6 +51,7 @@ export const viewport = {
   maximumScale: 1,
   themeColor: '#f5eedf',
   minimumScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
@@ -58,8 +59,14 @@ export default function RootLayout({ children }) {
     <html lang="vi" className={barlow.variable} suppressHydrationWarning>
       <ScrollRestorer />
       <body className={barlow.className} suppressHydrationWarning>
+        <FcmForegroundListener />
         {children}
+        <IosInstallPrompt />
       </body>
     </html>
   )
 }
+
+
+
+

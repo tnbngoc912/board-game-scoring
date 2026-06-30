@@ -144,3 +144,112 @@
   border-bottom-right-radius: 2px;
 }
 
+/* Standalone PWA Mode (Add to Home Screen) style adjustments */
+@media (display-mode: standalone) {
+  .bottom-nav {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-shell.screen-setup .bottom-nav,
+  .app-shell.screen-history .bottom-nav,
+  .app-shell.screen-achievements .bottom-nav,
+  .app-shell.screen-account .bottom-nav {
+    height: calc(40px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Fallback & Test Mode with .is-standalone class */
+.is-standalone .bottom-nav {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+}
+
+.is-standalone .app-shell.screen-setup .bottom-nav,
+.is-standalone .app-shell.screen-history .bottom-nav,
+.is-standalone .app-shell.screen-achievements .bottom-nav,
+.is-standalone .app-shell.screen-account .bottom-nav {
+  height: calc(40px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+}
+
+/* iOS Install Prompt styles */
+.ios-install-prompt {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(390px, 92vw);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border-focus);
+  box-shadow: 0 8px 30px rgba(93, 65, 40, 0.2);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  z-index: 1000;
+  animation: iosPromptSlideUp 0.3s ease-out;
+}
+
+@keyframes iosPromptSlideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.ios-install-prompt-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ios-install-prompt-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.ios-install-prompt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-brand-100);
+  border-radius: var(--radius-xs);
+  padding: 2px 4px;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+.ios-install-prompt-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--color-brand);
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.ios-install-prompt-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ios-install-prompt-btn-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--color-brand);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-install-prompt-btn-dismiss:active {
+  background-color: var(--color-brand-100);
+}

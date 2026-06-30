@@ -10,11 +10,13 @@ export function normalizeScoreColumn(column, index = 0) {
 }
 
 export function normalizeBoardGame(game) {
+  const genres = game.genres || game.category_ids || game.categoryIds || game.categories || []
   const scoreColumns = game.score_columns || game.scoreColumns || game.categories || []
 
   return {
     ...game,
     id: getEntityId(game),
+    genres,
     scoringType: game.scoring_type || game.scoringType || 'COLUMN_BASED',
     categories: scoreColumns.map(normalizeScoreColumn),
   }
