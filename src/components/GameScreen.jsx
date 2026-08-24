@@ -190,8 +190,14 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       }, 0),
     }))
     if (totals.length === 0) return new Set()
+    const isAllZero = totals.every((item) => item.total === 0)
+    if (isAllZero) return new Set()
     const max = Math.max(...totals.map((item) => item.total))
-    return new Set(totals.filter((item) => item.total === max).map((item) => item.id))
+    return new Set(
+      totals
+        .filter((item) => item.total === max)
+        .flatMap((item) => [item.id, String(item.id)])
+    )
   }, [players, draftScores])
 
   function updateCell(categoryId, playerId, value, type) {
