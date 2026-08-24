@@ -304,10 +304,11 @@
 }
 
 .score-entry-screen .score-grid-cell {
-  box-sizing: content-box;
+  box-sizing: border-box;
   min-height: 60px;
+  display: flex;
   align-items: center;
-  justify-items: stretch;
+  justify-content: center;
   padding: var(--space-1);
 }
 
@@ -326,8 +327,9 @@
   background: var(--color-card);
   color: var(--color-text);
   font-size: 16px;
-  line-height: 19px;
+  line-height: normal;
   font-weight: 700;
+  text-align: center;
   padding: 0 var(--space-2);
   box-sizing: border-box;
 }
@@ -361,14 +363,18 @@
   line-height: 1.15;
   font-weight: 700;
   padding-left: var(--space-5);
+  display: flex;
+  align-items: center;
 }
 
 .score-entry-screen .score-grid-winner {
   color: var(--color-text);
   font-size: 18px;
-  line-height: 20px;
+  line-height: normal;
   font-weight: 700;
   padding: 0 6px;
+  display: grid;
+  place-items: center;
 }
 
 .score-entry-screen .score-grid-winner strong {
