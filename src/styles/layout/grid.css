@@ -69,6 +69,35 @@
   font-size: 24px;
 }
 
+.winning-total {
+  position: relative;
+  width: 100%;
+  max-width: 74px;
+  height: 48px;
+  display: grid !important;
+  place-items: center;
+  background: transparent;
+  z-index: 0;
+  margin: 0 auto;
+}
+
+.winning-total .crown-icon-bg {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 45px;
+  height: 36px;
+  transform: translateX(-50%);
+  z-index: -1;
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.winning-total span {
+  position: relative;
+  z-index: 1;
+}
+
 @media (max-width: 420px) {
   .score-grid {
     grid-template-columns: minmax(92px, 1fr) repeat(auto-fit, minmax(70px, 1fr));
