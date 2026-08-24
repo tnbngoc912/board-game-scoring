@@ -96,22 +96,19 @@ export function ScoreGridCheckboxCell({
   ariaLabel,
 }) {
   return (
-    <div
+    <label
       className={clsx('score-grid-cell', 'score-grid-checkbox-cell', 'winner-only')}
-      onClick={!disabled ? onChange : undefined}
+      aria-label={ariaLabel}
     >
       <input
         type="checkbox"
         className="score-grid-checkbox"
         checked={checked}
-        onChange={(e) => {
-          e.stopPropagation()
-          onChange?.()
-        }}
+        onChange={onChange}
         disabled={disabled}
-        aria-label={ariaLabel}
       />
-    </div>
+    </label>
   )
 }
+
 
