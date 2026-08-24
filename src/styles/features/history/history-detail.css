@@ -151,6 +151,7 @@
   margin: 16px 16px 0px 16px;
   border-radius: var(--radius-md);
   background: var(--color-card);
+  border: 1px solid var(--color-border);
   padding: 8px 16px;
   font-size: 16px;
   line-height: 1.35;
