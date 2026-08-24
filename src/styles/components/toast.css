@@ -2,7 +2,7 @@
   position: fixed;
   left: 50%;
   bottom: calc(82px + env(safe-area-inset-bottom));
-  z-index: 9999;
+  z-index: 100;
   max-width: min(345px, calc(100vw - 32px));
   transform: translate(-50%, 12px);
   border-radius: var(--radius-pill);
