@@ -19,6 +19,7 @@ import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
 import { GameScreen } from './GameScreen'
 import { MatchCommentsSection } from './MatchCommentsSection'
+import { MatchReceiptCard } from './score/MatchReceiptCard'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -124,6 +125,24 @@ function attachMatchThumbnail(match, boardGames) {
   }
 }
 
+async function urlToDataUrl(url) {
+  if (!url || url.startsWith('data:')) return url
+  try {
+    const res = await fetch(url, { mode: 'cors' })
+    if (!res.ok) throw new Error('Fetch failed')
+    const blob = await res.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.onerror = () => resolve(url)
+      reader.readAsDataURL(blob)
+    })
+  } catch (err) {
+    console.warn('Cannot convert image to data URL:', err)
+    return url
+  }
+}
+
 export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -137,11 +156,26 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [receiptDataUrls, setReceiptDataUrls] = useState([])
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const [isEditingMatch, setIsEditingMatch] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const detailScreenRef = useRef(null)
+  const receiptCardRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
+
+  useEffect(() => {
+    if (!selectedMatch) {
+      setReceiptDataUrls([])
+      return
+    }
+    const rawImages = (selectedMatch.imageAttachments || []).filter((img) => img?.url).map((img) => img.url)
+    if (rawImages.length > 0) {
+      Promise.all(rawImages.map((u) => urlToDataUrl(u))).then(setReceiptDataUrls)
+    } else {
+      setReceiptDataUrls([])
+    }
+  }, [selectedMatch])
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -344,6 +378,94 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }, [selectedMatch, toast])
 
+  const handleDownloadMatchImage = useCallback(async () => {
+    if (!selectedMatch || !receiptCardRef.current) return
+    setIsDetailMenuOpen(false)
+
+    try {
+      const rawImages = (selectedMatch.imageAttachments || [])
+        .filter((img) => img?.url)
+        .map((img) => img.url)
+
+      // Chuyển đổi data URLs nếu chưa hoàn tất
+      if (rawImages.length > 0 && receiptDataUrls.length === 0) {
+        const dataUrls = await Promise.all(rawImages.map((u) => urlToDataUrl(u)))
+        setReceiptDataUrls(dataUrls)
+        await new Promise((r) => setTimeout(r, 100))
+      }
+
+      // Đảm bảo tất cả thẻ img đã load xong
+      if (receiptCardRef.current) {
+        const images = Array.from(receiptCardRef.current.querySelectorAll('img'))
+        await Promise.all(
+          images.map((img) => {
+            if (img.complete && img.naturalWidth !== 0) return Promise.resolve()
+            return new Promise((resolve) => {
+              img.onload = resolve
+              img.onerror = resolve
+              setTimeout(resolve, 600)
+            })
+          })
+        )
+      }
+
+      const { toBlob, toPng } = await import('html-to-image')
+
+      const datePart = String(selectedMatch.playedAt || '').match(/(\d{1,2}\/\d{1,2}\/\d{4})/)
+      const dateStr = (datePart?.[1] || 'match').replace(/\//g, '-')
+      const cleanGameName = (selectedMatch.gameName || 'bang-diem')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      const fileName = `bang-diem-${cleanGameName}-${dateStr}.png`
+
+      const blob = await toBlob(receiptCardRef.current, {
+        pixelRatio: 3,
+        cacheBust: true,
+        backgroundColor: '#fdfbf7',
+      })
+
+      if (!blob) throw new Error('Không tạo được tệp ảnh')
+      const file = new File([blob], fileName, { type: 'image/png' })
+
+      // Mở trực tiếp Native Share Sheet của iOS / Android để lưu vào Photos hoặc gửi
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Bảng điểm ${selectedMatch.gameName}`,
+          })
+          toast('Đã lưu hình ảnh bảng điểm!')
+          return
+        } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') return
+        }
+      }
+
+      // Fallback tải file ảnh về máy nếu trình duyệt không hỗ trợ Share Sheet file
+      const dataUrl = await toPng(receiptCardRef.current, {
+        pixelRatio: 3,
+        cacheBust: true,
+        backgroundColor: '#fdfbf7',
+      })
+
+      const link = document.createElement('a')
+      link.download = fileName
+      link.href = dataUrl
+      link.click()
+      toast('Đã lưu hình ảnh bảng điểm!')
+    } catch (err) {
+      console.error('Lỗi tải ảnh bảng điểm:', err)
+      toast('Không thể lưu hình ảnh bảng điểm')
+    }
+  }, [receiptDataUrls, selectedMatch, toast])
+
   if (routeDetailMatchId && !selectedMatch) {
     return (
       <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
@@ -382,7 +504,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const isWinnerOnly = scoringType === 'WINNER_ONLY'
     const displayedScoreRows = isTotalScoreOnly ? scoreRows.slice(0, 1) : scoreRows
     const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
-    const canManage = canEdit || canDelete
 
     return (
       <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
@@ -393,31 +514,22 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             router.push('/history')
           }}
           rightElement={
-            canManage ? (
-              <Icon
-                src="/more-menu.png"
-                size={32}
-                color="white"
-                onClick={() => setIsDetailMenuOpen(!isDetailMenuOpen)}
-                style={{ cursor: 'pointer' }}
-                aria-label="Tùy chọn"
-              />
-            ) : (
-              <Icon
-                src="/share.png"
-                size={32}
-                color="white"
-                onClick={handleShare}
-                style={{ cursor: 'pointer' }}
-                aria-label="Chia sẻ"
-              />
-            )
+            <Icon
+              src="/more-menu.png"
+              size={32}
+              color="white"
+              onClick={() => setIsDetailMenuOpen(!isDetailMenuOpen)}
+              style={{ cursor: 'pointer' }}
+              aria-label="Tùy chọn"
+            />
           }
         />
 
         <DetailActionMenu
           isOpen={isDetailMenuOpen}
           onClose={() => setIsDetailMenuOpen(false)}
+          onDownloadImage={handleDownloadMatchImage}
+          onShare={handleShare}
           onEdit={() => {
             setIsDetailMenuOpen(false)
             setIsEditingMatch(true)
@@ -426,10 +538,17 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             setIsDetailMenuOpen(false)
             setMatchToDelete(selectedMatch)
           }}
-          onShare={handleShare}
           canEdit={canEdit}
           canDelete={canDelete}
         />
+
+        <div className="match-receipt-hidden-container" aria-hidden="true">
+          <MatchReceiptCard
+            ref={receiptCardRef}
+            match={selectedMatch}
+            memoryDataUrls={receiptDataUrls}
+          />
+        </div>
 
         <div className={isDetailMenuOpen ? 'detail-content dimmed' : 'detail-content'}>
           <section className="match-summary-strip">
@@ -870,16 +989,23 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
   )
 }
 
-function DetailActionMenu({ isOpen, onEdit, onDelete, onShare, canEdit, canDelete }) {
+function DetailActionMenu({ isOpen, onEdit, onDelete, onShare, onDownloadImage, canEdit, canDelete }) {
   if (!isOpen) return null
 
   return (
-    <div className="detail-action-menu" role="menu" aria-label="Tuy chon bang diem">
+    <div className="detail-action-menu" role="menu" aria-label="Tùy chọn bảng điểm">
+      <button type="button" role="menuitem" className="detail-action-item" onClick={onDownloadImage}>
+        <span className="detail-action-icon" aria-hidden="true">
+          <Icon src="/download.png" size={24} color="var(--color-brand)" />
+        </span>
+        <span>Tải hình bảng điểm</span>
+      </button>
+
       <button type="button" role="menuitem" className="detail-action-item" onClick={onShare}>
         <span className="detail-action-icon" aria-hidden="true">
           <Icon src="/share.png" size={24} color="var(--color-brand)" />
         </span>
-        <span>Chia sẻ bảng điểm</span>
+        <span>Gửi link bảng điểm</span>
       </button>
 
       {canEdit && (
