@@ -86,14 +86,10 @@ export function ScoreGrid({
             <ScoreGridTotalLabelCell sticky={stickyHeader}>Tổng</ScoreGridTotalLabelCell>
             <ScoreGridSpacer bordered />
             {players.map((player) => (
-              <ScoreGridWinnerCell
-                key={player.id}
-                winning={winningPlayerIds.has(player.id) || winningPlayerIds.has(String(player.id))}
-              >
+              <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
                 {getTotal ? getTotal(player.id) : player.total}
               </ScoreGridWinnerCell>
             ))}
-            <ScoreGridSpacer bordered />
           </>
         ) : null}
       </div>

@@ -92,8 +92,7 @@
 }
 
 .history-score-board .score-grid-total,
-.history-score-board .score-grid-winner,
-.history-score-board .grid-spacer.border {
+.history-score-board .score-grid-winner, .grid-spacer.border {
   min-height: 48px;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -115,23 +114,20 @@
   display: grid !important;
   place-items: center;
   background: transparent;
-  z-index: 0;
+  z-index: 0
 }
 
-.history-score-board .winning-total .crown-icon-bg {
+.history-score-board .winning-total::before {
+  content: '';
+  z-index: -1;
   position: absolute;
   left: 50%;
   bottom: 5px;
   width: 45px;
   height: 36px;
   transform: translateX(-50%);
-  z-index: -1;
-  pointer-events: none;
-  object-fit: contain;
+  background-image: url('/crown.svg');
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
-
-.history-score-board .winning-total span {
-  position: relative;
-  z-index: 1;
-}
-
