@@ -131,6 +131,16 @@ export function normalizeMatchDetail(payload) {
   const normalizedPlayers = players
     .map((player, index) => {
       const id = getEntityId(player.user_id) || player.user_id || getEntityId(player)
+      const userScores = player.scores || {}
+
+      // Lấy thông tin options (Phe/Bảng) cho từng người chơi
+      const options = {}
+      scoreColumns.forEach((col) => {
+        if (String(col.type || '').toUpperCase() === 'SELECT') {
+          const val = userScores[col.id || col._id]
+          if (val) options[col.id || col._id] = val
+        }
+      })
 
       return {
         id,
@@ -139,11 +149,13 @@ export function normalizeMatchDetail(payload) {
         total: player.total_score ?? 0,
         rank: player.rank ?? index + 1,
         isWinner: Boolean(player.is_winner || winnerIds.has(id)),
-        scores: player.scores || {},
+        scores: userScores,
+        options,
       }
     })
   const winner = normalizedPlayers.find((player) => player.isWinner)
-  const scoreRowsFromColumns = scoreColumns.map((column, index) => ({
+  const numericScoreColumns = scoreColumns.filter((column) => String(column.type || '').toUpperCase() !== 'SELECT')
+  const scoreRowsFromColumns = numericScoreColumns.map((column, index) => ({
     ...normalizeScoreColumn(column, index),
     scores: normalizedPlayers.reduce((scores, player) => {
       scores[player.id] = player.scores?.[column.id || column._id] ?? 0
@@ -152,7 +164,7 @@ export function normalizeMatchDetail(payload) {
   }))
   const scoreRows = scoreRowsFromColumns.length > 0
     ? scoreRowsFromColumns
-    : normalizeRawScoreRows(rawScoreRows, normalizedPlayers)
+    : normalizeRawScoreRows(rawScoreRows, normalizedPlayers).filter((r) => String(r.type || '').toUpperCase() !== 'SELECT')
 
   return {
     id: getEntityId(match),

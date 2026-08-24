@@ -42,9 +42,14 @@ function normalizeCategory(category) {
     return { name: category, type: 'number' }
   }
 
+  const rawType = String(category.type || '').toUpperCase()
+  const isSelect = rawType === 'SELECT'
+  const isText = rawType === 'TEXT' || category.type === 'text'
+
   return {
     name: category.name,
-    type: category.type === 'text' ? 'text' : 'number',
+    type: isSelect ? 'SELECT' : (isText ? 'text' : 'number'),
+    options: Array.isArray(category.options) ? category.options : [],
   }
 }
 
@@ -58,8 +63,14 @@ function getScoreColumnId(category, index = 0) {
 
 function ensureScoreRows(categories, players, publishedScores = []) {
   const scoreMap = new Map(publishedScores.map((entry) => [entry.id, entry]))
+  // Chỉ lấy các cột tính điểm số (bỏ qua các cột type SELECT) cho bảng ScoreGrid
+  let scoringCategories = categories.filter((c) => c.type !== 'SELECT')
 
-  return categories.map((category, index) => {
+  if (scoringCategories.length === 0) {
+    scoringCategories = [{ id: 'total', name: 'Điểm', type: 'number' }]
+  }
+
+  return scoringCategories.map((category, index) => {
     const normalizedCategory = normalizeCategory(category)
     const id = getScoreColumnId(category, index)
     const previous = scoreMap.get(id)
@@ -92,14 +103,25 @@ function calculateTotals(players, publishedScores) {
     .sort((a, b) => b.total - a.total)
 }
 
-function buildApiScoresForPlayer(playerId, scoreRows) {
-  return scoreRows.reduce((scores, row) => {
-    if (row.type === 'text') return scores
+function buildApiScoresForPlayer(playerId, scoreRows, player = null) {
+  const scores = scoreRows.reduce((acc, row) => {
+    if (row.type === 'text' || row.type === 'SELECT') return acc
 
     const score = Number(row.scores?.[playerId] ?? 0)
-    scores[row.id] = Number.isNaN(score) ? 0 : score
-    return scores
+    acc[row.id] = Number.isNaN(score) ? 0 : score
+    return acc
   }, {})
+
+  // Bổ sung các giá trị lựa chọn của người chơi (Phe, Bảng,...)
+  if (player?.options) {
+    Object.entries(player.options).forEach(([colId, val]) => {
+      if (val !== undefined && val !== null && val !== '') {
+        scores[colId] = val
+      }
+    })
+  }
+
+  return scores
 }
 
 function getWinnerIds(players, scoreRows) {
@@ -159,7 +181,8 @@ export const useGameStore = create(
         const boardGameId = game.id || game._id || ''
         const gameName = game.name
         const scoringType = game.scoringType || game.scoring_type || 'COLUMN_BASED'
-        const categories = game.categories.map((category, index) => ({
+        const rawCategories = game.categories || game.score_columns || game.scoreColumns || []
+        const categories = rawCategories.map((category, index) => ({
           id: getScoreColumnId(category, index),
           ...normalizeCategory(category),
         }))
@@ -198,7 +221,7 @@ export const useGameStore = create(
         })
       },
 
-      addPlayer(name, apiUserId = null, avatar) {
+      addPlayer(name, apiUserId = null, avatar, options = {}) {
         const trimmed = normalizeLabel(name)
         if (!trimmed) return false
 
@@ -210,13 +233,30 @@ export const useGameStore = create(
             name: trimmed,
             initials: initials(trimmed),
             color: pickColor(get().players.length),
-            avatar_url: avatar
+            avatar_url: avatar,
+            options: options || {},
           },
         ]
 
         const nextScores = ensureScoreRows(get().categories, nextPlayers, get().publishedScores)
         set({ players: nextPlayers, publishedScores: nextScores })
         return true
+      },
+
+      setPlayerOption(playerId, colId, value) {
+        const nextPlayers = get().players.map((player) => {
+          if (player.id === playerId) {
+            return {
+              ...player,
+              options: {
+                ...(player.options || {}),
+                [colId]: value,
+              },
+            }
+          }
+          return player
+        })
+        set({ players: nextPlayers })
       },
 
       removePlayer(id) {
@@ -281,7 +321,7 @@ export const useGameStore = create(
 
               return {
                 user_id: user.id,
-                scores: buildApiScoresForPlayer(player.id, publishedScores),
+                scores: buildApiScoresForPlayer(player.id, publishedScores, player),
               }
             })
           const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)

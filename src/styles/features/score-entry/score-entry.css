@@ -78,8 +78,10 @@
 }
 
 .score-screen .player-header {
-  flex-direction: row;
-  gap: 0;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
 }
 
 .score-screen .score-grid-label,

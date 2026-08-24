@@ -93,7 +93,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   const [selectedGenres, setSelectedGenres] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [selectedUsersById, setSelectedUsersById] = useState({})
-  const { gameName, players, categories, selectGame, addPlayer, removePlayer, playDateTime, setPlayDateTime } = useGameStore(
+  const { gameName, players, categories, selectGame, addPlayer, removePlayer, setPlayerOption, playDateTime, setPlayDateTime } = useGameStore(
     useShallow((state) => ({
       gameName: state.gameName,
       players: state.players,
@@ -101,6 +101,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       selectGame: state.selectGame,
       addPlayer: state.addPlayer,
       removePlayer: state.removePlayer,
+      setPlayerOption: state.setPlayerOption,
       playDateTime: state.playDateTime,
       setPlayDateTime: state.setPlayDateTime,
     }))
@@ -229,13 +230,54 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     return `${timePart}, ${day}/${month}/${year}`
   }
 
-  const handleStart = useCallback(() => {
+  const selectColumns = useMemo(() => {
+    const candidates = [
+      categories,
+      selectedGame?.score_columns,
+      selectedGame?.scoreColumns,
+      selectedGame?.categories
+    ]
+
+    for (const list of candidates) {
+      if (Array.isArray(list) && list.length > 0) {
+        const found = list.filter((c) => {
+          const typeStr = String(c?.type || '').toUpperCase()
+          return typeStr === 'SELECT'
+        })
+        if (found.length > 0) return found
+      }
+    }
+
+    return []
+  }, [categories, selectedGame])
+
+  const handleConfigNext = useCallback(() => {
     if (!canStart) {
       toast('Cần ít nhất 2 người chơi')
       return
     }
+
+    if (selectColumns.length > 0) {
+      setSetupStep('faction-picker')
+    } else {
+      onStart()
+    }
+  }, [canStart, onStart, selectColumns.length, toast])
+
+  const handleStartFromFactionPicker = useCallback(() => {
+    // Bắt buộc chọn Phe / Phân loại cho tất cả người chơi
+    for (const player of players) {
+      for (const col of selectColumns) {
+        const val = player.options?.[col.id]
+        if (!val || typeof val !== 'string' || val.trim() === '') {
+          toast(`Vui lòng chọn "${col.name}" cho ${player.name}`)
+          return
+        }
+      }
+    }
+
     onStart()
-  }, [canStart, onStart, toast])
+  }, [onStart, players, selectColumns, toast])
 
   const toggleUserSelection = useCallback((user) => {
     const userId = user.id
@@ -436,6 +478,56 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
             </button>
           </div>
         </>
+      ) : setupStep === 'faction-picker' ? (
+        <>
+          <Header
+            title="Chọn Phe & Phân Loại"
+            onBack={() => setSetupStep('config')}
+          />
+
+          <div className="screen-inner setup-flow faction-picker-flow">
+            <section className="setup-section">
+              <h2>Thiết lập cho người chơi</h2>
+              <div className="setup-row-list">
+                {players.map((player) => (
+                  <div key={player.id} className="faction-picker-card">
+                    <div className="faction-picker-player-info">
+                      <Image src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={32} height={32} />
+                      <span className="faction-picker-player-name">{player.name}</span>
+                    </div>
+
+                    <div className="faction-picker-options">
+                      {selectColumns.map((col) => {
+                        const currentValue = player.options?.[col.id] || ''
+                        return (
+                          <div key={col.id} className="faction-picker-field">
+                            <label className="faction-picker-label">{col.name} <span className="required-star">*</span></label>
+                            <select
+                              className="faction-picker-select"
+                              value={currentValue}
+                              onChange={(e) => setPlayerOption(player.id, col.id, e.target.value)}
+                            >
+                              <option value="">-- Chọn {col.name} --</option>
+                              {(col.options || []).map((opt, optIdx) => (
+                                <option key={optIdx} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {canCreate && (
+              <button className="setup-start-btn" onClick={handleStartFromFactionPicker}>
+                Bắt đầu trận đấu
+              </button>
+            )}
+          </div>
+        </>
       ) : (
         <>
           <Header
@@ -462,7 +554,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                       <div className="setup-player-row-left">
                         <Image src={player.avatar_url ? player.avatar_url : '/avatar-default.svg'} alt='' width={28} height={28} />
                         <span>{player.name}</span>
-
                       </div>
 
                       <button className="setup-circle-btn remove" onClick={() => removePlayer(player.id)} aria-label={`Xoa ${player.name}`}>
@@ -495,8 +586,8 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
             </section>
 
             {canCreate && (
-              <button className="setup-start-btn" onClick={handleStart}>
-                Tạo bảng điểm
+              <button className="setup-start-btn" onClick={handleConfigNext}>
+                {selectColumns.length > 0 ? 'Tiếp tục chọn phe' : 'Tạo bảng điểm'}
               </button>
             )}
           </div>
