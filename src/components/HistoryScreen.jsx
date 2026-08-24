@@ -156,6 +156,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
   const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isExportingImage, setIsExportingImage] = useState(false)
   const [receiptDataUrls, setReceiptDataUrls] = useState([])
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const [isEditingMatch, setIsEditingMatch] = useState(false)
@@ -379,8 +380,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [selectedMatch, toast])
 
   const handleDownloadMatchImage = useCallback(async () => {
-    if (!selectedMatch || !receiptCardRef.current) return
+    if (!selectedMatch || !receiptCardRef.current || isExportingImage) return
     setIsDetailMenuOpen(false)
+    setIsExportingImage(true)
 
     try {
       const rawImages = (selectedMatch.imageAttachments || [])
@@ -437,6 +439,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         navigator.canShare({ files: [file] })
       ) {
         try {
+          setIsExportingImage(false)
           await navigator.share({
             files: [file],
             title: `Bảng điểm ${selectedMatch.gameName}`,
@@ -463,8 +466,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     } catch (err) {
       console.error('Lỗi tải ảnh bảng điểm:', err)
       toast('Không thể lưu hình ảnh bảng điểm')
+    } finally {
+      setIsExportingImage(false)
     }
-  }, [receiptDataUrls, selectedMatch, toast])
+  }, [isExportingImage, receiptDataUrls, selectedMatch, toast])
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
@@ -506,8 +511,13 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     const memoryImages = (selectedMatch.imageAttachments || []).filter((image) => image?.url)
 
     return (
-      <div ref={detailScreenRef} className="screen score-screen history-detail-screen loading-shell" aria-busy={isLoadingMatchDetail}>
+      <div
+        ref={detailScreenRef}
+        className="screen score-screen history-detail-screen loading-shell"
+        aria-busy={isLoadingMatchDetail || isExportingImage}
+      >
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
+        {isExportingImage ? <LoadingOverlay label="Đang tạo ảnh..." /> : null}
         <Header title="Bảng Điểm"
           onBack={() => {
             setIsDetailMenuOpen(false)
