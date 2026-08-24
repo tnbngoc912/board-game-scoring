@@ -370,15 +370,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     const winner = getWinner(selectedMatch)
     const players = selectedMatch.players || []
-    const isAllZero = players.every((player) => (Number(player.total) || 0) === 0)
     const maxTotal = players.reduce((max, player) => Math.max(max, Number(player.total) || 0), Number.NEGATIVE_INFINITY)
-    const winningPlayerIds = isAllZero
-      ? new Set()
-      : new Set(
-          players
-            .filter((player) => (Number(player.total) || 0) === maxTotal)
-            .flatMap((player) => [player.id, String(player.id)])
-        )
+    const winningPlayerIds = new Set(
+      players
+        .filter((player) => (Number(player.total) || 0) === maxTotal)
+        .map((player) => player.id)
+    )
     const scoreRows = selectedMatch.scoreRows || []
     const scoringType = selectedMatch.scoringType || 'COLUMN_BASED'
     const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
