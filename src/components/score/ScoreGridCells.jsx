@@ -1,7 +1,9 @@
 import React from 'react'
 import clsx from 'clsx'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function ScoreGridHeaderCell({ children, sticky = false, player = false }) {
+
   return (
     <div
       className={clsx(
@@ -89,6 +91,64 @@ export function ScoreGridWinnerCell({ children, winning = false }) {
   )
 }
 
+export function ScoreGridWinnerSelectCell({
+  checked = false,
+  onChange,
+  disabled = false,
+  ariaLabel,
+}) {
+  return (
+    <div
+      className={clsx(
+        'score-grid-cell',
+        'score-grid-winner-select-cell',
+        'winner-only',
+        checked && 'is-winner'
+      )}
+      onClick={!disabled ? onChange : undefined}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={(e) => {
+        if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onChange?.()
+        }
+      }}
+      aria-label={ariaLabel}
+      aria-pressed={checked}
+    >
+      <div className="winner-crown-slot">
+        <AnimatePresence mode="wait">
+          {checked ? (
+            <motion.div
+              key="crown"
+              layoutId="winner-crown-active"
+              className="winner-crown-wrapper"
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{
+                type: 'spring',
+                stiffness: 450,
+                damping: 28,
+              }}
+            >
+              <img
+                src="/crown.svg"
+                alt=""
+                className="winner-crown-icon"
+                crossOrigin="anonymous"
+              />
+            </motion.div>
+          ) : (
+            <div className="winner-crown-placeholder" />
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
 export function ScoreGridCheckboxCell({
   checked = false,
   onChange,
@@ -110,5 +170,6 @@ export function ScoreGridCheckboxCell({
     </label>
   )
 }
+
 
 

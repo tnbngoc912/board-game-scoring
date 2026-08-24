@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   ScoreGridCheckboxCell,
+  ScoreGridWinnerSelectCell,
   ScoreGridHeaderCell,
   ScoreGridInputCell,
   ScoreGridLabelCell,
@@ -9,6 +10,7 @@ import {
   ScoreGridTotalLabelCell,
   ScoreGridWinnerCell,
 } from './ScoreGridCells'
+
 
 export function ScoreGrid({
   players,
@@ -65,13 +67,14 @@ export function ScoreGrid({
                 winningPlayerIds.has(String(player.id))
 
               return editable ? (
-                <ScoreGridCheckboxCell
+                <ScoreGridWinnerSelectCell
                   key={player.id}
                   checked={isWin}
                   onChange={() => onWinnerChange?.(player.id)}
                   ariaLabel={`Chọn ${player.name} là người thắng`}
                 />
               ) : (
+
                 <ScoreGridWinnerCell key={player.id} winning={isWin}>
                   {isWin ? '' : '-'}
                 </ScoreGridWinnerCell>

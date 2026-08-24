@@ -313,6 +313,67 @@
   padding: var(--space-1);
 }
 
+.score-entry-screen .score-grid-winner-select-cell {
+  min-height: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.score-entry-screen .score-grid-winner-select-cell:hover {
+  background-color: rgba(93, 65, 40, 0.04);
+}
+
+.score-entry-screen .score-grid-winner-select-cell:active {
+  transform: scale(0.96);
+}
+
+.score-entry-screen .winner-crown-slot {
+  position: relative;
+  width: 44px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-entry-screen .winner-crown-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  z-index: 2;
+}
+
+.score-entry-screen .winner-crown-icon {
+  width: 32px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  pointer-events: none;
+}
+
+.score-entry-screen .winner-crown-placeholder {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(122, 85, 45, 0.28);
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.score-entry-screen .score-grid-winner-select-cell:hover .winner-crown-placeholder {
+  border-color: var(--color-brand);
+  background-color: rgba(122, 85, 45, 0.08);
+  transform: scale(1.2);
+}
+
 .score-entry-screen .score-grid-checkbox-cell {
   min-height: 48px;
   display: flex;
@@ -336,6 +397,7 @@
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
+
 
 
 .score-entry-screen .score-box {
