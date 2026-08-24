@@ -297,7 +297,8 @@
   padding: 0 16px;
 }
 
-.score-entry-screen .score-grid-label.total-score-only {
+.score-entry-screen .score-grid-label.total-score-only,
+.score-entry-screen .score-grid-label.winner-only {
   min-height: 48px;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -313,7 +314,7 @@
 }
 
 .score-entry-screen .score-grid-checkbox-cell {
-  min-height: 60px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,12 +330,13 @@
   margin: 0;
 }
 
-.score-entry-screen .score-grid-cell.total-score-only {
-
+.score-entry-screen .score-grid-cell.total-score-only,
+.score-entry-screen .score-grid-cell.winner-only {
   min-height: 48px;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
+
 
 .score-entry-screen .score-box {
   width: 100%;

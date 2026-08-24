@@ -19,13 +19,14 @@ export function ScoreGridSpacer({ bordered = false }) {
   return <div className={clsx('grid-spacer', bordered && 'border')} />
 }
 
-export function ScoreGridLabelCell({ children, sticky = true, totalScoreOnly = false }) {
+export function ScoreGridLabelCell({ children, sticky = true, totalScoreOnly = false, winnerOnly = false }) {
   return (
-    <div className={clsx('score-grid-label', sticky && 'score-grid-sticky', totalScoreOnly && 'total-score-only')}>
+    <div className={clsx('score-grid-label', sticky && 'score-grid-sticky', (totalScoreOnly || winnerOnly) && 'total-score-only winner-only')}>
       {children}
     </div>
   )
 }
+
 
 export function ScoreGridInputCell({
   row,

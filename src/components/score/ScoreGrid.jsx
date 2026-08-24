@@ -54,7 +54,7 @@ export function ScoreGrid({
 
         {isWinnerOnly ? (
           <React.Fragment key="winner">
-            <ScoreGridLabelCell sticky={stickyHeader} totalScoreOnly={false}>
+            <ScoreGridLabelCell sticky={stickyHeader} winnerOnly={true}>
               Winner
             </ScoreGridLabelCell>
             <ScoreGridSpacer bordered />
