@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  ScoreGridCheckboxCell,
   ScoreGridHeaderCell,
   ScoreGridInputCell,
   ScoreGridLabelCell,
@@ -11,11 +12,13 @@ import {
 
 export function ScoreGrid({
   players,
-  rows,
+  rows = [],
   mode = 'COLUMN_BASED',
   stickyHeader = true,
   showTotal = true,
   winningPlayerIds = new Set(),
+  winnerPlayerId = '',
+  onWinnerChange,
   editable = false,
   getTotal,
   getInputValue,
@@ -24,7 +27,12 @@ export function ScoreGrid({
   onCellBlur,
 }) {
   const isTotalScoreOnly = mode === 'TOTAL_SCORE_ONLY'
-  const displayRows = isTotalScoreOnly ? rows.slice(0, 1) : rows
+  const isWinnerOnly = mode === 'WINNER_ONLY'
+  const displayRows = isTotalScoreOnly
+    ? (rows || []).slice(0, 1)
+    : isWinnerOnly
+    ? [{ id: 'winner', name: 'Winner' }]
+    : (rows || [])
 
   return (
     <div className="score-grid-wrap score-board-scroll">
@@ -44,44 +52,73 @@ export function ScoreGrid({
         ))}
         <ScoreGridSpacer />
 
-        {displayRows.map((row) => (
-          <React.Fragment key={row.id}>
-            <ScoreGridLabelCell sticky={stickyHeader} totalScoreOnly={isTotalScoreOnly}>
-              {row.name || row.id}
+        {isWinnerOnly ? (
+          <React.Fragment key="winner">
+            <ScoreGridLabelCell sticky={stickyHeader} totalScoreOnly={false}>
+              Winner
             </ScoreGridLabelCell>
-            <ScoreGridSpacer bordered={isTotalScoreOnly} />
-            {players.map((player) => (
-              isTotalScoreOnly && !editable ? (
-                <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
-                  {row.scores?.[player.id] ?? 0}
-                </ScoreGridWinnerCell>
-              ) : (
-                editable ? (
-                  <ScoreGridInputCell
-                    key={player.id}
-                    row={row}
-                    playerId={player.id}
-                    totalScoreOnly={isTotalScoreOnly}
-                    getInputValue={getInputValue}
-                    onCellChange={onCellChange}
-                    onCellFocus={onCellFocus}
-                    onCellBlur={onCellBlur}
-                  />
-                ) : (
-                  <ScoreGridReadonlyCell
-                    key={player.id}
-                    row={row}
-                    playerId={player.id}
-                    totalScoreOnly={isTotalScoreOnly}
-                  />
-                )
-              )
-            ))}
-            <ScoreGridSpacer bordered={isTotalScoreOnly} />
-          </React.Fragment>
-        ))}
+            <ScoreGridSpacer bordered />
+            {players.map((player) => {
+              const isWin =
+                winnerPlayerId === player.id ||
+                winningPlayerIds.has(player.id) ||
+                winningPlayerIds.has(String(player.id))
 
-        {!isTotalScoreOnly && showTotal ? (
+              return editable ? (
+                <ScoreGridCheckboxCell
+                  key={player.id}
+                  checked={isWin}
+                  onChange={() => onWinnerChange?.(player.id)}
+                  ariaLabel={`Chọn ${player.name} là người thắng`}
+                />
+              ) : (
+                <ScoreGridWinnerCell key={player.id} winning={isWin}>
+                  {isWin ? '' : '-'}
+                </ScoreGridWinnerCell>
+              )
+            })}
+            <ScoreGridSpacer bordered />
+          </React.Fragment>
+        ) : (
+          displayRows.map((row) => (
+            <React.Fragment key={row.id}>
+              <ScoreGridLabelCell sticky={stickyHeader} totalScoreOnly={isTotalScoreOnly}>
+                {row.name || row.id}
+              </ScoreGridLabelCell>
+              <ScoreGridSpacer bordered={isTotalScoreOnly} />
+              {players.map((player) => (
+                isTotalScoreOnly && !editable ? (
+                  <ScoreGridWinnerCell key={player.id} winning={winningPlayerIds.has(player.id)}>
+                    {row.scores?.[player.id] ?? 0}
+                  </ScoreGridWinnerCell>
+                ) : (
+                  editable ? (
+                    <ScoreGridInputCell
+                      key={player.id}
+                      row={row}
+                      playerId={player.id}
+                      totalScoreOnly={isTotalScoreOnly}
+                      getInputValue={getInputValue}
+                      onCellChange={onCellChange}
+                      onCellFocus={onCellFocus}
+                      onCellBlur={onCellBlur}
+                    />
+                  ) : (
+                    <ScoreGridReadonlyCell
+                      key={player.id}
+                      row={row}
+                      playerId={player.id}
+                      totalScoreOnly={isTotalScoreOnly}
+                    />
+                  )
+                )
+              ))}
+              <ScoreGridSpacer bordered={isTotalScoreOnly} />
+            </React.Fragment>
+          ))
+        )}
+
+        {!isTotalScoreOnly && !isWinnerOnly && showTotal ? (
           <>
             <ScoreGridTotalLabelCell sticky={stickyHeader}>Tổng</ScoreGridTotalLabelCell>
             <ScoreGridSpacer bordered />
@@ -100,3 +137,4 @@ export function ScoreGrid({
     </div>
   )
 }
+
