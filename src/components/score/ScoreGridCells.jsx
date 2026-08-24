@@ -71,7 +71,19 @@ export function ScoreGridTotalLabelCell({ sticky = true, children = 'Tổng' }) 
 export function ScoreGridWinnerCell({ children, winning = false }) {
   return (
     <div className="score-grid-winner">
-      <strong className={clsx(winning && 'winning-total')}>{children}</strong>
+      {winning ? (
+        <strong className="winning-total">
+          <img
+            src="/crown.svg"
+            alt=""
+            className="crown-icon-bg"
+            crossOrigin="anonymous"
+          />
+          <span>{children}</span>
+        </strong>
+      ) : (
+        <strong>{children}</strong>
+      )}
     </div>
   )
 }
