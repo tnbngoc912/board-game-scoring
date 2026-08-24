@@ -516,6 +516,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           activeIndex={lightboxImageIndex}
           onClose={() => setLightboxImageIndex(null)}
           onChange={setLightboxImageIndex}
+          toast={toast}
         />
 
         {isDetailMenuOpen ? (
@@ -657,7 +658,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 }
 
 
-function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
+function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) {
   const hasImages = images.length > 0
   const isOpen = activeIndex !== null && hasImages
   const activeImage = isOpen ? images[activeIndex] : null
@@ -796,12 +797,47 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange }) {
     event.currentTarget.releasePointerCapture?.(event.pointerId)
   }, [])
 
+  const handleDownload = useCallback(async (event) => {
+    event?.stopPropagation?.()
+    if (!activeImage?.url) return
+
+    try {
+      const response = await fetch(activeImage.url, { mode: 'cors' })
+      if (!response.ok) throw new Error('Fetch failed')
+      const blob = await response.blob()
+      const mimeType = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg'
+      const ext = mimeType.includes('png') ? 'png' : 'jpg'
+      const file = new File([blob], `IMG_${activeIndex + 1}.${ext}`, { type: mimeType })
+
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          files: [file],
+        })
+        toast?.('Đã lưu hình ảnh!')
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      console.warn('Lỗi chia sẻ ảnh:', err)
+    }
+  }, [activeImage, activeIndex, toast])
+
   if (!isOpen) return null
 
   return (
     <div className="memory-lightbox" role="dialog" aria-modal="true" aria-label="Xem hình ảnh kỉ niệm">
       <button className="memory-lightbox-backdrop" type="button" onClick={onClose} aria-label="Đóng hình ảnh" />
       <div className="memory-lightbox-content">
+        <button
+          className="memory-lightbox-download"
+          type="button"
+          onClick={handleDownload}
+          aria-label="Tải hình ảnh"
+          title="Tải hình ảnh xuống"
+        >
+          <Icon src="/download.png" size={20} color="#ffffff" />
+          <span>Tải hình</span>
+        </button>
+
         <button className="memory-lightbox-close" type="button" onClick={onClose} aria-label="Đóng">
           <Image src="/close-icon.svg" alt="" width={32} height={32} />
         </button>
