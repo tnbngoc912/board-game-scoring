@@ -24,7 +24,13 @@ function getGameImageTheme(index) {
 const MAX_MEMORY_IMAGES = 3
 
 function buildDraft(categories, players, publishedScores) {
-  return categories.map((category) => {
+  let scoringCategories = categories.filter((c) => String(c.type || '').toUpperCase() !== 'SELECT')
+
+  if (scoringCategories.length === 0) {
+    scoringCategories = [{ id: 'total', name: 'Điểm', type: 'number' }]
+  }
+
+  return scoringCategories.map((category) => {
     const existing = publishedScores.find((entry) => entry.id === category.id)
     const type = category.type === 'text' ? 'text' : 'number'
     const scores = {}

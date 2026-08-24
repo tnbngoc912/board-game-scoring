@@ -24,7 +24,8 @@ export function ScoreGrid({
   onCellBlur,
 }) {
   const isTotalScoreOnly = mode === 'TOTAL_SCORE_ONLY'
-  const displayRows = isTotalScoreOnly ? rows.slice(0, 1) : rows
+  const numericRows = rows.filter((row) => String(row.type || '').toUpperCase() !== 'SELECT')
+  const displayRows = isTotalScoreOnly ? numericRows.slice(0, 1) : numericRows
 
   return (
     <div className="score-grid-wrap score-board-scroll">
@@ -37,11 +38,19 @@ export function ScoreGrid({
       >
         <ScoreGridHeaderCell sticky={stickyHeader} />
         <ScoreGridSpacer />
-        {players.map((player) => (
-          <ScoreGridHeaderCell key={player.id} player>
-            <span>{player.name}</span>
-          </ScoreGridHeaderCell>
-        ))}
+        {players.map((player) => {
+          const optionValues = player.options ? Object.values(player.options).filter(Boolean) : []
+          return (
+            <ScoreGridHeaderCell key={player.id} player>
+              <span className="player-name-text">{player.name}</span>
+              {optionValues.length > 0 && (
+                <span className="player-faction-badge" title={optionValues.join(', ')}>
+                  {optionValues.join(', ')}
+                </span>
+              )}
+            </ScoreGridHeaderCell>
+          )
+        })}
         <ScoreGridSpacer />
 
         {displayRows.map((row) => (
