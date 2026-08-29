@@ -28,7 +28,7 @@ function getScoreValue(scores, columnId, fallbackId) {
   return undefined
 }
 
-function formatPlayedAt(value) {
+export function formatPlayedAt(value) {
   if (!value) return ''
 
   const d = new Date(value)

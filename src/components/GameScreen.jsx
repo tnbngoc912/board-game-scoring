@@ -8,6 +8,7 @@ import { Header } from './Header'
 import Image from "next/image"
 import { useAppDataStore } from '../store/appDataStore'
 import { updateMatchScores, uploadMatchImages } from '../api/backendService'
+import { formatPlayedAt } from '../store/mappers/matchMapper'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -49,6 +50,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const memoryImagesRef = useRef([])
   const {
     gameName: storeGameName,
+    boardGameOverview: storeBoardGameOverview,
+    playDateTime: storePlayDateTime,
     scoringType: storeScoringType,
     players: storePlayers,
     categories: storeCategories,
@@ -58,6 +61,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   } = useGameStore(
     useShallow((state) => ({
       gameName: state.gameName,
+      boardGameOverview: state.boardGameOverview,
+      playDateTime: state.playDateTime,
       scoringType: state.scoringType,
       players: state.players,
       categories: state.categories,
@@ -72,6 +77,17 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const gameName = isEditMode ? matchToEdit.gameName : storeGameName
   const scoringType = isEditMode ? (matchToEdit.scoringType || 'COLUMN_BASED') : storeScoringType
   const players = isEditMode ? (matchToEdit.players || []) : storePlayers
+
+  const displayThumbnail = isEditMode
+    ? matchToEdit.thumbnailUrl
+    : (storeBoardGameOverview?.thumbnail_url || storeBoardGameOverview?.thumbnailUrl || '')
+  const displayGameName = isEditMode
+    ? matchToEdit.gameName
+    : (gameName || storeBoardGameOverview?.name || '')
+  const displayPlayedAt = isEditMode
+    ? matchToEdit.playedAt
+    : (formatPlayedAt(storePlayDateTime) || formatPlayedAt(new Date()))
+
 
   const [draftScores, setDraftScores] = useState(() => {
     if (matchToEdit) {
@@ -378,56 +394,44 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
 
       <div className="score-content">
         <div className="score-entry-main-block">
-          {isEditMode && matchToEdit && (
+          {displayGameName && (
             <section className="match-summary-strip">
               <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
-                {matchToEdit.thumbnailUrl ? (
-                  <Image loading="lazy" alt="" width={78} height={78} src={matchToEdit.thumbnailUrl} />
+                {displayThumbnail ? (
+                  <Image loading="lazy" alt="" width={78} height={78} src={displayThumbnail} />
                 ) : (
-                  <span>{matchToEdit.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                  <span>{displayGameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
                 )}
               </div>
               <div>
-                <h2>{matchToEdit.gameName}</h2>
-                <p>{matchToEdit.playedAt}</p>
+                <h2>{displayGameName}</h2>
+                <p>{displayPlayedAt}</p>
               </div>
             </section>
           )}
 
-          {isWinnerOnly ? (
-            <section className="winner-picker-card" aria-label="Chon nguoi thang">
-              {players.map((player) => (
-                <label key={player.id} className="winner-picker-row">
-                  <span>{player.name}</span>
-                  <input
-                    type="checkbox"
-                    checked={winnerPlayerId === player.id}
-                    onChange={() => setWinnerPlayerId((current) => (
-                      current === player.id ? '' : player.id
-                    ))}
-                  />
-                </label>
+          <section className="score-board">
+            <ScoreGrid
+              players={players}
+              rows={draftScores}
+              mode={isWinnerOnly ? 'WINNER_ONLY' : (isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED')}
+              stickyHeader
+              showTotal={!isTotalScoreOnly && !isWinnerOnly}
+              editable
+              winningPlayerIds={winningPlayerIds}
+              winnerPlayerId={winnerPlayerId}
+              onWinnerChange={(playerId) => setWinnerPlayerId((current) => (
+                current === playerId ? '' : playerId
               ))}
-            </section>
-          ) : (
-            <section className="score-board">
-              <ScoreGrid
-                players={players}
-                rows={draftScores}
-                mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
-                stickyHeader
-                showTotal={!isTotalScoreOnly}
-                editable
-                winningPlayerIds={winningPlayerIds}
-                getTotal={getDraftTotal}
-                getInputValue={getInputValue}
-                onCellChange={updateCell}
-                onCellFocus={setFocusedCell}
-                onCellBlur={() => setFocusedCell(null)}
-              />
-            </section>
-          )}
+              getTotal={getDraftTotal}
+              getInputValue={getInputValue}
+              onCellChange={updateCell}
+              onCellFocus={setFocusedCell}
+              onCellBlur={() => setFocusedCell(null)}
+            />
+          </section>
         </div>
+
 
 
         <textarea
