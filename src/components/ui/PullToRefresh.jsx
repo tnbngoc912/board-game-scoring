@@ -2,23 +2,44 @@ import React, { useState, useEffect, useRef } from 'react'
 import { RotateCw } from 'lucide-react'
 import '../../styles/components/pull-to-refresh.css'
 
+const PULL_THRESHOLD = 60 // Khoảng cách kéo tối thiểu bằng px để kích hoạt refresh
+const ACTIVATION_THRESHOLD = 12 // Khoảng cách trễ ban đầu trước khi nhận diện là hành vi kéo làm mới có chủ đích
+
 export function PullToRefresh({ children, onRefresh }) {
   const [isStandalone, setIsStandalone] = useState(false)
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const containerRef = useRef(null)
-  const startY = useRef(0)
-  const isPulling = useRef(false)
 
-  const PULL_THRESHOLD = 60 // Khoảng cách kéo tối thiểu bằng px để kích hoạt refresh
+  const containerRef = useRef(null)
+  const startX = useRef(0)
+  const startY = useRef(0)
+  const isEligibleForPull = useRef(false)
+  const isPulling = useRef(false)
+  const pullDistanceRef = useRef(0)
+  const isRefreshingRef = useRef(false)
+  const onRefreshRef = useRef(onRefresh)
+
+  // Đồng bộ refs để listener không cần re-bind khi state thay đổi
+  useEffect(() => {
+    pullDistanceRef.current = pullDistance
+  }, [pullDistance])
+
+  useEffect(() => {
+    isRefreshingRef.current = isRefreshing
+  }, [isRefreshing])
+
+  useEffect(() => {
+    onRefreshRef.current = onRefresh
+  }, [onRefresh])
 
   // 1. Kiểm tra xem ứng dụng có đang chạy ở chế độ standalone hay không
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
+      const standalone =
+        window.navigator.standalone ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(Boolean(standalone))
     }
   }, [])
 
@@ -30,49 +51,84 @@ export function PullToRefresh({ children, onRefresh }) {
     if (!container) return
 
     const handleTouchStart = (e) => {
-      // Chỉ bắt đầu kéo nếu người dùng đang cuộn ở trên cùng (scrollTop === 0)
-      if (container.scrollTop === 0) {
+      if (isRefreshingRef.current) return
+
+      // Chỉ có thể bắt đầu kéo nếu người dùng đang ở trên cùng
+      if (container.scrollTop <= 0) {
+        startX.current = e.touches[0].pageX
         startY.current = e.touches[0].pageY
-        isPulling.current = true
+        isEligibleForPull.current = true
+        isPulling.current = false
       } else {
+        isEligibleForPull.current = false
         isPulling.current = false
       }
     }
 
     const handleTouchMove = (e) => {
-      if (!isPulling.current || isRefreshing) return
+      if (!isEligibleForPull.current || isRefreshingRef.current) return
 
+      // Nếu người dùng đã cuộn xuống trong container thì hủy khả năng kéo
+      if (container.scrollTop > 0) {
+        isEligibleForPull.current = false
+        isPulling.current = false
+        setPullDistance(0)
+        return
+      }
+
+      const currentX = e.touches[0].pageX
       const currentY = e.touches[0].pageY
-      const diff = currentY - startY.current
+      const diffY = currentY - startY.current
+      const diffX = currentX - startX.current
 
-      // Kéo từ trên xuống dưới
-      if (diff > 0) {
-        // Ngăn chặn hành vi cuộn quá tay (bounce) mặc định của iOS Safari
+      // Nếu vuốt lên (scroll down), để native scroll hoạt động tự nhiên
+      if (diffY <= 0) {
+        isPulling.current = false
+        return
+      }
+
+      // Kiểm tra góc vuốt: nếu vuốt ngang nhiều hơn vuốt dọc thì bỏ qua
+      if (Math.abs(diffX) > Math.abs(diffY) * 0.8) {
+        isEligibleForPull.current = false
+        return
+      }
+
+      // Chỉ kích hoạt khi vượt qua ngưỡng khoảng cách ban đầu để tránh chạm nhầm
+      if (diffY > ACTIVATION_THRESHOLD) {
         if (e.cancelable) {
           e.preventDefault()
         }
-        
-        // Áp dụng cản trở lực kéo (resistance) để cho cảm giác đầm tay hơn
-        const distance = Math.min(diff * 0.45, PULL_THRESHOLD * 1.6)
+
+        isPulling.current = true
+        const effectiveDiff = diffY - ACTIVATION_THRESHOLD
+        // Áp dụng cản trở lực kéo (resistance)
+        const distance = Math.min(effectiveDiff * 0.42, PULL_THRESHOLD * 1.5)
         setPullDistance(distance)
       }
     }
 
     const handleTouchEnd = () => {
-      if (!isPulling.current || isRefreshing) return
-      isPulling.current = false
+      isEligibleForPull.current = false
 
-      if (pullDistance >= PULL_THRESHOLD) {
+      if (!isPulling.current || isRefreshingRef.current) {
+        setPullDistance(0)
+        return
+      }
+
+      isPulling.current = false
+      const currentDistance = pullDistanceRef.current
+
+      if (currentDistance >= PULL_THRESHOLD) {
         setIsRefreshing(true)
         setPullDistance(PULL_THRESHOLD)
 
         const runRefresh = async () => {
           try {
-            if (onRefresh) {
-              await onRefresh()
+            if (onRefreshRef.current) {
+              await onRefreshRef.current()
             } else {
-              // Fallback nếu không truyền hàm onRefresh: reload trang sau 800ms
-              await new Promise((resolve) => setTimeout(resolve, 800))
+              // Fallback nếu không truyền hàm onRefresh: reload trang sau 600ms
+              await new Promise((resolve) => setTimeout(resolve, 600))
               window.location.reload()
             }
           } catch (err) {
@@ -92,13 +148,15 @@ export function PullToRefresh({ children, onRefresh }) {
     container.addEventListener('touchstart', handleTouchStart, { passive: true })
     container.addEventListener('touchmove', handleTouchMove, { passive: false })
     container.addEventListener('touchend', handleTouchEnd, { passive: true })
+    container.addEventListener('touchcancel', handleTouchEnd, { passive: true })
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart)
       container.removeEventListener('touchmove', handleTouchMove)
       container.removeEventListener('touchend', handleTouchEnd)
+      container.removeEventListener('touchcancel', handleTouchEnd)
     }
-  }, [pullDistance, isRefreshing, onRefresh, isStandalone])
+  }, [isStandalone])
 
   // Nếu không phải chế độ standalone, trả về container cuộn mặc định và không có hiệu ứng gì
   if (!isStandalone) {
@@ -116,7 +174,9 @@ export function PullToRefresh({ children, onRefresh }) {
         style={{
           transform: `translateY(${pullDistance}px)`,
           opacity: Math.min(pullDistance / PULL_THRESHOLD, 1),
-          transition: isPulling.current ? 'none' : 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease',
+          transition: isPulling.current
+            ? 'none'
+            : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease',
         }}
       >
         <div className="pull-indicator-circle">
@@ -133,7 +193,9 @@ export function PullToRefresh({ children, onRefresh }) {
         className="pull-to-refresh-content"
         style={{
           transform: `translateY(${pullDistance}px)`,
-          transition: isPulling.current ? 'none' : 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          transition: isPulling.current
+            ? 'none'
+            : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
         {children}

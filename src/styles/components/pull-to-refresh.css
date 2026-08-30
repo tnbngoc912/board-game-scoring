@@ -5,10 +5,12 @@
   width: 100%;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 .pull-to-refresh-container.normal-scroll {
   overscroll-behavior-y: auto; /* Giữ hành vi cuộn mặc định của trình duyệt thường */
+  touch-action: auto;
 }
 
 .pull-to-refresh-indicator {
