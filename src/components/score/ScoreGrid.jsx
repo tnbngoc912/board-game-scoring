@@ -62,7 +62,7 @@ export function ScoreGrid({
             <ScoreGridSpacer bordered />
             {players.map((player) => {
               const isWin =
-                winnerPlayerId === player.id ||
+                (Boolean(winnerPlayerId) && String(winnerPlayerId) === String(player.id)) ||
                 winningPlayerIds.has(player.id) ||
                 winningPlayerIds.has(String(player.id))
 
@@ -74,7 +74,6 @@ export function ScoreGrid({
                   ariaLabel={`Chọn ${player.name} là người thắng`}
                 />
               ) : (
-
                 <ScoreGridWinnerCell key={player.id} winning={isWin}>
                   {isWin ? '' : '-'}
                 </ScoreGridWinnerCell>

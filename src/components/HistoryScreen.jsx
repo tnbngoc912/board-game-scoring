@@ -578,34 +578,18 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
             </div>
           </section>
 
-          {isWinnerOnly ? (
-            <section className="winner-only-list history-winner-only-card" aria-label="Nguoi choi va nguoi thang">
-              {players.map((player) => {
-                const isWinner = winner?.id === player.id
-
-                return (
-                  <div key={player.id} className={`winner-only-player${isWinner ? ' winner' : ''}`}>
-                    <span>{player.name}</span>
-                    <div className="winner-only-crown-row" aria-label={isWinner ? 'Nguoi thang' : undefined}>
-                      {isWinner ? <Image src="/crown.svg" alt="" width={32} height={28} /> : null}
-                    </div>
-                  </div>
-                )
-              })}
-            </section>
-          ) : (
-            <section className="score-board history-score-board">
-              <ScoreGrid
-                players={players}
-                rows={displayedScoreRows}
-                mode={isTotalScoreOnly ? "TOTAL_SCORE_ONLY" : "COLUMN_BASED"}
-                stickyHeader
-                showTotal={!isTotalScoreOnly}
-                winningPlayerIds={winningPlayerIds}
-                editable={false}
-              />
-            </section>
-          )}
+          <section className="score-board history-score-board">
+            <ScoreGrid
+              players={players}
+              rows={displayedScoreRows}
+              mode={isWinnerOnly ? 'WINNER_ONLY' : isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
+              stickyHeader
+              showTotal={!isTotalScoreOnly && !isWinnerOnly}
+              winningPlayerIds={winningPlayerIds}
+              winnerPlayerId={winner?.id || ''}
+              editable={false}
+            />
+          </section>
 
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>
