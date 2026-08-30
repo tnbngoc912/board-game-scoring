@@ -8,6 +8,7 @@ import { Header } from './Header'
 import Image from "next/image"
 import { useAppDataStore } from '../store/appDataStore'
 import { updateMatchScores, uploadMatchImages } from '../api/backendService'
+import { formatPlayedAt } from '../store/mappers/matchMapper'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -42,6 +43,29 @@ function buildDraft(categories, players, publishedScores) {
   })
 }
 
+function getMatchWinnerId(match) {
+  if (!match) return ''
+  if (match.winner?.id) return String(match.winner.id)
+  if (match.winner?._id) return String(match.winner._id)
+
+  const winningPlayer = (match.players || []).find((p) => p.isWinner || p.is_winner)
+  if (winningPlayer) return String(winningPlayer.id || winningPlayer.userId || winningPlayer._id || '')
+
+  const winnerIds = match.winner_ids || match.winnerIds || []
+  if (Array.isArray(winnerIds) && winnerIds.length > 0) {
+    const first = winnerIds[0]
+    return String(typeof first === 'object' ? (first.id || first._id) : first)
+  }
+
+  const winnerRow = (match.scoreRows || []).find((r) => r.id === 'winner')
+  if (winnerRow && winnerRow.scores) {
+    const winnerId = Object.keys(winnerRow.scores).find((pId) => Number(winnerRow.scores[pId]) === 1)
+    if (winnerId) return String(winnerId)
+  }
+
+  return ''
+}
+
 export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onCloseEdit, onSaveEdit }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -49,6 +73,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const memoryImagesRef = useRef([])
   const {
     gameName: storeGameName,
+    boardGameOverview: storeBoardGameOverview,
+    playDateTime: storePlayDateTime,
     scoringType: storeScoringType,
     players: storePlayers,
     categories: storeCategories,
@@ -58,6 +84,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   } = useGameStore(
     useShallow((state) => ({
       gameName: state.gameName,
+      boardGameOverview: state.boardGameOverview,
+      playDateTime: state.playDateTime,
       scoringType: state.scoringType,
       players: state.players,
       categories: state.categories,
@@ -72,6 +100,17 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const gameName = isEditMode ? matchToEdit.gameName : storeGameName
   const scoringType = isEditMode ? (matchToEdit.scoringType || 'COLUMN_BASED') : storeScoringType
   const players = isEditMode ? (matchToEdit.players || []) : storePlayers
+
+  const displayThumbnail = isEditMode
+    ? matchToEdit.thumbnailUrl
+    : (storeBoardGameOverview?.thumbnail_url || storeBoardGameOverview?.thumbnailUrl || '')
+  const displayGameName = isEditMode
+    ? matchToEdit.gameName
+    : (gameName || storeBoardGameOverview?.name || '')
+  const displayPlayedAt = isEditMode
+    ? matchToEdit.playedAt
+    : (formatPlayedAt(storePlayDateTime) || formatPlayedAt(new Date()))
+
 
   const [draftScores, setDraftScores] = useState(() => {
     if (matchToEdit) {
@@ -100,16 +139,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     return []
   })
   const [winnerPlayerId, setWinnerPlayerId] = useState(() => {
-    if (matchToEdit) {
-      if (matchToEdit.scoringType === 'WINNER_ONLY') {
-        const winnerRow = (matchToEdit.scoreRows || []).find((r) => r.id === 'winner')
-        if (winnerRow) {
-          const winnerId = Object.keys(winnerRow.scores || {}).find(
-            (pId) => Number(winnerRow.scores[pId]) === 1
-          )
-          return winnerId || ''
-        }
-      }
+    if (matchToEdit && (matchToEdit.scoringType === 'WINNER_ONLY' || storeScoringType === 'WINNER_ONLY')) {
+      return getMatchWinnerId(matchToEdit)
     }
     return ''
   })
@@ -144,14 +175,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           fileId: img.fileId,
         }))
       )
-      if (matchToEdit.scoringType === 'WINNER_ONLY') {
-        const winnerRow = (matchToEdit.scoreRows || []).find((r) => r.id === 'winner')
-        if (winnerRow) {
-          const winnerId = Object.keys(winnerRow.scores || {}).find(
-            (pId) => Number(winnerRow.scores[pId]) === 1
-          )
-          setWinnerPlayerId(winnerId || '')
-        }
+      if (matchToEdit.scoringType === 'WINNER_ONLY' || scoringType === 'WINNER_ONLY') {
+        setWinnerPlayerId(getMatchWinnerId(matchToEdit))
       } else {
         setWinnerPlayerId('')
       }
@@ -161,7 +186,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       setMemoryImages([])
       setWinnerPlayerId('')
     }
-  }, [isEditMode, matchToEdit, storeCategories, storePlayers, storePublishedScores])
+  }, [isEditMode, matchToEdit, storeCategories, storePlayers, storePublishedScores, scoringType])
 
   useEffect(() => {
     if (isEditMode) return
@@ -378,56 +403,44 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
 
       <div className="score-content">
         <div className="score-entry-main-block">
-          {isEditMode && matchToEdit && (
+          {displayGameName && (
             <section className="match-summary-strip">
               <div className="game-card-thumb detail-thumb" style={{ background: `linear-gradient(135deg, ${getGameImageTheme(1).join(', ')})` }}>
-                {matchToEdit.thumbnailUrl ? (
-                  <Image loading="lazy" alt="" width={78} height={78} src={matchToEdit.thumbnailUrl} />
+                {displayThumbnail ? (
+                  <Image loading="lazy" alt="" width={78} height={78} src={displayThumbnail} />
                 ) : (
-                  <span>{matchToEdit.gameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
+                  <span>{displayGameName?.slice(0, 2).toUpperCase() || 'BG'}</span>
                 )}
               </div>
               <div>
-                <h2>{matchToEdit.gameName}</h2>
-                <p>{matchToEdit.playedAt}</p>
+                <h2>{displayGameName}</h2>
+                <p>{displayPlayedAt}</p>
               </div>
             </section>
           )}
 
-          {isWinnerOnly ? (
-            <section className="winner-picker-card" aria-label="Chon nguoi thang">
-              {players.map((player) => (
-                <label key={player.id} className="winner-picker-row">
-                  <span>{player.name}</span>
-                  <input
-                    type="checkbox"
-                    checked={winnerPlayerId === player.id}
-                    onChange={() => setWinnerPlayerId((current) => (
-                      current === player.id ? '' : player.id
-                    ))}
-                  />
-                </label>
+          <section className="score-board">
+            <ScoreGrid
+              players={players}
+              rows={draftScores}
+              mode={isWinnerOnly ? 'WINNER_ONLY' : (isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED')}
+              stickyHeader
+              showTotal={!isTotalScoreOnly && !isWinnerOnly}
+              editable
+              winningPlayerIds={winningPlayerIds}
+              winnerPlayerId={winnerPlayerId}
+              onWinnerChange={(playerId) => setWinnerPlayerId((current) => (
+                current === playerId ? '' : playerId
               ))}
-            </section>
-          ) : (
-            <section className="score-board">
-              <ScoreGrid
-                players={players}
-                rows={draftScores}
-                mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
-                stickyHeader
-                showTotal={!isTotalScoreOnly}
-                editable
-                winningPlayerIds={winningPlayerIds}
-                getTotal={getDraftTotal}
-                getInputValue={getInputValue}
-                onCellChange={updateCell}
-                onCellFocus={setFocusedCell}
-                onCellBlur={() => setFocusedCell(null)}
-              />
-            </section>
-          )}
+              getTotal={getDraftTotal}
+              getInputValue={getInputValue}
+              onCellChange={updateCell}
+              onCellFocus={setFocusedCell}
+              onCellBlur={() => setFocusedCell(null)}
+            />
+          </section>
         </div>
+
 
 
         <textarea

@@ -13,11 +13,13 @@
   background: var(--color-bg);
 }
 
-.history-score-board .score-grid-label.total-score-only {
+.history-score-board .score-grid-label.total-score-only,
+.history-score-board .score-grid-label.winner-only {
   min-height: 48px;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
+
 
 .history-score-board .score-board-scroll {
   overflow-x: auto;
