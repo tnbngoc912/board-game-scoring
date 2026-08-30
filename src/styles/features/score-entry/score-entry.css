@@ -366,16 +366,18 @@
 }
 
 .score-entry-screen .winner-crown-placeholder {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(122, 85, 45, 0.28);
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  border: 1.5px solid rgba(122, 85, 45, 0.22);
+  background-color: rgba(122, 85, 45, 0.03);
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .score-entry-screen .score-grid-winner-select-cell:hover .winner-crown-placeholder {
   border-color: var(--color-brand);
-  transform: scale(1.2);
+  background-color: rgba(122, 85, 45, 0.08);
+  transform: scale(1.15);
 }
 
 .score-entry-screen .score-grid-checkbox-cell {
