@@ -147,29 +147,27 @@
 /* Standalone PWA Mode (Add to Home Screen) style adjustments */
 @media (display-mode: standalone) {
   .bottom-nav {
-    padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .app-shell.screen-setup .bottom-nav,
   .app-shell.screen-history .bottom-nav,
   .app-shell.screen-achievements .bottom-nav,
   .app-shell.screen-account .bottom-nav {
-    height: calc(40px + env(safe-area-inset-bottom)) !important;
-    padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
 /* Fallback & Test Mode with .is-standalone class */
-.is-standalone .bottom-nav {
-  padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-}
-
+.is-standalone .bottom-nav,
 .is-standalone .app-shell.screen-setup .bottom-nav,
 .is-standalone .app-shell.screen-history .bottom-nav,
 .is-standalone .app-shell.screen-achievements .bottom-nav,
 .is-standalone .app-shell.screen-account .bottom-nav {
-  height: calc(40px + env(safe-area-inset-bottom)) !important;
-  padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* iOS Install Prompt styles */
