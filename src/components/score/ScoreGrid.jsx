@@ -62,7 +62,7 @@ export function ScoreGrid({
             <ScoreGridSpacer bordered />
             {players.map((player) => {
               const isWin =
-                winnerPlayerId === player.id ||
+                (Boolean(winnerPlayerId) && String(winnerPlayerId) === String(player.id)) ||
                 winningPlayerIds.has(player.id) ||
                 winningPlayerIds.has(String(player.id))
 
