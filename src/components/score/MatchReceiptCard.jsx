@@ -115,51 +115,18 @@ export const MatchReceiptCard = forwardRef(function MatchReceiptCard(
       </section>
 
       {/* 3. Bảng Điểm Scoreboard */}
-      {isWinnerOnly ? (
-        <section
-          className="winner-only-list history-winner-only-card"
-          aria-label="Người chơi và người thắng"
-        >
-          {players.map((player) => {
-            const isWin = winner?.id === player.id
-
-            return (
-              <div
-                key={player.id}
-                className={`winner-only-player${isWin ? ' winner' : ''}`}
-              >
-                <span>{player.name}</span>
-                <div
-                  className="winner-only-crown-row"
-                  aria-label={isWin ? 'Người thắng' : undefined}
-                >
-                  {isWin ? (
-                    <img
-                      src="/crown.svg"
-                      alt=""
-                      width={32}
-                      height={28}
-                      crossOrigin="anonymous"
-                    />
-                  ) : null}
-                </div>
-              </div>
-            )
-          })}
-        </section>
-      ) : (
-        <section className="score-board history-score-board">
-          <ScoreGrid
-            players={players}
-            rows={displayedScoreRows}
-            mode={isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
-            stickyHeader={false}
-            showTotal={!isTotalScoreOnly}
-            winningPlayerIds={winningPlayerIds}
-            editable={false}
-          />
-        </section>
-      )}
+      <section className="score-board history-score-board">
+        <ScoreGrid
+          players={players}
+          rows={displayedScoreRows}
+          mode={isWinnerOnly ? 'WINNER_ONLY' : isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
+          stickyHeader={false}
+          showTotal={!isTotalScoreOnly && !isWinnerOnly}
+          winningPlayerIds={winningPlayerIds}
+          winnerPlayerId={winner?.id || ''}
+          editable={false}
+        />
+      </section>
 
       {/* 4. Note Ghi Chú */}
       {match.description ? (
