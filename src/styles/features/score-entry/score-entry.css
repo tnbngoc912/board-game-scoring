@@ -323,15 +323,21 @@
   user-select: none;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-.score-entry-screen .score-grid-winner-select-cell:hover {
-  background-color: rgba(93, 65, 40, 0.04);
-}
-
-.score-entry-screen .score-grid-winner-select-cell:active {
-  transform: scale(0.96);
+.score-entry-screen .score-grid-winner-select-cell:hover,
+.score-entry-screen .score-grid-winner-select-cell:focus,
+.score-entry-screen .score-grid-winner-select-cell:focus-visible,
+.score-entry-screen .score-grid-winner-select-cell:active,
+.score-entry-screen .score-grid-winner-select-cell.is-winner {
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .score-entry-screen .winner-crown-slot {
@@ -364,12 +370,11 @@
   height: 14px;
   border-radius: 50%;
   border: 1.5px dashed rgba(122, 85, 45, 0.28);
-  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .score-entry-screen .score-grid-winner-select-cell:hover .winner-crown-placeholder {
   border-color: var(--color-brand);
-  background-color: rgba(122, 85, 45, 0.08);
   transform: scale(1.2);
 }
 
