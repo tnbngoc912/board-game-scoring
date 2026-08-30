@@ -10,6 +10,7 @@ import {
   ScoreGridTotalLabelCell,
   ScoreGridWinnerCell,
 } from './ScoreGridCells'
+import { Icon } from '../ui/Icon'
 
 
 export function ScoreGrid({
@@ -75,7 +76,7 @@ export function ScoreGrid({
                 />
               ) : (
                 <ScoreGridWinnerCell key={player.id} winning={isWin} winnerOnly={true}>
-                  {isWin ? '' : '-'}
+                  {isWin ? '' : <Icon src="/face-frown-slight.png" color="#A3988F" size={24} ariaLabel="Người thua" />}
                 </ScoreGridWinnerCell>
               )
             })}
