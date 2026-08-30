@@ -167,13 +167,23 @@ export function PullToRefresh({ children, onRefresh }) {
     )
   }
 
+  const indicatorVisible = isRefreshing || pullDistance > 0
+
   return (
     <div ref={containerRef} className="pull-to-refresh-container">
       <div
         className="pull-to-refresh-indicator"
         style={{
-          transform: `translateY(${pullDistance}px)`,
-          opacity: Math.min(pullDistance / PULL_THRESHOLD, 1),
+          transform: isRefreshing
+            ? 'translateY(28px) scale(1)'
+            : indicatorVisible
+            ? `translateY(${Math.min(pullDistance * 0.7, 44)}px) scale(${Math.min(0.6 + (pullDistance / PULL_THRESHOLD) * 0.4, 1)})`
+            : 'translateY(-20px) scale(0.6)',
+          opacity: isRefreshing
+            ? 1
+            : indicatorVisible
+            ? Math.min(pullDistance / (PULL_THRESHOLD * 0.7), 1)
+            : 0,
           transition: isPulling.current
             ? 'none'
             : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease',
@@ -189,15 +199,7 @@ export function PullToRefresh({ children, onRefresh }) {
           />
         </div>
       </div>
-      <div
-        className="pull-to-refresh-content"
-        style={{
-          transform: `translateY(${pullDistance}px)`,
-          transition: isPulling.current
-            ? 'none'
-            : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        }}
-      >
+      <div className="pull-to-refresh-content">
         {children}
       </div>
     </div>
