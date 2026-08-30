@@ -74,7 +74,6 @@ export function ScoreGrid({
                   ariaLabel={`Chọn ${player.name} là người thắng`}
                 />
               ) : (
-
                 <ScoreGridWinnerCell key={player.id} winning={isWin}>
                   {isWin ? '' : '-'}
                 </ScoreGridWinnerCell>
