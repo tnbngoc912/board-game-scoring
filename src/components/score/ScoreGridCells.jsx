@@ -1,6 +1,6 @@
 import React from 'react'
 import clsx from 'clsx'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 export function ScoreGridHeaderCell({ children, sticky = false, player = false }) {
 
@@ -118,32 +118,29 @@ export function ScoreGridWinnerSelectCell({
       aria-pressed={checked}
     >
       <div className="winner-crown-slot">
-        <AnimatePresence mode="wait">
-          {checked ? (
-            <motion.div
-              key="crown"
-              layoutId="winner-crown-active"
-              className="winner-crown-wrapper"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.6, opacity: 0 }}
-              transition={{
-                type: 'spring',
-                stiffness: 450,
-                damping: 28,
-              }}
-            >
-              <img
-                src="/crown.svg"
-                alt=""
-                className="winner-crown-icon"
-                crossOrigin="anonymous"
-              />
-            </motion.div>
-          ) : (
-            <div className="winner-crown-placeholder" />
-          )}
-        </AnimatePresence>
+        {checked ? (
+          <motion.div
+            key="crown"
+            layoutId="winner-crown-active"
+            className="winner-crown-wrapper"
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: 'spring',
+              stiffness: 450,
+              damping: 28,
+            }}
+          >
+            <img
+              src="/crown.svg"
+              alt=""
+              className="winner-crown-icon"
+              crossOrigin="anonymous"
+            />
+          </motion.div>
+        ) : (
+          <div className="winner-crown-placeholder" />
+        )}
       </div>
     </div>
   )
