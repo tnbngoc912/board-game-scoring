@@ -132,8 +132,20 @@
   object-fit: contain;
 }
 
-.history-score-board .winning-total span {
-  position: relative;
-  z-index: 1;
+.history-score-board .winning-total.winner-only {
+  position: static;
+  width: 100% !important;
+  height: 48px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-score-board .winning-total.winner-only .crown-icon-bg {
+  position: static;
+  width: 32px;
+  height: 28px;
+  transform: none;
+  object-fit: contain;
 }
 
