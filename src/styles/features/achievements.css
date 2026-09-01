@@ -23,6 +23,13 @@
   width: 100%;
 }
 
+.achievements-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
 /* 1. Title Banner (👑 THÀNH TÍCH CỦA BẠN) */
 .achievements-title-banner {
   display: flex;

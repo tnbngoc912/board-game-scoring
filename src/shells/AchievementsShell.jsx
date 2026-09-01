@@ -344,6 +344,7 @@ export function AchievementsShell() {
                 <AchievementsSkeleton />
               ) : (
                 <motion.div
+                  className="achievements-cards-container"
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
