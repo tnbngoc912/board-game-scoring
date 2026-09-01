@@ -150,43 +150,19 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [selectedPlayerName, setSelectedPlayerName] = useState('')
   const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [selectedMatch, setSelectedMatch] = useState(null)
-  const [matchToDelete, setMatchToDelete] = useState(null)
-  const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
-  const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isExportingImage, setIsExportingImage] = useState(false)
-  const [receiptDataUrls, setReceiptDataUrls] = useState([])
-  const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
-  const [isEditingMatch, setIsEditingMatch] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
-  const detailScreenRef = useRef(null)
-  const receiptCardRef = useRef(null)
-  const resetBoard = useGameStore((state) => state.resetBoard)
-
-  useEffect(() => {
-    setReceiptDataUrls([])
-  }, [selectedMatch?.id])
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
-    }
-  }, [])
-
-  const currentUser = useAuthStore((state) => state.user)
-  const { match } = usePermissions()
-  const { canEdit, canDelete } = match
+  const routeDetailMatchId = useMemo(() => {
+    const match = pathname.match(/^\/history\/(.+)$/)
+    return match?.[1] || ''
+  }, [pathname])
 
   const {
     history,
     historyHasMore,
     boardGames,
     users,
+    activeMatchDetail,
+    cachedMatchDetails,
+    setActiveMatchDetail,
     isLoadingHistory,
     isLoadingMoreHistory,
     fetchHistory,
@@ -200,6 +176,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       historyHasMore: state.historyHasMore,
       boardGames: state.boardGames,
       users: state.users,
+      activeMatchDetail: state.activeMatchDetail,
+      cachedMatchDetails: state.cachedMatchDetails,
+      setActiveMatchDetail: state.setActiveMatchDetail,
       isLoadingHistory: state.isLoadingHistory,
       isLoadingMoreHistory: state.isLoadingMoreHistory,
       fetchHistory: state.fetchHistory,
@@ -209,10 +188,52 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       removeHistoryMatch: state.removeHistoryMatch,
     }))
   )
-  const routeDetailMatchId = useMemo(() => {
-    const match = pathname.match(/^\/history\/(.+)$/)
-    return match?.[1] || ''
-  }, [pathname])
+
+  const [selectedMatch, setSelectedMatch] = useState(() => {
+    if (!routeDetailMatchId) return null
+    const { activeMatchDetail, cachedMatchDetails, history, boardGames } = useAppDataStore.getState()
+    if (activeMatchDetail && String(activeMatchDetail.id) === routeDetailMatchId) {
+      return activeMatchDetail
+    }
+    if (cachedMatchDetails?.[routeDetailMatchId]) {
+      return cachedMatchDetails[routeDetailMatchId]
+    }
+    const fromHistory = history.find((item) => String(item.id) === routeDetailMatchId)
+    if (fromHistory) {
+      return attachMatchThumbnail(fromHistory, boardGames)
+    }
+    return null
+  })
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [matchToDelete, setMatchToDelete] = useState(null)
+  const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isExportingImage, setIsExportingImage] = useState(false)
+  const [receiptDataUrls, setReceiptDataUrls] = useState([])
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
+  const [isEditingMatch, setIsEditingMatch] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const detailScreenRef = useRef(null)
+  const receiptCardRef = useRef(null)
+  const resetBoard = useGameStore((state) => state.resetBoard)
+
+  useEffect(() => {
+    setReceiptDataUrls([])
+  }, [selectedMatch?.id])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode: standalone)').matches ||
+                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
+      setIsStandalone(standalone)
+    }
+  }, [])
+
+  const currentUser = useAuthStore((state) => state.user)
+  const { match } = usePermissions()
+  const { canEdit, canDelete } = match
 
   useEffect(() => {
     if (!selectedMatch) return
@@ -342,8 +363,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     if (!entry) return
     const { syncRoute = true } = options
 
-    // 1. Optimistic / Instant Render: Hiển thị ngay lập tức dữ liệu ván đấu có sẵn (0ms delay)
-    const initialMatch = attachMatchThumbnail(entry, boardGames)
+    const currentBoardGames = useAppDataStore.getState().boardGames
+    const initialMatch = attachMatchThumbnail(entry, currentBoardGames)
+
+    // Lưu vào store TRƯỚC KHI chuyển route để trang mới mount đọc được ngay lập tức
+    setActiveMatchDetail(initialMatch)
     setSelectedMatch(initialMatch)
     setIsDetailMenuOpen(false)
 
@@ -351,27 +375,30 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       router.push(`/history/${entry.id}`)
     }
 
-    // 2. Revalidate ngầm dưới nền: lấy toàn bộ chi tiết điểm số / categories mới nhất
+    // Revalidate ngầm dưới nền: lấy toàn bộ chi tiết điểm số / categories mới nhất
     try {
       const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
-      const currentBoardGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
+      const currentGames = cachedBoardGames?.length ? cachedBoardGames : currentBoardGames
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
       const normalizedMatch = detail.scoreRows?.length
         ? matchWithRows
-        : alignScoreRowsWithBoardGame(matchWithRows, currentBoardGames)
-      setSelectedMatch(attachMatchThumbnail(normalizedMatch, currentBoardGames))
+        : alignScoreRowsWithBoardGame(matchWithRows, currentGames)
+      const finalMatch = attachMatchThumbnail(normalizedMatch, currentGames)
+      setActiveMatchDetail(finalMatch)
+      setSelectedMatch(finalMatch)
     } catch (err) {
       console.warn('Cannot sync match detail:', err)
       if (!entry.players?.length) {
         toast('Không tải được chi tiết bảng điểm')
       }
     }
-  }, [boardGames, fetchBoardGames, router, toast])
+  }, [fetchBoardGames, router, setActiveMatchDetail, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
       if (selectedMatch) {
         setSelectedMatch(null)
+        setActiveMatchDetail(null)
         setIsDetailMenuOpen(false)
       }
       return
@@ -379,7 +406,17 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     if (String(selectedMatch?.id || '') === routeDetailMatchId) return
 
-    const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
+    const { activeMatchDetail, cachedMatchDetails, history, boardGames } = useAppDataStore.getState()
+    if (activeMatchDetail && String(activeMatchDetail.id) === routeDetailMatchId) {
+      setSelectedMatch(activeMatchDetail)
+      return
+    }
+    if (cachedMatchDetails?.[routeDetailMatchId]) {
+      setSelectedMatch(cachedMatchDetails[routeDetailMatchId])
+      return
+    }
+
+    const entry = history.find((item) => String(item.id) === routeDetailMatchId)
     if (entry) {
       openMatchDetail(entry, { syncRoute: false })
       return
@@ -387,25 +424,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     // Trường hợp mở trực tiếp URL /history/[id] mà dữ liệu chưa có trong history store
     let isMounted = true
-    setIsLoadingMatchDetail(true)
     Promise.all([getMatch(routeDetailMatchId), fetchBoardGames()])
       .then(([detail, cachedBoardGames]) => {
         if (!isMounted) return
-        const currentBoardGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
-        const normalizedMatch = alignScoreRowsWithBoardGame(detail, currentBoardGames)
-        setSelectedMatch(attachMatchThumbnail(normalizedMatch, currentBoardGames))
+        const currentGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
+        const normalizedMatch = alignScoreRowsWithBoardGame(detail, currentGames)
+        const finalMatch = attachMatchThumbnail(normalizedMatch, currentGames)
+        setActiveMatchDetail(finalMatch)
+        setSelectedMatch(finalMatch)
       })
       .catch(() => {
         if (isMounted) toast('Không tải được chi tiết bảng điểm')
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingMatchDetail(false)
       })
 
     return () => {
       isMounted = false
     }
-  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails, openMatchDetail, boardGames, fetchBoardGames, toast])
+  }, [routeDetailMatchId, selectedMatch, openMatchDetail, fetchBoardGames, setActiveMatchDetail, toast])
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
@@ -556,8 +591,26 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
-      <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
-        <LoadingOverlay label="Đang tải..." />
+      <div className="screen score-screen history-detail-screen" aria-busy="true">
+        <Header
+          title="Bảng Điểm"
+          onBack={() => {
+            setIsDetailMenuOpen(false)
+            router.push('/history')
+          }}
+        />
+        <div className="detail-content">
+          <section className="match-summary-strip match-summary-skeleton">
+            <div className="game-card-skeleton-thumb" />
+            <div className="match-skeleton-info">
+              <div className="game-card-skeleton-line title" />
+              <div className="game-card-skeleton-line short" />
+            </div>
+          </section>
+          <section className="score-board history-score-board match-grid-skeleton">
+            <div className="match-grid-skeleton-card" />
+          </section>
+        </div>
       </div>
     )
   }
@@ -600,9 +653,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       <div
         ref={detailScreenRef}
         className="screen score-screen history-detail-screen loading-shell"
-        aria-busy={isLoadingMatchDetail || isExportingImage}
+        aria-busy={isExportingImage}
       >
-        {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         {isExportingImage ? <LoadingOverlay label="Đang tạo ảnh..." /> : null}
         <Header title="Bảng Điểm"
           onBack={() => {

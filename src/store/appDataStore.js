@@ -38,6 +38,20 @@ export const useAppDataStore = create((set, get) => ({
   userGameStats: [],
   userGameStatsFetchedAt: 0,
   isLoadingUserGameStats: false,
+  activeMatchDetail: null,
+  cachedMatchDetails: {},
+
+  setActiveMatchDetail(match) {
+    if (!match) {
+      set({ activeMatchDetail: null })
+      return
+    }
+    const id = String(match.id || '')
+    set((state) => ({
+      activeMatchDetail: match,
+      cachedMatchDetails: id ? { ...state.cachedMatchDetails, [id]: match } : state.cachedMatchDetails,
+    }))
+  },
 
   async fetchBoardGames({ force = false, page = 1, limit = 10, ...params } = {}) {
     const { boardGames, boardGamesFetchedAt } = get()
