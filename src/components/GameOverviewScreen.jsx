@@ -29,6 +29,12 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const [isLoading, setIsLoading] = useState(!initialCached)
 
   useEffect(() => {
+    const freshCached = hydrateOverviewIfNeeded(boardGameId)
+    setLocalOverview(freshCached)
+    setIsLoading(!freshCached)
+  }, [boardGameId, hydrateOverviewIfNeeded])
+
+  useEffect(() => {
     let isMounted = true
 
     async function load() {
@@ -65,7 +71,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     }
   }, [boardGameId, toast, applyBoardGameOverview, hydrateOverviewIfNeeded, setOverview])
 
-  if (isLoading && !overview) {
+  const isMatchCurrentGame = overview && (overview.id === boardGameId || overview._id === boardGameId)
+  const activeOverview = isMatchCurrentGame ? overview : initialCached
+
+  if (isLoading && !activeOverview) {
     return (
       <div className="game-overview-screen loading-shell" aria-busy="true">
         <LoadingOverlay label="Đang tải..." />
@@ -73,7 +82,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  if (!overview) {
+  if (!activeOverview) {
     return (
       <div className="screen score-screen loading-shell">
         <div className="screen-inner">
@@ -83,7 +92,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const leaders = overview.leaderboard || []
+  const leaders = activeOverview.leaderboard || []
 
   return (
     <div className="game-overview-screen">
