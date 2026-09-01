@@ -235,9 +235,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   useEffect(() => {
     async function loadHistory() {
-      // Gọi làm mới profile ngầm
-      useAuthStore.getState().refreshProfile().catch(() => {})
-
       try {
         await Promise.all([fetchHistory(), fetchBoardGames(), fetchUsers()])
       } catch {

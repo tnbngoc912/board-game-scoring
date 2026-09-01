@@ -49,13 +49,6 @@ export default function App() {
   }, [screen])
 
   useEffect(() => {
-    if (!token || !user) return
-    refreshProfile().catch(() => {
-      // Bỏ qua lỗi ngầm nếu có sự cố mạng
-    })
-  }, [screen, pathname, gameFlow, token, user, refreshProfile])
-
-  useEffect(() => {
     if (screen !== 'game') return
     if (boardGameId) return
     router.replace('/')
