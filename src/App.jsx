@@ -145,6 +145,7 @@ export default function App() {
         {screen === 'game' && boardGameId ? (
           gameFlow === 'overview' ? (
             <GameOverviewScreen
+              key={boardGameId}
               boardGameId={boardGameId}
               toast={showToast}
               onBack={showHome}
