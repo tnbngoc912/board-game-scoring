@@ -193,20 +193,26 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   const {
     history,
+    historyHasMore,
     boardGames,
     users,
     isLoadingHistory,
+    isLoadingMoreHistory,
     fetchHistory,
+    fetchMoreHistory,
     fetchBoardGames,
     fetchUsers,
     removeHistoryMatch,
   } = useAppDataStore(
     useShallow((state) => ({
       history: state.history,
+      historyHasMore: state.historyHasMore,
       boardGames: state.boardGames,
       users: state.users,
       isLoadingHistory: state.isLoadingHistory,
+      isLoadingMoreHistory: state.isLoadingMoreHistory,
       fetchHistory: state.fetchHistory,
+      fetchMoreHistory: state.fetchMoreHistory,
       fetchBoardGames: state.fetchBoardGames,
       fetchUsers: state.fetchUsers,
       removeHistoryMatch: state.removeHistoryMatch,
@@ -276,6 +282,63 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [historyWithThumbnails, searchTerm, selectedGameName, selectedPlayerName, myMatchesOnly, currentUser])
 
   const hasFilters = Boolean(selectedGameName || selectedPlayerName || myMatchesOnly || searchTerm.trim())
+
+  // Chỉ cho phép load thêm khi còn data, không đang loading và danh sách hiển thị >= 10 ván
+  const canLoadMore = Boolean(
+    historyHasMore &&
+    !isLoadingHistory &&
+    filteredHistory.length >= 10 &&
+    (!hasFilters || filteredHistory.length >= 10)
+  )
+
+  const sentinelRef = useRef(null)
+
+  useEffect(() => {
+    if (!canLoadMore) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && canLoadMore && !isLoadingMoreHistory) {
+          fetchMoreHistory({ limit: 10 }).catch(() => {})
+        }
+      },
+      {
+        root: null,
+        rootMargin: '150px',
+        threshold: 0,
+      }
+    )
+
+    const el = sentinelRef.current
+    if (el) observer.observe(el)
+
+    const scrollContainer = el?.closest('.pull-to-refresh-container') || (typeof window !== 'undefined' ? window : null)
+    const handleScroll = () => {
+      if (!canLoadMore || isLoadingMoreHistory || isLoadingHistory) return
+      const target = scrollContainer === window ? document.documentElement : scrollContainer
+      if (!target) return
+      const scrollTop = scrollContainer === window ? window.scrollY : target.scrollTop
+      const scrollHeight = target.scrollHeight
+      const clientHeight = scrollContainer === window ? window.innerHeight : target.clientHeight
+
+      // Chỉ kích hoạt khi container thực sự có thanh cuộn (dài hơn màn hình) và người dùng cuộn đến gần đáy
+      if (scrollHeight > clientHeight + 100 && scrollHeight - (scrollTop + clientHeight) < 250) {
+        fetchMoreHistory({ limit: 10 }).catch(() => {})
+      }
+    }
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    }
+
+    return () => {
+      if (el) observer.unobserve(el)
+      observer.disconnect()
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [canLoadMore, isLoadingMoreHistory, isLoadingHistory, fetchMoreHistory])
 
   const handleNewGame = useCallback(async () => {
     const ok = await resetBoard()
@@ -759,6 +822,25 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 </GameCard>
               )
             })}
+
+            {canLoadMore && isLoadingMoreHistory ? (
+              <>
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={`more-skeleton-${index}`} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
+                    <div className="game-card-thumb" />
+                    <div className="game-card-info">
+                      <span className="game-card-skeleton-line title" />
+                      <span className="game-card-skeleton-line" />
+                      <span className="game-card-skeleton-line short" />
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : null}
+
+            {canLoadMore ? (
+              <div ref={sentinelRef} className="history-scroll-sentinel" aria-hidden="true" style={{ height: 1, margin: 0, padding: 0 }} />
+            ) : null}
           </div>
         </div>
       </PullToRefresh>

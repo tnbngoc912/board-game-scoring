@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
@@ -110,16 +110,22 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     gameList,
     userList,
     isLoadingGames,
+    isLoadingMoreBoardGames,
+    boardGamesHasMore,
     isLoadingUsers,
     fetchBoardGames,
+    fetchMoreBoardGames,
     fetchUsers,
   } = useAppDataStore(
     useShallow((state) => ({
       gameList: state.boardGames,
       userList: state.users,
       isLoadingGames: state.isLoadingBoardGames,
+      isLoadingMoreBoardGames: state.isLoadingMoreBoardGames,
+      boardGamesHasMore: state.boardGamesHasMore,
       isLoadingUsers: state.isLoadingUsers,
       fetchBoardGames: state.fetchBoardGames,
+      fetchMoreBoardGames: state.fetchMoreBoardGames,
       fetchUsers: state.fetchUsers,
     }))
   )
@@ -174,6 +180,64 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
       return matchesName && matchesPlayers && matchesGenres
     })
   }, [gameList, gameSearchTerm, playerCountFilter, selectedGenres])
+
+  const hasGameFilters = Boolean(gameSearchTerm.trim() || playerCountFilter || selectedGenres.length > 0)
+
+  const canLoadMoreGames = Boolean(
+    setupStep === 'games' &&
+    boardGamesHasMore &&
+    !isLoadingGames &&
+    filteredGames.length >= 10 &&
+    (!hasGameFilters || filteredGames.length >= 10)
+  )
+
+  const sentinelGamesRef = useRef(null)
+
+  useEffect(() => {
+    if (!canLoadMoreGames) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && canLoadMoreGames && !isLoadingMoreBoardGames) {
+          fetchMoreBoardGames({ limit: 10 }).catch(() => {})
+        }
+      },
+      {
+        root: null,
+        rootMargin: '150px',
+        threshold: 0,
+      }
+    )
+
+    const el = sentinelGamesRef.current
+    if (el) observer.observe(el)
+
+    const scrollContainer = el?.closest('.pull-to-refresh-container') || (typeof window !== 'undefined' ? window : null)
+    const handleScroll = () => {
+      if (!canLoadMoreGames || isLoadingMoreBoardGames || isLoadingGames) return
+      const target = scrollContainer === window ? document.documentElement : scrollContainer
+      if (!target) return
+      const scrollTop = scrollContainer === window ? window.scrollY : target.scrollTop
+      const scrollHeight = target.scrollHeight
+      const clientHeight = scrollContainer === window ? window.innerHeight : target.clientHeight
+
+      if (scrollHeight > clientHeight + 100 && scrollHeight - (scrollTop + clientHeight) < 250) {
+        fetchMoreBoardGames({ limit: 10 }).catch(() => {})
+      }
+    }
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    }
+
+    return () => {
+      if (el) observer.unobserve(el)
+      observer.disconnect()
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [canLoadMoreGames, isLoadingMoreBoardGames, isLoadingGames, fetchMoreBoardGames])
 
   const normalizeVietnamese = (str) => {
     return str
@@ -365,6 +429,25 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                         </GameCard>
                       )
                     })}
+
+                    {canLoadMoreGames && isLoadingMoreBoardGames ? (
+                      <>
+                        {Array.from({ length: 2 }).map((_, index) => (
+                          <div key={`more-game-skeleton-${index}`} className="game-card game-card-skeleton" aria-hidden="true">
+                            <div className="game-card-thumb" />
+                            <div className="game-card-info">
+                              <span className="game-card-skeleton-line title" />
+                              <span className="game-card-skeleton-line" />
+                              <span className="game-card-skeleton-line short" />
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
+
+                    {canLoadMoreGames ? (
+                      <div ref={sentinelGamesRef} className="history-scroll-sentinel" aria-hidden="true" style={{ height: 1, margin: 0, padding: 0 }} />
+                    ) : null}
                   </div>
                 ) : null}
               </section>
