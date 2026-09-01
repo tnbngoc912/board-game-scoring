@@ -67,5 +67,5 @@ body > div:first-child {
 .home-screen,
 .history-screen,
 .history-detail-screen {
-  padding-bottom: 72px;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
