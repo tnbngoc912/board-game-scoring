@@ -44,7 +44,7 @@
 }
 
 .home-screen .home-content {
-  padding: var(--space-3) var(--space-4) calc(56px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-3) var(--space-4) 24px;
 }
 
 .home-notification-banner {
