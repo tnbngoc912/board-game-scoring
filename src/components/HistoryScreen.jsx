@@ -193,20 +193,26 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   const {
     history,
+    historyHasMore,
     boardGames,
     users,
     isLoadingHistory,
+    isLoadingMoreHistory,
     fetchHistory,
+    fetchMoreHistory,
     fetchBoardGames,
     fetchUsers,
     removeHistoryMatch,
   } = useAppDataStore(
     useShallow((state) => ({
       history: state.history,
+      historyHasMore: state.historyHasMore,
       boardGames: state.boardGames,
       users: state.users,
       isLoadingHistory: state.isLoadingHistory,
+      isLoadingMoreHistory: state.isLoadingMoreHistory,
       fetchHistory: state.fetchHistory,
+      fetchMoreHistory: state.fetchMoreHistory,
       fetchBoardGames: state.fetchBoardGames,
       fetchUsers: state.fetchUsers,
       removeHistoryMatch: state.removeHistoryMatch,
@@ -241,6 +247,33 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     loadHistory()
   }, [fetchBoardGames, fetchHistory, fetchUsers, toast])
+
+  const sentinelRef = useRef(null)
+
+  useEffect(() => {
+    if (isLoadingHistory || !historyHasMore) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && historyHasMore && !isLoadingMoreHistory) {
+          fetchMoreHistory({ limit: 10 }).catch(() => {})
+        }
+      },
+      {
+        root: null,
+        rootMargin: '250px',
+        threshold: 0.05,
+      }
+    )
+
+    const el = sentinelRef.current
+    if (el) observer.observe(el)
+
+    return () => {
+      if (el) observer.unobserve(el)
+      observer.disconnect()
+    }
+  }, [historyHasMore, isLoadingMoreHistory, isLoadingHistory, fetchMoreHistory])
 
   const historyWithThumbnails = useMemo(
     () => history
@@ -759,6 +792,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                 </GameCard>
               )
             })}
+
+            {isLoadingMoreHistory ? (
+              <>
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={`more-skeleton-${index}`} className="game-card game-card--history game-card-skeleton" aria-hidden="true">
+                    <div className="game-card-thumb" />
+                    <div className="game-card-info">
+                      <span className="game-card-skeleton-line title" />
+                      <span className="game-card-skeleton-line" />
+                      <span className="game-card-skeleton-line short" />
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : null}
+
+            <div ref={sentinelRef} className="history-scroll-sentinel" aria-hidden="true" style={{ height: 1, margin: 0, padding: 0 }} />
           </div>
         </div>
       </PullToRefresh>

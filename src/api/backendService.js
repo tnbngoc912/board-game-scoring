@@ -199,10 +199,24 @@ export async function getMatches(params = {}) {
 
   if (params.boardGameId) searchParams.set('board_game_id', params.boardGameId)
   if (params.search) searchParams.set('search', params.search)
+  if (params.page !== undefined) searchParams.set('page', String(params.page))
+  if (params.limit !== undefined) searchParams.set('limit', String(params.limit))
+  if (params.userId) searchParams.set('user_id', params.userId)
+  if (params.startDate) searchParams.set('start_date', params.startDate)
+  if (params.endDate) searchParams.set('end_date', params.endDate)
 
   const query = searchParams.toString()
   const payload = await request(`/matches${query ? `?${query}` : ''}`)
-  return unwrapList(payload).map(normalizeMatch)
+  const items = unwrapList(payload).map(normalizeMatch)
+
+  return {
+    items,
+    results: items,
+    page: Number(payload?.page || params.page || 1),
+    limit: Number(payload?.limit || params.limit || items.length),
+    totalResults: Number(payload?.totalResults ?? items.length),
+    totalPages: Number(payload?.totalPages ?? (items.length > 0 ? 1 : 0)),
+  }
 }
 
 export async function ensureBoardGame(gameName, categories) {
