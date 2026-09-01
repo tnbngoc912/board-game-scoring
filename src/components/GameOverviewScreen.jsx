@@ -92,7 +92,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const leaders = activeOverview.leaderboard || []
+  const leaders = (activeOverview.leaderboard || []).slice(0, 3)
 
   return (
     <div className="game-overview-screen">
