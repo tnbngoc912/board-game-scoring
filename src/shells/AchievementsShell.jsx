@@ -7,7 +7,6 @@ import { Icon } from '../components/ui/Icon'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
-import { useAppDataStore } from '../store/appDataStore'
 import { Header } from '../components/Header'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 
@@ -105,8 +104,7 @@ function AchievementsSkeleton() {
 
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
-  const { userGameStats, fetchUserGameStats, userGameStatsFetchedAt } = useAppDataStore()
-  const [isInitializing, setIsInitializing] = useState(userGameStatsFetchedAt === 0 && !user?.stats)
+  const [isInitializing, setIsInitializing] = useState(!user?.stats)
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
@@ -121,11 +119,7 @@ export function AchievementsShell() {
   useEffect(() => {
     async function loadData() {
       try {
-        const freshUser = await refreshProfile()
-        const userId = freshUser?.id || freshUser?._id || user?.id || user?._id
-        if (userId) {
-          await fetchUserGameStats(userId)
-        }
+        await refreshProfile()
       } catch (error) {
         console.error('Lỗi khi tải thông tin thành tựu:', error)
       } finally {
@@ -134,38 +128,27 @@ export function AchievementsShell() {
     }
 
     loadData()
-  }, [refreshProfile, fetchUserGameStats, user?.id, user?._id])
+  }, [refreshProfile])
 
-  // Trích xuất các chỉ số từ profile & fallback sang userGameStats
+  // Trích xuất các chỉ số trực tiếp từ user.stats đã được Backend xử lý sẵn
   const userName = user?.name || 'Người chơi'
   const avatarUrl = user?.avatar_url || user?.avatar || '/avatar-default.svg'
 
   const totalGamesPlayed = user?.stats?.total_games_played ?? 0
-  const totalBoardGamesPlayed = user?.stats?.total_board_games_played ?? userGameStats?.length ?? 0
+  const totalBoardGamesPlayed = user?.stats?.total_board_games_played ?? 0
   const winRate = user?.stats?.win_rate ?? 0
   const totalWins = user?.stats?.total_wins ?? 0
   const totalLastPlaces = user?.stats?.total_last_places ?? 0
 
-  const lastPlayedDate = user?.stats?.last_played_game?.play_date || user?.stats?.last_played_at || userGameStats?.[0]?.last_played_at
-  const lastPlayedGameName = user?.stats?.last_played_game?.name || (totalGamesPlayed > 0 && userGameStats?.[0]?.board_game_name) || 'Chưa có'
+  const lastPlayedDate = user?.stats?.last_played_game?.play_date || user?.stats?.last_played_at
+  const lastPlayedGameName = user?.stats?.last_played_game?.name || 'Chưa có'
 
-  const mostPlayedGame = user?.stats?.most_played_game || (userGameStats?.length > 0 ? { name: userGameStats[0].board_game_name, thumbnail_url: userGameStats[0].thumbnail_url } : null)
-  const mostWonGame = user?.stats?.most_won_game || (userGameStats?.filter((g) => (g.win_count || 0) > 0)?.sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0] ? { name: userGameStats.filter((g) => (g.win_count || 0) > 0).sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0].board_game_name, thumbnail_url: userGameStats.filter((g) => (g.win_count || 0) > 0).sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0].thumbnail_url } : null)
-  const mostLostGame = user?.stats?.most_lost_game || (userGameStats?.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0)?.sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0] ? { name: userGameStats.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0).sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0].board_game_name, thumbnail_url: userGameStats.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0).sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0].thumbnail_url } : null)
+  const mostPlayedGame = user?.stats?.most_played_game || null
+  const mostWonGame = user?.stats?.most_won_game || null
+  const mostLostGame = user?.stats?.most_lost_game || null
 
   const topRecordGames = user?.stats?.top_record_games || []
-
-  const leastRecentlyPlayedGame = user?.stats?.least_recently_played_game || (() => {
-    const unplayed = userGameStats?.filter((g) => g.last_played_at)?.sort((a, b) => new Date(a.last_played_at) - new Date(b.last_played_at))
-    if (unplayed && unplayed.length > 0) {
-      return {
-        name: unplayed[0].board_game_name,
-        thumbnail_url: unplayed[0].thumbnail_url,
-        last_played_at: unplayed[0].last_played_at
-      }
-    }
-    return null
-  })()
+  const leastRecentlyPlayedGame = user?.stats?.least_recently_played_game || null
 
   return (
     <ProtectedScreen>
@@ -175,11 +158,7 @@ export function AchievementsShell() {
 
           <PullToRefresh onRefresh={async () => {
             try {
-              const freshUser = await refreshProfile()
-              const userId = freshUser?.id || freshUser?._id || user?.id || user?._id
-              if (userId) {
-                await fetchUserGameStats(userId, { force: true })
-              }
+              await refreshProfile()
             } catch (err) {
               console.error('Pull to refresh failed:', err)
             }
