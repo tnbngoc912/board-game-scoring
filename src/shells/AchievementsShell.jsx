@@ -176,7 +176,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalBoardGamesPlayed}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/layer.png" size={26} color="var(--color-brand-600)" />
+                    <Icon src="/layer.png" size={40} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -187,7 +187,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{winRate}%</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/rate.png" size={26} color="var(--color-brand-600)" />
+                    <Icon src="/rate.png" size={40} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -198,7 +198,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalWins}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/cup.png" size={26} color="var(--color-brand-600)" />
+                    <Icon src="/cup.png" size={40} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -209,7 +209,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalLastPlaces}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/dislike.png" size={26} color="var(--color-brand-600)" />
+                    <Icon src="/dislike.png" size={40} color="var(--color-brand-600)" />
                   </div>
                 </div>
               </div>
