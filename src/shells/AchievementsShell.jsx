@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Layers, Percent, Trophy, ThumbsDown, Gamepad2 } from 'lucide-react'
+import { Gamepad2 } from 'lucide-react'
+import { Icon } from '../components/ui/Icon'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
@@ -175,7 +176,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalBoardGamesPlayed}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Layers size={26} strokeWidth={2.2} />
+                    <Icon src="/layer.png" size={26} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -186,7 +187,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{winRate}%</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Percent size={24} strokeWidth={2.5} />
+                    <Icon src="/rate.png" size={26} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -197,7 +198,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalWins}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <Trophy size={26} strokeWidth={2.2} />
+                    <Icon src="/cup.png" size={26} color="var(--color-brand-600)" />
                   </div>
                 </div>
 
@@ -208,7 +209,7 @@ export function AchievementsShell() {
                     <span className="achievements-stat-val-md">{totalLastPlaces}</span>
                   </div>
                   <div className="achievements-metric-icon" aria-hidden="true">
-                    <ThumbsDown size={26} strokeWidth={2.2} />
+                    <Icon src="/dislike.png" size={26} color="var(--color-brand-600)" />
                   </div>
                 </div>
               </div>
