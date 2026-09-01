@@ -166,17 +166,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const resetBoard = useGameStore((state) => state.resetBoard)
 
   useEffect(() => {
-    if (!selectedMatch) {
-      setReceiptDataUrls([])
-      return
-    }
-    const rawImages = (selectedMatch.imageAttachments || []).filter((img) => img?.url).map((img) => img.url)
-    if (rawImages.length > 0) {
-      Promise.all(rawImages.map((u) => urlToDataUrl(u))).then(setReceiptDataUrls)
-    } else {
-      setReceiptDataUrls([])
-    }
-  }, [selectedMatch])
+    setReceiptDataUrls([])
+  }, [selectedMatch?.id])
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -348,24 +339,34 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [onNewGame, resetBoard, toast])
 
   const openMatchDetail = useCallback(async (entry, options = {}) => {
+    if (!entry) return
     const { syncRoute = true } = options
-    if (syncRoute) router.push(`/history/${entry.id}`)
-    setIsDetailMenuOpen(false)
-    setIsLoadingMatchDetail(true)
 
+    // 1. Optimistic / Instant Render: Hiển thị ngay lập tức dữ liệu ván đấu có sẵn (0ms delay)
+    const initialMatch = attachMatchThumbnail(entry, boardGames)
+    setSelectedMatch(initialMatch)
+    setIsDetailMenuOpen(false)
+
+    if (syncRoute) {
+      router.push(`/history/${entry.id}`)
+    }
+
+    // 2. Revalidate ngầm dưới nền: lấy toàn bộ chi tiết điểm số / categories mới nhất
     try {
       const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
+      const currentBoardGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
       const normalizedMatch = detail.scoreRows?.length
         ? matchWithRows
-        : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
-      setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
-    } catch {
-      toast('Khong tai duoc chi tiet bang diem')
-    } finally {
-      setIsLoadingMatchDetail(false)
+        : alignScoreRowsWithBoardGame(matchWithRows, currentBoardGames)
+      setSelectedMatch(attachMatchThumbnail(normalizedMatch, currentBoardGames))
+    } catch (err) {
+      console.warn('Cannot sync match detail:', err)
+      if (!entry.players?.length) {
+        toast('Không tải được chi tiết bảng điểm')
+      }
     }
-  }, [fetchBoardGames, router, toast])
+  }, [boardGames, fetchBoardGames, router, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
@@ -379,10 +380,32 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     if (String(selectedMatch?.id || '') === routeDetailMatchId) return
 
     const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
-    if (!entry) return
+    if (entry) {
+      openMatchDetail(entry, { syncRoute: false })
+      return
+    }
 
-    openMatchDetail(entry, { syncRoute: false })
-  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
+    // Trường hợp mở trực tiếp URL /history/[id] mà dữ liệu chưa có trong history store
+    let isMounted = true
+    setIsLoadingMatchDetail(true)
+    Promise.all([getMatch(routeDetailMatchId), fetchBoardGames()])
+      .then(([detail, cachedBoardGames]) => {
+        if (!isMounted) return
+        const currentBoardGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
+        const normalizedMatch = alignScoreRowsWithBoardGame(detail, currentBoardGames)
+        setSelectedMatch(attachMatchThumbnail(normalizedMatch, currentBoardGames))
+      })
+      .catch(() => {
+        if (isMounted) toast('Không tải được chi tiết bảng điểm')
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingMatchDetail(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails, openMatchDetail, boardGames, fetchBoardGames, toast])
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
