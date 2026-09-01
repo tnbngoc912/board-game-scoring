@@ -248,7 +248,8 @@ export async function getMatches(params = {}) {
 }
 
 export async function ensureBoardGame(gameName, categories) {
-  const boardGames = await getBoardGames()
+  const res = await getBoardGames()
+  const boardGames = res?.items || (Array.isArray(res) ? res : [])
   const existing = boardGames.find((game) => game.name === gameName)
 
   if (existing) {
