@@ -153,13 +153,7 @@ export function AchievementsShell() {
   const mostWonGame = user?.stats?.most_won_game || (userGameStats?.filter((g) => (g.win_count || 0) > 0)?.sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0] ? { name: userGameStats.filter((g) => (g.win_count || 0) > 0).sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0].board_game_name, thumbnail_url: userGameStats.filter((g) => (g.win_count || 0) > 0).sort((a, b) => (b.win_count || 0) - (a.win_count || 0))[0].thumbnail_url } : null)
   const mostLostGame = user?.stats?.most_lost_game || (userGameStats?.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0)?.sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0] ? { name: userGameStats.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0).sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0].board_game_name, thumbnail_url: userGameStats.filter((g) => ((g.played_count || 0) - (g.win_count || 0)) > 0).sort((a, b) => (((b.played_count || 0) - (b.win_count || 0))) - (((a.played_count || 0) - (a.win_count || 0))))[0].thumbnail_url } : null)
 
-  const topRecordGames = user?.stats?.top_record_games?.length > 0
-    ? user.stats.top_record_games
-    : userGameStats
-      ?.filter((g) => g.scoring_type !== 'WINNER_ONLY' && (g.best_score ?? 0) > 0)
-      ?.sort((a, b) => (b.best_score || 0) - (a.best_score || 0))
-      ?.slice(0, 3)
-      ?.map((g) => ({ name: g.board_game_name, thumbnail_url: g.thumbnail_url, best_score: g.best_score })) || []
+  const topRecordGames = user?.stats?.top_record_games || []
 
   const leastRecentlyPlayedGame = user?.stats?.least_recently_played_game || (() => {
     const unplayed = userGameStats?.filter((g) => g.last_played_at)?.sort((a, b) => new Date(a.last_played_at) - new Date(b.last_played_at))
