@@ -75,7 +75,11 @@ async function request(path, options = {}) {
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
-  return payload?.data || payload
+  if (options.raw) {
+    return payload
+  }
+
+  return payload?.data !== undefined ? payload.data : payload
 }
 
 async function requestFormData(path, formData, options = {}) {
@@ -206,7 +210,7 @@ export async function getMatches(params = {}) {
   if (params.endDate) searchParams.set('end_date', params.endDate)
 
   const query = searchParams.toString()
-  const payload = await request(`/matches${query ? `?${query}` : ''}`)
+  const payload = await request(`/matches${query ? `?${query}` : ''}`, { raw: true })
   const items = unwrapList(payload).map(normalizeMatch)
 
   return {

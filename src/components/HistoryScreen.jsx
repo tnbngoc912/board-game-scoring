@@ -261,17 +261,38 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       },
       {
         root: null,
-        rootMargin: '250px',
-        threshold: 0.05,
+        rootMargin: '350px',
+        threshold: 0,
       }
     )
 
     const el = sentinelRef.current
     if (el) observer.observe(el)
 
+    const scrollContainer = el?.closest('.pull-to-refresh-container') || (typeof window !== 'undefined' ? window : null)
+    const handleScroll = () => {
+      if (!historyHasMore || isLoadingMoreHistory || isLoadingHistory) return
+      const target = scrollContainer === window ? document.documentElement : scrollContainer
+      if (!target) return
+      const scrollTop = scrollContainer === window ? window.scrollY : target.scrollTop
+      const scrollHeight = target.scrollHeight
+      const clientHeight = scrollContainer === window ? window.innerHeight : target.clientHeight
+
+      if (scrollHeight - (scrollTop + clientHeight) < 450) {
+        fetchMoreHistory({ limit: 10 }).catch(() => {})
+      }
+    }
+
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    }
+
     return () => {
       if (el) observer.unobserve(el)
       observer.disconnect()
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll)
+      }
     }
   }, [historyHasMore, isLoadingMoreHistory, isLoadingHistory, fetchMoreHistory])
 
