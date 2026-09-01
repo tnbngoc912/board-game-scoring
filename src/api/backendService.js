@@ -185,9 +185,33 @@ export async function getUsers(params = {}) {
   return unwrapList(payload).map(normalizeUser)
 }
 
-export async function getBoardGames() {
-  const payload = await request('/board-games')
-  return unwrapList(payload).map(normalizeBoardGame)
+export async function getBoardGames(params = {}) {
+  const searchParams = new URLSearchParams()
+  if (params.page !== undefined) searchParams.set('page', String(params.page))
+  if (params.limit !== undefined) searchParams.set('limit', String(params.limit))
+  if (params.search) searchParams.set('search', params.search)
+  if (params.playerCount) searchParams.set('playerCount', String(params.playerCount))
+  if (params.categoryIds) searchParams.set('categoryIds', String(params.categoryIds))
+  if (params.sortBy) searchParams.set('sortBy', params.sortBy)
+
+  const query = searchParams.toString()
+  const payload = await request(`/board-games${query ? `?${query}` : ''}`, { raw: true })
+  const items = unwrapList(payload).map(normalizeBoardGame)
+
+  const page = Number(payload?.page || params.page || 1)
+  const limit = Number(payload?.limit || params.limit || items.length)
+  const totalResults = Number(payload?.totalResults ?? items.length)
+  const totalPages = Number(payload?.totalPages ?? (items.length > 0 ? 1 : 0))
+
+  return {
+    items,
+    results: items,
+    page,
+    limit,
+    totalResults,
+    totalPages,
+    hasMore: page < totalPages,
+  }
 }
 
 export async function getBoardGameOverview(boardGameId, { leaderboardLimit } = {}) {

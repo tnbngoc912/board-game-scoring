@@ -17,8 +17,13 @@ function isFresh(fetchedAt, ttl) {
 
 export const useAppDataStore = create((set, get) => ({
   boardGames: [],
+  boardGamesPage: 1,
+  boardGamesTotalPages: 1,
+  boardGamesTotalResults: 0,
+  boardGamesHasMore: false,
   boardGamesFetchedAt: 0,
   isLoadingBoardGames: false,
+  isLoadingMoreBoardGames: false,
   users: [],
   usersFetchedAt: 0,
   isLoadingUsers: false,
@@ -34,16 +39,25 @@ export const useAppDataStore = create((set, get) => ({
   userGameStatsFetchedAt: 0,
   isLoadingUserGameStats: false,
 
-  async fetchBoardGames({ force = false } = {}) {
+  async fetchBoardGames({ force = false, page = 1, limit = 10, ...params } = {}) {
     const { boardGames, boardGamesFetchedAt } = get()
-    if (!force && isFresh(boardGamesFetchedAt, BOARD_GAMES_TTL)) return boardGames
+    if (!force && page === 1 && isFresh(boardGamesFetchedAt, BOARD_GAMES_TTL) && boardGames.length > 0) return boardGames
     if (boardGamesRequest) return boardGamesRequest
 
     set({ isLoadingBoardGames: true })
-    boardGamesRequest = getBoardGames()
-      .then((items) => {
+    boardGamesRequest = getBoardGames({ page, limit, ...params })
+      .then((res) => {
+        const items = res?.items || (Array.isArray(res) ? res : [])
+        const totalPages = res?.totalPages || 1
+        const totalResults = res?.totalResults || items.length
+        const hasMore = page < totalPages
+
         set({
           boardGames: items,
+          boardGamesPage: page,
+          boardGamesTotalPages: totalPages,
+          boardGamesTotalResults: totalResults,
+          boardGamesHasMore: hasMore,
           boardGamesFetchedAt: Date.now(),
           isLoadingBoardGames: false,
         })
@@ -58,6 +72,39 @@ export const useAppDataStore = create((set, get) => ({
       })
 
     return boardGamesRequest
+  },
+
+  async fetchMoreBoardGames({ limit = 10, ...params } = {}) {
+    const { boardGames, boardGamesPage, boardGamesHasMore, isLoadingMoreBoardGames, isLoadingBoardGames } = get()
+    if (!boardGamesHasMore || isLoadingMoreBoardGames || isLoadingBoardGames) return boardGames
+
+    const nextPage = boardGamesPage + 1
+    set({ isLoadingMoreBoardGames: true })
+
+    try {
+      const res = await getBoardGames({ page: nextPage, limit, ...params })
+      const newItems = res?.items || (Array.isArray(res) ? res : [])
+      const totalPages = res?.totalPages || 1
+      const totalResults = res?.totalResults || (boardGames.length + newItems.length)
+      const hasMore = nextPage < totalPages
+
+      const existingIds = new Set(boardGames.map((item) => item.id || item._id))
+      const uniqueNewItems = newItems.filter((item) => !existingIds.has(item.id || item._id))
+      const updatedGames = [...boardGames, ...uniqueNewItems]
+
+      set({
+        boardGames: updatedGames,
+        boardGamesPage: nextPage,
+        boardGamesTotalPages: totalPages,
+        boardGamesTotalResults: totalResults,
+        boardGamesHasMore: hasMore,
+        isLoadingMoreBoardGames: false,
+      })
+      return updatedGames
+    } catch (error) {
+      set({ isLoadingMoreBoardGames: false })
+      throw error
+    }
   },
 
   async fetchUsers({ force = false } = {}) {
