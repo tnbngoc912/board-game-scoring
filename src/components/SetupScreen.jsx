@@ -14,7 +14,6 @@ import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
-import { useAuthStore } from '../store/authStore'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
 
 const GAME_IMAGE_THEMES = [
@@ -135,9 +134,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
   useEffect(() => {
     async function loadSetupData() {
-      // Gọi làm mới profile ngầm
-      useAuthStore.getState().refreshProfile().catch(() => {})
-
       try {
         await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {

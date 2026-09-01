@@ -9,7 +9,6 @@ import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
 import { Icon } from './ui/Icon';
 import { usePermissions } from '../hooks/usePermissions'
-import { useAuthStore } from '../store/authStore'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -33,9 +32,6 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
     async function load() {
       if (!boardGameId) return
-
-      // Gọi làm mới profile ngầm
-      useAuthStore.getState().refreshProfile().catch(() => {})
 
       const cached = hydrateOverviewIfNeeded(boardGameId)
       if (cached) {
