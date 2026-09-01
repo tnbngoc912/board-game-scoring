@@ -329,7 +329,31 @@ export function AchievementsShell() {
                 <GameThumb src={mostLostGame?.thumbnail_url} alt={mostLostGame?.name} size={48} />
               </div>
 
-              {/* 6. Danh sách game có điểm cao kỷ lục */}
+              {/* 6. Game lâu rồi chưa chơi */}
+              <div className="achievements-group-card">
+                <div className="achievements-group-header">
+                  <span className="achievements-stat-label-sm">GAME LÂU RỒI CHƯA CHƠI</span>
+                </div>
+                <div className="achievements-group-list">
+                  {leastRecentlyPlayedGame ? (
+                    <div className="achievements-list-item">
+                      <GameThumb src={leastRecentlyPlayedGame.thumbnail_url} alt={leastRecentlyPlayedGame.name} size={48} />
+                      <div className="achievements-list-item-info">
+                        <span className="achievements-list-item-title" title={leastRecentlyPlayedGame.name}>
+                          {leastRecentlyPlayedGame.name}
+                        </span>
+                        <span className="achievements-list-item-sub">
+                          Lần cuối chơi hồi {formatDate(leastRecentlyPlayedGame.last_played_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="achievements-empty-inline">Chưa có dữ liệu</span>
+                  )}
+                </div>
+              </div>
+
+              {/* 7. Danh sách game có điểm cao kỷ lục */}
               <div className="achievements-group-card">
                 <div className="achievements-group-header">
                   <span className="achievements-stat-label-sm">NHỮNG GAME BẠN CÓ ĐIỂM CAO KỶ LỤC</span>
@@ -351,30 +375,6 @@ export function AchievementsShell() {
                     ))
                   ) : (
                     <span className="achievements-empty-inline">Chưa có dữ liệu điểm kỷ lục</span>
-                  )}
-                </div>
-              </div>
-
-              {/* 7. Game lâu rồi chưa chơi */}
-              <div className="achievements-group-card">
-                <div className="achievements-group-header">
-                  <span className="achievements-stat-label-sm">GAME LÂU RỒI CHƯA CHƠI</span>
-                </div>
-                <div className="achievements-group-list">
-                  {leastRecentlyPlayedGame ? (
-                    <div className="achievements-list-item">
-                      <GameThumb src={leastRecentlyPlayedGame.thumbnail_url} alt={leastRecentlyPlayedGame.name} size={48} />
-                      <div className="achievements-list-item-info">
-                        <span className="achievements-list-item-title" title={leastRecentlyPlayedGame.name}>
-                          {leastRecentlyPlayedGame.name}
-                        </span>
-                        <span className="achievements-list-item-sub">
-                          Lần cuối chơi hồi {formatDate(leastRecentlyPlayedGame.last_played_at)}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="achievements-empty-inline">Chưa có dữ liệu</span>
                   )}
                 </div>
               </div>
