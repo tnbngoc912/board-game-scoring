@@ -137,10 +137,16 @@ export function AchievementsShell() {
             <div className="achievements-content">
               {/* 1. Title Banner: 👑 THÀNH TÍCH CỦA BẠN */}
               <div className="achievements-title-banner">
-                <span className="achievements-title-crown">
-                  <Image src="/crown.svg" alt="👑" width={22} height={18} />
-                </span>
-                <h1 className="achievements-title-text">THÀNH TÍCH CỦA BẠN</h1>
+                <h1 className="visually-hidden">Thành tích của bạn</h1>
+                <Image
+                  src="/image-header-ach.png"
+                  alt="Thành tích của bạn"
+                  width={220}
+                  height={28}
+                  priority
+                  className="achievements-title-image"
+                  unoptimized
+                />
               </div>
 
               {/* 2. User Profile Banner Card */}

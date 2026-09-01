@@ -29,29 +29,17 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 6px;
   padding: 0 16px;
-  min-height: 24px;
+  min-height: 28px;
   margin-bottom: 2px;
 }
 
-.achievements-title-crown {
-  color: var(--color-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.achievements-title-text {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 19px;
-  line-height: 19px;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--color-brand);
-  letter-spacing: 0.5px;
+.achievements-title-image {
+  width: auto;
+  height: 26px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* 2. User Profile Banner Card (Frame 18) */
