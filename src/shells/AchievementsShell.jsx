@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 import { Gamepad2 } from 'lucide-react'
 import { Icon } from '../components/ui/Icon'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
@@ -9,6 +10,27 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
 import { Header } from '../components/Header'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
+
+// Framer motion variants cho hiệu ứng xuất hiện mượt mà
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.05,
+    },
+  },
+}
+
+const cardItemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.28, ease: 'easeOut' },
+  },
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return '--/--/----'
@@ -43,6 +65,146 @@ function GameThumb({ src, alt, size = 48, radius = 6 }) {
         onError={() => setError(true)}
       />
     </div>
+  )
+}
+
+function UserProfileCard({ userName, avatarUrl, totalGamesPlayed }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-user-card">
+      <div className="achievements-user-profile">
+        <div className="achievements-user-avatar-wrap">
+          <Image
+            src={avatarUrl}
+            alt={userName}
+            width={40}
+            height={40}
+            className="achievements-user-avatar"
+            unoptimized
+          />
+        </div>
+        <div className="achievements-user-name" title={userName}>
+          {userName}
+        </div>
+      </div>
+      <div className="achievements-divider-vert" aria-hidden="true" />
+      <div className="achievements-user-total">
+        <span className="achievements-stat-label-sm">TỔNG VÁN CHƠI</span>
+        <span className="achievements-stat-val-md">{totalGamesPlayed}</span>
+      </div>
+    </motion.div>
+  )
+}
+
+function MetricCard({ label, value, iconSrc }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-metric-card">
+      <div className="achievements-metric-info">
+        <span className="achievements-stat-label-sm">{label}</span>
+        <span className="achievements-stat-val-md">{value}</span>
+      </div>
+      <div className="achievements-metric-icon" aria-hidden="true">
+        <Icon src={iconSrc} size={40} color="var(--color-brand-600)" />
+      </div>
+    </motion.div>
+  )
+}
+
+function MetricGrid({ totalBoardGamesPlayed, winRate, totalWins, totalLastPlaces }) {
+  return (
+    <div className="achievements-metric-grid">
+      <MetricCard label="SỐ GAME ĐÃ CHƠI" value={totalBoardGamesPlayed} iconSrc="/layer.png" />
+      <MetricCard label="TỈ LỆ THẮNG" value={`${winRate}%`} iconSrc="/rate.png" />
+      <MetricCard label="SỐ VÁN THẮNG" value={totalWins} iconSrc="/cup.png" />
+      <MetricCard label="SỐ VÁN CHÓT" value={totalLastPlaces} iconSrc="/dislike.png" />
+    </div>
+  )
+}
+
+function RecentPlayCard({ lastPlayedDate, lastPlayedGameName }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-recent-card">
+      <div className="achievements-recent-date-col">
+        <span className="achievements-stat-label-sm">LẦN CHƠI GẦN ĐÂY</span>
+        <span className="achievements-stat-val-md">{formatDate(lastPlayedDate)}</span>
+      </div>
+      <div className="achievements-divider-vert" aria-hidden="true" />
+      <div className="achievements-recent-game-col">
+        <span className="achievements-stat-label-sm">GAME</span>
+        <span className="achievements-recent-game-name" title={lastPlayedGameName}>
+          {lastPlayedGameName}
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+function HighlightGameCard({ label, game }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-highlight-card">
+      <div className="achievements-highlight-info">
+        <span className="achievements-stat-label-sm">{label}</span>
+        <span className="achievements-highlight-name" title={game?.name || 'Chưa có'}>
+          {game?.name || 'Chưa có'}
+        </span>
+      </div>
+      <GameThumb src={game?.thumbnail_url} alt={game?.name} size={48} />
+    </motion.div>
+  )
+}
+
+function LeastRecentGroupCard({ game }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-group-card">
+      <div className="achievements-group-header">
+        <span className="achievements-stat-label-sm">GAME LÂU RỒI CHƯA CHƠI</span>
+      </div>
+      <div className="achievements-group-list">
+        {game ? (
+          <div className="achievements-list-item">
+            <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />
+            <div className="achievements-list-item-info">
+              <span className="achievements-list-item-title" title={game.name}>
+                {game.name}
+              </span>
+              <span className="achievements-list-item-sub">
+                Lần cuối chơi hồi {formatDate(game.last_played_at)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <span className="achievements-empty-inline">Chưa có dữ liệu</span>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+function TopRecordsGroupCard({ topRecordGames }) {
+  return (
+    <motion.div variants={cardItemVariants} className="achievements-group-card">
+      <div className="achievements-group-header">
+        <span className="achievements-stat-label-sm">NHỮNG GAME BẠN CÓ ĐIỂM CAO KỶ LỤC</span>
+      </div>
+      <div className="achievements-group-list">
+        {topRecordGames.length > 0 ? (
+          topRecordGames.map((game, idx) => (
+            <div className="achievements-list-item" key={game.board_game_id || idx}>
+              <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />
+              <div className="achievements-list-item-info">
+                <span className="achievements-list-item-title" title={game.name}>
+                  {game.name}
+                </span>
+                <span className="achievements-list-item-sub">
+                  {game.best_score} điểm
+                </span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <span className="achievements-empty-inline">Chưa có dữ liệu điểm kỷ lục</span>
+        )}
+      </div>
+    </motion.div>
   )
 }
 
@@ -181,180 +343,46 @@ export function AchievementsShell() {
               {isInitializing ? (
                 <AchievementsSkeleton />
               ) : (
-                <>
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {/* 2. User Profile Banner Card */}
-                  <div className="achievements-user-card">
-                    <div className="achievements-user-profile">
-                      <div className="achievements-user-avatar-wrap">
-                        <Image
-                          src={avatarUrl}
-                          alt={userName}
-                          width={40}
-                          height={40}
-                          className="achievements-user-avatar"
-                          unoptimized
-                        />
-                      </div>
-                      <div className="achievements-user-name" title={userName}>
-                        {userName}
-                      </div>
-                    </div>
-                    <div className="achievements-divider-vert" aria-hidden="true" />
-                    <div className="achievements-user-total">
-                      <span className="achievements-stat-label-sm">TỔNG VÁN CHƠI</span>
-                      <span className="achievements-stat-val-md">{totalGamesPlayed}</span>
-                    </div>
-                  </div>
+                  <UserProfileCard
+                    userName={userName}
+                    avatarUrl={avatarUrl}
+                    totalGamesPlayed={totalGamesPlayed}
+                  />
 
-              {/* 3. 2x2 Metric Grid Cards */}
-              <div className="achievements-metric-grid">
-                {/* Số game đã chơi */}
-                <div className="achievements-metric-card">
-                  <div className="achievements-metric-info">
-                    <span className="achievements-stat-label-sm">SỐ GAME ĐÃ CHƠI</span>
-                    <span className="achievements-stat-val-md">{totalBoardGamesPlayed}</span>
-                  </div>
-                  <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/layer.png" size={40} color="var(--color-brand-600)" />
-                  </div>
-                </div>
+                  {/* 3. 2x2 Metric Grid Cards */}
+                  <MetricGrid
+                    totalBoardGamesPlayed={totalBoardGamesPlayed}
+                    winRate={winRate}
+                    totalWins={totalWins}
+                    totalLastPlaces={totalLastPlaces}
+                  />
 
-                {/* Tỉ lệ thắng */}
-                <div className="achievements-metric-card">
-                  <div className="achievements-metric-info">
-                    <span className="achievements-stat-label-sm">TỈ LỆ THẮNG</span>
-                    <span className="achievements-stat-val-md">{winRate}%</span>
-                  </div>
-                  <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/rate.png" size={40} color="var(--color-brand-600)" />
-                  </div>
-                </div>
+                  {/* 4. Recent Play Card */}
+                  <RecentPlayCard
+                    lastPlayedDate={lastPlayedDate}
+                    lastPlayedGameName={lastPlayedGameName}
+                  />
 
-                {/* Số ván thắng */}
-                <div className="achievements-metric-card">
-                  <div className="achievements-metric-info">
-                    <span className="achievements-stat-label-sm">SỐ VÁN THẮNG</span>
-                    <span className="achievements-stat-val-md">{totalWins}</span>
-                  </div>
-                  <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/cup.png" size={40} color="var(--color-brand-600)" />
-                  </div>
-                </div>
+                  {/* 5. Highlight Game Cards */}
+                  <HighlightGameCard label="GAME CHƠI NHIỀU NHẤT" game={mostPlayedGame} />
+                  <HighlightGameCard label="GAME CHƠI GIỎI NHẤT" game={mostWonGame} />
+                  <HighlightGameCard label="GAME CHƠI GÀ NHẤT" game={mostLostGame} />
 
-                {/* Số ván chót */}
-                <div className="achievements-metric-card">
-                  <div className="achievements-metric-info">
-                    <span className="achievements-stat-label-sm">SỐ VÁN CHÓT</span>
-                    <span className="achievements-stat-val-md">{totalLastPlaces}</span>
-                  </div>
-                  <div className="achievements-metric-icon" aria-hidden="true">
-                    <Icon src="/dislike.png" size={40} color="var(--color-brand-600)" />
-                  </div>
-                </div>
-              </div>
+                  {/* 6. Game lâu rồi chưa chơi */}
+                  <LeastRecentGroupCard game={leastRecentlyPlayedGame} />
 
-              {/* 4. Recent Play Card */}
-              <div className="achievements-recent-card">
-                <div className="achievements-recent-date-col">
-                  <span className="achievements-stat-label-sm">LẦN CHƠI GẦN ĐÂY</span>
-                  <span className="achievements-stat-val-md">{formatDate(lastPlayedDate)}</span>
-                </div>
-                <div className="achievements-divider-vert" aria-hidden="true" />
-                <div className="achievements-recent-game-col">
-                  <span className="achievements-stat-label-sm">GAME</span>
-                  <span className="achievements-recent-game-name" title={lastPlayedGameName}>
-                    {lastPlayedGameName}
-                  </span>
-                </div>
-              </div>
-
-              {/* 5. Highlight Game Cards */}
-              {/* Game chơi nhiều nhất */}
-              <div className="achievements-highlight-card">
-                <div className="achievements-highlight-info">
-                  <span className="achievements-stat-label-sm">GAME CHƠI NHIỀU NHẤT</span>
-                  <span className="achievements-highlight-name" title={mostPlayedGame?.name || 'Chưa có'}>
-                    {mostPlayedGame?.name || 'Chưa có'}
-                  </span>
-                </div>
-                <GameThumb src={mostPlayedGame?.thumbnail_url} alt={mostPlayedGame?.name} size={48} />
-              </div>
-
-              {/* Game chơi giỏi nhất */}
-              <div className="achievements-highlight-card">
-                <div className="achievements-highlight-info">
-                  <span className="achievements-stat-label-sm">GAME CHƠI GIỎI NHẤT</span>
-                  <span className="achievements-highlight-name" title={mostWonGame?.name || 'Chưa có'}>
-                    {mostWonGame?.name || 'Chưa có'}
-                  </span>
-                </div>
-                <GameThumb src={mostWonGame?.thumbnail_url} alt={mostWonGame?.name} size={48} />
-              </div>
-
-              {/* Game chơi gà nhất */}
-              <div className="achievements-highlight-card">
-                <div className="achievements-highlight-info">
-                  <span className="achievements-stat-label-sm">GAME CHƠI GÀ NHẤT</span>
-                  <span className="achievements-highlight-name" title={mostLostGame?.name || 'Chưa có'}>
-                    {mostLostGame?.name || 'Chưa có'}
-                  </span>
-                </div>
-                <GameThumb src={mostLostGame?.thumbnail_url} alt={mostLostGame?.name} size={48} />
-              </div>
-
-              {/* 6. Game lâu rồi chưa chơi */}
-              <div className="achievements-group-card">
-                <div className="achievements-group-header">
-                  <span className="achievements-stat-label-sm">GAME LÂU RỒI CHƯA CHƠI</span>
-                </div>
-                <div className="achievements-group-list">
-                  {leastRecentlyPlayedGame ? (
-                    <div className="achievements-list-item">
-                      <GameThumb src={leastRecentlyPlayedGame.thumbnail_url} alt={leastRecentlyPlayedGame.name} size={48} />
-                      <div className="achievements-list-item-info">
-                        <span className="achievements-list-item-title" title={leastRecentlyPlayedGame.name}>
-                          {leastRecentlyPlayedGame.name}
-                        </span>
-                        <span className="achievements-list-item-sub">
-                          Lần cuối chơi hồi {formatDate(leastRecentlyPlayedGame.last_played_at)}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="achievements-empty-inline">Chưa có dữ liệu</span>
-                  )}
-                </div>
-              </div>
-
-              {/* 7. Danh sách game có điểm cao kỷ lục */}
-              <div className="achievements-group-card">
-                <div className="achievements-group-header">
-                  <span className="achievements-stat-label-sm">NHỮNG GAME BẠN CÓ ĐIỂM CAO KỶ LỤC</span>
-                </div>
-                <div className="achievements-group-list">
-                  {topRecordGames.length > 0 ? (
-                    topRecordGames.map((game, idx) => (
-                      <div className="achievements-list-item" key={game.board_game_id || idx}>
-                        <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />
-                        <div className="achievements-list-item-info">
-                          <span className="achievements-list-item-title" title={game.name}>
-                            {game.name}
-                          </span>
-                          <span className="achievements-list-item-sub">
-                            {game.best_score} điểm
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="achievements-empty-inline">Chưa có dữ liệu điểm kỷ lục</span>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </PullToRefresh>
+                  {/* 7. Danh sách game có điểm cao kỷ lục */}
+                  <TopRecordsGroupCard topRecordGames={topRecordGames} />
+                </motion.div>
+              )}
+            </div>
+          </PullToRefresh>
         </div>
         <BottomNav />
       </div>
