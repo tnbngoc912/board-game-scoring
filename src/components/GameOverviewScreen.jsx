@@ -24,8 +24,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const { match } = usePermissions()
   const { canCreate } = match
 
-  const [overview, setLocalOverview] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const initialCached = hydrateOverviewIfNeeded(boardGameId)
+  const [overview, setLocalOverview] = useState(initialCached)
+  const [isLoading, setIsLoading] = useState(!initialCached)
 
   useEffect(() => {
     let isMounted = true
@@ -38,10 +39,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         applyBoardGameOverview(cached)
         setLocalOverview(cached)
         setIsLoading(false)
-        return
+      } else {
+        setIsLoading(true)
       }
 
-      setIsLoading(true)
       try {
         const data = await getBoardGameOverview(boardGameId)
         if (!isMounted) return
@@ -50,7 +51,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         setLocalOverview(data)
       } catch (error) {
         if (!isMounted) return
-        toast(error?.message || 'Không tải được thông tin game')
+        if (!cached) {
+          toast(error?.message || 'Không tải được thông tin game')
+        }
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -62,7 +65,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     }
   }, [boardGameId, toast, applyBoardGameOverview, hydrateOverviewIfNeeded, setOverview])
 
-  if (isLoading) {
+  if (isLoading && !overview) {
     return (
       <div className="game-overview-screen loading-shell" aria-busy="true">
         <LoadingOverlay label="Đang tải..." />
@@ -107,7 +110,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <p className="overview-game-meta">
               {overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút
             </p>
-            <p className="overview-game-genre">{overview.category.name || 'Board game'}</p>
+            <p className="overview-game-genre">{overview.category?.name || overview.category || 'Board game'}</p>
           </div>
         </section>
 
