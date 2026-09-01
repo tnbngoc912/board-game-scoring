@@ -47,10 +47,66 @@ function GameThumb({ src, alt, size = 48, radius = 6 }) {
   )
 }
 
+function AchievementsSkeleton() {
+  return (
+    <>
+      {/* 2. User Profile Banner Skeleton */}
+      <div className="achievements-user-card" aria-hidden="true">
+        <div className="achievements-user-profile">
+          <div className="achievements-skeleton-box" style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0 }} />
+          <div className="achievements-skeleton-box" style={{ width: 90, height: 18, borderRadius: 4 }} />
+        </div>
+        <div className="achievements-divider-vert" />
+        <div className="achievements-user-total">
+          <div className="achievements-skeleton-box" style={{ width: 70, height: 12, borderRadius: 4, marginBottom: 4 }} />
+          <div className="achievements-skeleton-box" style={{ width: 50, height: 18, borderRadius: 4 }} />
+        </div>
+      </div>
+
+      {/* 3. 2x2 Metric Grid Skeleton */}
+      <div className="achievements-metric-grid" aria-hidden="true">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="achievements-metric-card">
+            <div className="achievements-metric-info">
+              <div className="achievements-skeleton-box" style={{ width: 65, height: 12, borderRadius: 4, marginBottom: 4 }} />
+              <div className="achievements-skeleton-box" style={{ width: 45, height: 18, borderRadius: 4 }} />
+            </div>
+            <div className="achievements-skeleton-box" style={{ width: 36, height: 36, borderRadius: 8, flexShrink: 0 }} />
+          </div>
+        ))}
+      </div>
+
+      {/* 4. Recent Play Skeleton */}
+      <div className="achievements-recent-card" aria-hidden="true">
+        <div className="achievements-recent-date-col">
+          <div className="achievements-skeleton-box" style={{ width: 80, height: 12, borderRadius: 4, marginBottom: 4 }} />
+          <div className="achievements-skeleton-box" style={{ width: 70, height: 18, borderRadius: 4 }} />
+        </div>
+        <div className="achievements-divider-vert" />
+        <div className="achievements-recent-game-col">
+          <div className="achievements-skeleton-box" style={{ width: 40, height: 12, borderRadius: 4, marginBottom: 4 }} />
+          <div className="achievements-skeleton-box" style={{ width: '80%', height: 18, borderRadius: 4 }} />
+        </div>
+      </div>
+
+      {/* 5. Highlight Cards Skeleton */}
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="achievements-highlight-card" aria-hidden="true">
+          <div className="achievements-highlight-info">
+            <div className="achievements-skeleton-box" style={{ width: 110, height: 12, borderRadius: 4, marginBottom: 4 }} />
+            <div className="achievements-skeleton-box" style={{ width: '70%', height: 18, borderRadius: 4 }} />
+          </div>
+          <div className="achievements-skeleton-box" style={{ width: 48, height: 48, borderRadius: 6, flexShrink: 0 }} />
+        </div>
+      ))}
+    </>
+  )
+}
+
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const { userGameStats, fetchUserGameStats, userGameStatsFetchedAt } = useAppDataStore()
-  const [isInitializing, setIsInitializing] = useState(userGameStatsFetchedAt === 0)
+  const [isInitializing, setIsInitializing] = useState(userGameStatsFetchedAt === 0 && !user?.stats)
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
@@ -149,29 +205,33 @@ export function AchievementsShell() {
                 />
               </div>
 
-              {/* 2. User Profile Banner Card */}
-              <div className="achievements-user-card">
-                <div className="achievements-user-profile">
-                  <div className="achievements-user-avatar-wrap">
-                    <Image
-                      src={avatarUrl}
-                      alt={userName}
-                      width={40}
-                      height={40}
-                      className="achievements-user-avatar"
-                      unoptimized
-                    />
+              {isInitializing ? (
+                <AchievementsSkeleton />
+              ) : (
+                <>
+                  {/* 2. User Profile Banner Card */}
+                  <div className="achievements-user-card">
+                    <div className="achievements-user-profile">
+                      <div className="achievements-user-avatar-wrap">
+                        <Image
+                          src={avatarUrl}
+                          alt={userName}
+                          width={40}
+                          height={40}
+                          className="achievements-user-avatar"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="achievements-user-name" title={userName}>
+                        {userName}
+                      </div>
+                    </div>
+                    <div className="achievements-divider-vert" aria-hidden="true" />
+                    <div className="achievements-user-total">
+                      <span className="achievements-stat-label-sm">TỔNG VÁN CHƠI</span>
+                      <span className="achievements-stat-val-md">{totalGamesPlayed}</span>
+                    </div>
                   </div>
-                  <div className="achievements-user-name" title={userName}>
-                    {userName}
-                  </div>
-                </div>
-                <div className="achievements-divider-vert" aria-hidden="true" />
-                <div className="achievements-user-total">
-                  <span className="achievements-stat-label-sm">TỔNG VÁN CHƠI</span>
-                  <span className="achievements-stat-val-md">{totalGamesPlayed}</span>
-                </div>
-              </div>
 
               {/* 3. 2x2 Metric Grid Cards */}
               <div className="achievements-metric-grid">
@@ -318,8 +378,10 @@ export function AchievementsShell() {
                   )}
                 </div>
               </div>
-            </div>
-          </PullToRefresh>
+            </>
+          )}
+        </div>
+      </PullToRefresh>
         </div>
         <BottomNav />
       </div>
