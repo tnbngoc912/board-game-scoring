@@ -75,7 +75,11 @@ async function request(path, options = {}) {
     throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
 
-  return payload?.data || payload
+  if (options.raw) {
+    return payload
+  }
+
+  return payload?.data !== undefined ? payload.data : payload
 }
 
 async function requestFormData(path, formData, options = {}) {
@@ -181,9 +185,33 @@ export async function getUsers(params = {}) {
   return unwrapList(payload).map(normalizeUser)
 }
 
-export async function getBoardGames() {
-  const payload = await request('/board-games')
-  return unwrapList(payload).map(normalizeBoardGame)
+export async function getBoardGames(params = {}) {
+  const searchParams = new URLSearchParams()
+  if (params.page !== undefined) searchParams.set('page', String(params.page))
+  if (params.limit !== undefined) searchParams.set('limit', String(params.limit))
+  if (params.search) searchParams.set('search', params.search)
+  if (params.playerCount) searchParams.set('playerCount', String(params.playerCount))
+  if (params.categoryIds) searchParams.set('categoryIds', String(params.categoryIds))
+  if (params.sortBy) searchParams.set('sortBy', params.sortBy)
+
+  const query = searchParams.toString()
+  const payload = await request(`/board-games${query ? `?${query}` : ''}`, { raw: true })
+  const items = unwrapList(payload).map(normalizeBoardGame)
+
+  const page = Number(payload?.page || params.page || 1)
+  const limit = Number(payload?.limit || params.limit || items.length)
+  const totalResults = Number(payload?.totalResults ?? items.length)
+  const totalPages = Number(payload?.totalPages ?? (items.length > 0 ? 1 : 0))
+
+  return {
+    items,
+    results: items,
+    page,
+    limit,
+    totalResults,
+    totalPages,
+    hasMore: page < totalPages,
+  }
 }
 
 export async function getBoardGameOverview(boardGameId, { leaderboardLimit } = {}) {
@@ -199,14 +227,29 @@ export async function getMatches(params = {}) {
 
   if (params.boardGameId) searchParams.set('board_game_id', params.boardGameId)
   if (params.search) searchParams.set('search', params.search)
+  if (params.page !== undefined) searchParams.set('page', String(params.page))
+  if (params.limit !== undefined) searchParams.set('limit', String(params.limit))
+  if (params.userId) searchParams.set('user_id', params.userId)
+  if (params.startDate) searchParams.set('start_date', params.startDate)
+  if (params.endDate) searchParams.set('end_date', params.endDate)
 
   const query = searchParams.toString()
-  const payload = await request(`/matches${query ? `?${query}` : ''}`)
-  return unwrapList(payload).map(normalizeMatch)
+  const payload = await request(`/matches${query ? `?${query}` : ''}`, { raw: true })
+  const items = unwrapList(payload).map(normalizeMatch)
+
+  return {
+    items,
+    results: items,
+    page: Number(payload?.page || params.page || 1),
+    limit: Number(payload?.limit || params.limit || items.length),
+    totalResults: Number(payload?.totalResults ?? items.length),
+    totalPages: Number(payload?.totalPages ?? (items.length > 0 ? 1 : 0)),
+  }
 }
 
 export async function ensureBoardGame(gameName, categories) {
-  const boardGames = await getBoardGames()
+  const res = await getBoardGames()
+  const boardGames = res?.items || (Array.isArray(res) ? res : [])
   const existing = boardGames.find((game) => game.name === gameName)
 
   if (existing) {
