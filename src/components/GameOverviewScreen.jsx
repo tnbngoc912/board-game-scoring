@@ -32,7 +32,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     const freshCached = hydrateOverviewIfNeeded(boardGameId)
     setLocalOverview(freshCached)
     setIsLoading(!freshCached)
-  }, [boardGameId, hydrateOverviewIfNeeded])
+    if (freshCached) {
+      applyBoardGameOverview(freshCached)
+    }
+  }, [boardGameId, hydrateOverviewIfNeeded, applyBoardGameOverview])
 
   useEffect(() => {
     let isMounted = true
@@ -41,14 +44,16 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
       if (!boardGameId) return
 
       const cached = hydrateOverviewIfNeeded(boardGameId)
+      // Nếu đã có sẵn dữ liệu từ trang chủ thì dùng luôn 100%, KHÔNG gọi API nữa
       if (cached) {
         applyBoardGameOverview(cached)
         setLocalOverview(cached)
         setIsLoading(false)
-      } else {
-        setIsLoading(true)
+        return
       }
 
+      // Chỉ gọi API khi chưa có dữ liệu trong cache (do F5 hoặc mở trực tiếp link)
+      setIsLoading(true)
       try {
         const data = await getBoardGameOverview(boardGameId)
         if (!isMounted) return
@@ -57,9 +62,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         setLocalOverview(data)
       } catch (error) {
         if (!isMounted) return
-        if (!cached) {
-          toast(error?.message || 'Không tải được thông tin game')
-        }
+        toast(error?.message || 'Không tải được thông tin game')
       } finally {
         if (isMounted) setIsLoading(false)
       }
