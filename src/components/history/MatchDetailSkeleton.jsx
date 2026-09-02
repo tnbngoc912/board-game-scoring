@@ -9,90 +9,91 @@ export function MatchDetailSkeleton({ onBack }) {
         onBack={onBack}
       />
 
-      <div className="detail-content match-detail-skeleton-content">
+      <div className="detail-content">
         {/* 1. Summary Strip Skeleton */}
-        <section className="match-summary-strip match-summary-strip-skeleton">
+        <section className="match-summary-strip">
           <div className="game-card-thumb detail-thumb skeleton-box" />
           <div className="match-summary-skeleton-info">
-            <span className="skeleton-box skeleton-title" />
-            <span className="skeleton-box skeleton-subtitle" />
+            <div className="skeleton-box skeleton-title" />
+            <div className="skeleton-box skeleton-subtitle" />
           </div>
         </section>
 
-        {/* 2. Score Grid Skeleton */}
-        <section className="score-board history-score-board match-score-skeleton-section">
+        {/* 2. Score Grid Skeleton - Cấu trúc 100% khớp với ScoreGrid thật */}
+        <section className="score-board history-score-board">
           <div className="score-grid-wrap score-board-scroll">
             <div
-              className="score-grid score-entry-grid match-grid-skeleton"
+              className="score-grid score-entry-grid"
               style={{
                 gridTemplateColumns: '95px 8px repeat(3, minmax(70px, 1fr)) 8px',
                 minWidth: '320px',
               }}
             >
               {/* Header row */}
-              <div className="score-cell-head score-cell-sticky">
-                <span className="skeleton-box skeleton-text-short" />
-              </div>
-              <div className="score-col-spacer" />
+              <div className="score-grid-header score-grid-sticky score-grid-sticky-header" />
+              <div className="grid-spacer" />
               {[1, 2, 3].map((playerIndex) => (
-                <div key={`head-${playerIndex}`} className="score-cell-head score-cell-head-player">
-                  <span className="skeleton-box skeleton-player-name" />
+                <div key={`head-${playerIndex}`} className="score-grid-header player-header">
+                  <div className="skeleton-box skeleton-player-name" />
                 </div>
               ))}
-              <div className="score-col-spacer" />
+              <div className="grid-spacer" />
 
               {/* Score rows */}
               {[1, 2, 3, 4].map((rowIndex) => (
                 <React.Fragment key={`row-${rowIndex}`}>
-                  <div className="score-cell-label score-cell-sticky">
-                    <span className="skeleton-box skeleton-category-name" />
+                  <div className="score-grid-label score-grid-sticky">
+                    <div className="skeleton-box skeleton-category-name" />
                   </div>
-                  <div className="score-col-spacer" />
+                  <div className="grid-spacer" />
                   {[1, 2, 3].map((playerIndex) => (
-                    <div key={`cell-${rowIndex}-${playerIndex}`} className="score-cell-score">
-                      <span className="skeleton-box skeleton-cell-value" />
+                    <div key={`cell-${rowIndex}-${playerIndex}`} className="score-grid-cell">
+                      <div className="readonly-score-box">
+                        <div className="skeleton-box skeleton-score-val" />
+                      </div>
                     </div>
                   ))}
-                  <div className="score-col-spacer" />
+                  <div className="grid-spacer" />
                 </React.Fragment>
               ))}
 
               {/* Total row */}
-              <div className="score-cell-total-label score-cell-sticky">
-                <span className="skeleton-box skeleton-total-label" />
-              </div>
-              <div className="score-col-spacer score-col-spacer--bordered" />
+              <div className="score-grid-total score-grid-sticky">Tổng</div>
+              <div className="grid-spacer border" />
               {[1, 2, 3].map((playerIndex) => (
-                <div key={`total-${playerIndex}`} className="score-cell-winner">
-                  <span className="skeleton-box skeleton-total-value" />
+                <div key={`total-${playerIndex}`} className="score-grid-winner">
+                  <strong className="winning-total">
+                    <div className="skeleton-box skeleton-total-val" />
+                  </strong>
                 </div>
               ))}
-              <div className="score-col-spacer score-col-spacer--bordered" />
+              <div className="grid-spacer border" />
             </div>
           </div>
         </section>
 
-        {/* 3. Comments Section Skeleton */}
-        <section className="match-comments-section match-comments-skeleton-section" aria-label="Đang tải bình luận">
+        {/* 3. Comments Section Skeleton - Khớp 100% với MatchCommentsSection thật */}
+        <section className="match-comments-section" aria-label="Đang tải bình luận">
           <div className="match-comments-heading">
-            <span className="skeleton-box skeleton-comments-title" />
+            <h2>Bình luận</h2>
+            <div className="skeleton-box skeleton-comments-count" />
           </div>
 
           <div className="match-comments-list">
             {[1, 2].map((itemIndex) => (
-              <div key={`comment-${itemIndex}`} className="match-comment-item match-comment-skeleton-item">
+              <article key={`comment-${itemIndex}`} className="match-comment-item">
                 <div className="match-comment-avatar skeleton-box" />
                 <div className="match-comment-body">
                   <div className="match-comment-details">
                     <div className="match-comment-meta">
-                      <span className="skeleton-box skeleton-comment-user" />
-                      <span className="skeleton-box skeleton-comment-time" />
+                      <div className="skeleton-box skeleton-comment-user" />
+                      <div className="skeleton-box skeleton-comment-time" />
                     </div>
-                    <span className="skeleton-box skeleton-comment-text-1" />
-                    <span className="skeleton-box skeleton-comment-text-2" />
+                    <div className="skeleton-box skeleton-comment-line-1" />
+                    <div className="skeleton-box skeleton-comment-line-2" />
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </section>
