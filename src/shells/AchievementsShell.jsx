@@ -121,8 +121,13 @@ function MetricGrid({ totalBoardGamesPlayed, winRate, totalWins, totalLastPlaces
 }
 
 function RecentPlayCard({ lastPlayedDate, lastPlayedGameName }) {
+  const isShortName = !lastPlayedGameName || lastPlayedGameName.length < 25
+
   return (
-    <motion.div variants={cardItemVariants} className="achievements-recent-card">
+    <motion.div
+      variants={cardItemVariants}
+      className={`achievements-recent-card${isShortName ? ' achievements-recent-card--equal' : ''}`}
+    >
       <div className="achievements-recent-date-col">
         <span className="achievements-stat-label-sm">LẦN CHƠI GẦN ĐÂY</span>
         <span className="achievements-stat-val-md">{formatDate(lastPlayedDate)}</span>
