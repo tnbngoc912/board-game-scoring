@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
+import { MatchDetailSkeleton } from './history/MatchDetailSkeleton'
 import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
@@ -411,11 +412,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     if (String(selectedMatch?.id || '') === routeDetailMatchId) return
 
-    const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
-    if (!entry) return
+    const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId) || { id: routeDetailMatchId }
 
     openMatchDetail(entry, { syncRoute: false })
-  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
+  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails, openMatchDetail])
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
@@ -571,9 +571,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
-      <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
-        <LoadingOverlay label="Đang tải..." />
-      </div>
+      <MatchDetailSkeleton
+        onBack={() => {
+          setIsDetailMenuOpen(false)
+          router.push('/history')
+        }}
+      />
     )
   }
 
@@ -617,7 +620,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         className="screen score-screen history-detail-screen loading-shell"
         aria-busy={isLoadingMatchDetail || isExportingImage}
       >
-        {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         {isExportingImage ? <LoadingOverlay label="Đang tạo ảnh..." /> : null}
         <Header title="Bảng Điểm"
           onBack={() => {
