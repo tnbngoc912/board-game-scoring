@@ -9,6 +9,7 @@ import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
 import { Icon } from './ui/Icon';
 import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -24,18 +25,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const { match } = usePermissions()
   const { canCreate } = match
 
-  const initialCached = hydrateOverviewIfNeeded(boardGameId)
-  const [overview, setLocalOverview] = useState(initialCached)
-  const [isLoading, setIsLoading] = useState(!initialCached)
-
-  useEffect(() => {
-    const freshCached = hydrateOverviewIfNeeded(boardGameId)
-    setLocalOverview(freshCached)
-    setIsLoading(!freshCached)
-    if (freshCached) {
-      applyBoardGameOverview(freshCached)
-    }
-  }, [boardGameId, hydrateOverviewIfNeeded, applyBoardGameOverview])
+  const [overview, setLocalOverview] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
@@ -43,8 +34,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     async function load() {
       if (!boardGameId) return
 
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       const cached = hydrateOverviewIfNeeded(boardGameId)
-      // Nếu đã có sẵn dữ liệu từ trang chủ thì dùng luôn 100%, KHÔNG gọi API nữa
       if (cached) {
         applyBoardGameOverview(cached)
         setLocalOverview(cached)
@@ -52,7 +45,6 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         return
       }
 
-      // Chỉ gọi API khi chưa có dữ liệu trong cache (do F5 hoặc mở trực tiếp link)
       setIsLoading(true)
       try {
         const data = await getBoardGameOverview(boardGameId)
@@ -74,10 +66,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     }
   }, [boardGameId, toast, applyBoardGameOverview, hydrateOverviewIfNeeded, setOverview])
 
-  const isMatchCurrentGame = overview && (overview.id === boardGameId || overview._id === boardGameId)
-  const activeOverview = isMatchCurrentGame ? overview : initialCached
-
-  if (isLoading && !activeOverview) {
+  if (isLoading) {
     return (
       <div className="game-overview-screen loading-shell" aria-busy="true">
         <LoadingOverlay label="Đang tải..." />
@@ -85,7 +74,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  if (!activeOverview) {
+  if (!overview) {
     return (
       <div className="screen score-screen loading-shell">
         <div className="screen-inner">
@@ -95,7 +84,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const leaders = (activeOverview.leaderboard || []).slice(0, 3)
+  const leaders = overview.leaderboard || []
 
   return (
     <div className="game-overview-screen">
@@ -122,7 +111,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <p className="overview-game-meta">
               {overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút
             </p>
-            <p className="overview-game-genre">{overview.category?.name || overview.category || 'Board game'}</p>
+            <p className="overview-game-genre">{overview.category.name || 'Board game'}</p>
           </div>
         </section>
 

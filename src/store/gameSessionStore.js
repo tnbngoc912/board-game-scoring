@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { normalizeBoardGameOverview } from './mappers/boardGameMapper'
 
 export const useGameSessionStore = create((set, get) => ({
   flow: 'overview',
@@ -8,17 +7,10 @@ export const useGameSessionStore = create((set, get) => ({
 
   startGameFlow(boardGame) {
     const boardGameId = boardGame?.id || boardGame?._id || ''
-    if (!boardGameId) return
-
-    const initialOverview = normalizeBoardGameOverview(boardGame, boardGameId)
-    set((state) => ({
+    set({
       boardGameId,
       flow: 'overview',
-      overviewByGameId: {
-        ...state.overviewByGameId,
-        [boardGameId]: state.overviewByGameId[boardGameId] || initialOverview,
-      },
-    }))
+    })
   },
 
   goToOverview() {

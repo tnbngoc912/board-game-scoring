@@ -150,68 +150,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [selectedPlayerName, setSelectedPlayerName] = useState('')
   const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const routeDetailMatchId = useMemo(() => {
-    const match = pathname.match(/^\/history\/(.+)$/)
-    return match?.[1] || ''
-  }, [pathname])
-
-  const {
-    history,
-    historyHasMore,
-    boardGames,
-    allBoardGames,
-    users,
-    activeMatchDetail,
-    cachedMatchDetails,
-    setActiveMatchDetail,
-    isLoadingHistory,
-    isLoadingMoreHistory,
-    fetchHistory,
-    fetchMoreHistory,
-    fetchBoardGames,
-    fetchAllBoardGames,
-    fetchUsers,
-    removeHistoryMatch,
-  } = useAppDataStore(
-    useShallow((state) => ({
-      history: state.history,
-      historyHasMore: state.historyHasMore,
-      boardGames: state.boardGames,
-      allBoardGames: state.allBoardGames,
-      users: state.users,
-      activeMatchDetail: state.activeMatchDetail,
-      cachedMatchDetails: state.cachedMatchDetails,
-      setActiveMatchDetail: state.setActiveMatchDetail,
-      isLoadingHistory: state.isLoadingHistory,
-      isLoadingMoreHistory: state.isLoadingMoreHistory,
-      fetchHistory: state.fetchHistory,
-      fetchMoreHistory: state.fetchMoreHistory,
-      fetchBoardGames: state.fetchBoardGames,
-      fetchAllBoardGames: state.fetchAllBoardGames,
-      fetchUsers: state.fetchUsers,
-      removeHistoryMatch: state.removeHistoryMatch,
-    }))
-  )
-
-  const [selectedMatch, setSelectedMatch] = useState(() => {
-    if (!routeDetailMatchId) return null
-    const { activeMatchDetail, cachedMatchDetails, history, boardGames, allBoardGames } = useAppDataStore.getState()
-    if (activeMatchDetail && String(activeMatchDetail.id) === routeDetailMatchId) {
-      return activeMatchDetail
-    }
-    if (cachedMatchDetails?.[routeDetailMatchId]) {
-      return cachedMatchDetails[routeDetailMatchId]
-    }
-    const fromHistory = history.find((item) => String(item.id) === routeDetailMatchId)
-    if (fromHistory) {
-      return attachMatchThumbnail(fromHistory, allBoardGames?.length ? allBoardGames : boardGames)
-    }
-    return null
-  })
-
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState(null)
   const [matchToDelete, setMatchToDelete] = useState(null)
   const [isDetailMenuOpen, setIsDetailMenuOpen] = useState(false)
+  const [isLoadingMatchDetail, setIsLoadingMatchDetail] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isExportingImage, setIsExportingImage] = useState(false)
   const [receiptDataUrls, setReceiptDataUrls] = useState([])
@@ -223,9 +166,18 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const resetBoard = useGameStore((state) => state.resetBoard)
 
   useEffect(() => {
-    setReceiptDataUrls([])
-  }, [selectedMatch?.id])
-
+    if (!selectedMatch) {
+      setReceiptDataUrls([])
+      return
+    }
+    const rawImages = (selectedMatch.imageAttachments || []).filter((img) => img?.url).map((img) => img.url)
+    if (rawImages.length > 0) {
+      Promise.all(rawImages.map((u) => urlToDataUrl(u))).then(setReceiptDataUrls)
+    } else {
+      setReceiptDataUrls([])
+    }
+  }, [selectedMatch])
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const standalone = window.navigator.standalone || 
@@ -239,6 +191,38 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const { match } = usePermissions()
   const { canEdit, canDelete } = match
 
+  const {
+    history,
+    historyHasMore,
+    boardGames,
+    users,
+    isLoadingHistory,
+    isLoadingMoreHistory,
+    fetchHistory,
+    fetchMoreHistory,
+    fetchBoardGames,
+    fetchUsers,
+    removeHistoryMatch,
+  } = useAppDataStore(
+    useShallow((state) => ({
+      history: state.history,
+      historyHasMore: state.historyHasMore,
+      boardGames: state.boardGames,
+      users: state.users,
+      isLoadingHistory: state.isLoadingHistory,
+      isLoadingMoreHistory: state.isLoadingMoreHistory,
+      fetchHistory: state.fetchHistory,
+      fetchMoreHistory: state.fetchMoreHistory,
+      fetchBoardGames: state.fetchBoardGames,
+      fetchUsers: state.fetchUsers,
+      removeHistoryMatch: state.removeHistoryMatch,
+    }))
+  )
+  const routeDetailMatchId = useMemo(() => {
+    const match = pathname.match(/^\/history\/(.+)$/)
+    return match?.[1] || ''
+  }, [pathname])
+
   useEffect(() => {
     if (!selectedMatch) return
 
@@ -251,36 +235,29 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   useEffect(() => {
     async function loadHistory() {
+      // Gọi làm mới profile ngầm
+      useAuthStore.getState().refreshProfile().catch(() => {})
+
       try {
-        await Promise.all([
-          fetchHistory(),
-          fetchAllBoardGames(),
-          fetchBoardGames(),
-          fetchUsers(),
-        ])
+        await Promise.all([fetchHistory(), fetchBoardGames(), fetchUsers()])
       } catch {
         toast('Không tải được lịch sử ván chơi')
       }
     }
 
     loadHistory()
-  }, [fetchAllBoardGames, fetchBoardGames, fetchHistory, fetchUsers, toast])
-
-  const gamesLookup = useMemo(
-    () => (allBoardGames.length ? allBoardGames : boardGames),
-    [allBoardGames, boardGames]
-  )
+  }, [fetchBoardGames, fetchHistory, fetchUsers, toast])
 
   const historyWithThumbnails = useMemo(
     () => history
-      .map((entry) => attachMatchThumbnail(entry, gamesLookup))
+      .map((entry) => attachMatchThumbnail(entry, boardGames))
       .sort((a, b) => getSortableTime(b) - getSortableTime(a)),
-    [gamesLookup, history]
+    [boardGames, history]
   )
 
   const gameOptions = useMemo(
-    () => [...new Set(gamesLookup.map((entry) => entry.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
-    [gamesLookup]
+    () => [...new Set(historyWithThumbnails.map((entry) => entry.gameName).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')),
+    [historyWithThumbnails]
   )
 
   const playerOptions = useMemo(
@@ -288,49 +265,30 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     [users]
   )
 
-  const isInitialHistoryMount = useRef(true)
+  const filteredHistory = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase()
 
-  useEffect(() => {
-    if (isInitialHistoryMount.current) {
-      isInitialHistoryMount.current = false
-      return
-    }
+    return historyWithThumbnails.filter((entry) => {
+      const matchesGame = !selectedGameName || entry.gameName === selectedGameName
+      const matchesSearch = !keyword || (entry.description || '').toLowerCase().includes(keyword)
+      const matchesPlayer = !selectedPlayerName || (entry.players || []).some(
+        (p) => p.name === selectedPlayerName
+      )
+      const matchesMyMatches = !myMatchesOnly || (currentUser && (entry.players || []).some(
+        (p) => p.name === currentUser.name || String(p.id) === String(currentUser.id)
+      ))
+      return matchesGame && matchesSearch && matchesPlayer && matchesMyMatches
+    })
+  }, [historyWithThumbnails, searchTerm, selectedGameName, selectedPlayerName, myMatchesOnly, currentUser])
 
-    const boardGame = gamesLookup.find((g) => g.name === selectedGameName)
-    const boardGameId = boardGame?.id || boardGame?._id || undefined
-
-    let targetUserId = undefined
-    if (myMatchesOnly && currentUser?.id) {
-      targetUserId = currentUser.id
-    } else if (selectedPlayerName) {
-      const user = users.find((u) => u.name === selectedPlayerName)
-      targetUserId = user?.id || user?._id || undefined
-    }
-
-    const timer = setTimeout(() => {
-      fetchHistory({
-        force: true,
-        page: 1,
-        limit: 10,
-        boardGameId,
-        userId: targetUserId,
-        search: searchTerm.trim() || undefined,
-      }).catch(() => {
-        toast('Không tải được lịch sử ván chơi')
-      })
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [selectedGameName, selectedPlayerName, myMatchesOnly, searchTerm, gamesLookup, users, currentUser, fetchHistory, toast])
-
-  const filteredHistory = historyWithThumbnails
   const hasFilters = Boolean(selectedGameName || selectedPlayerName || myMatchesOnly || searchTerm.trim())
 
   // Chỉ cho phép load thêm khi còn data, không đang loading và danh sách hiển thị >= 10 ván
   const canLoadMore = Boolean(
     historyHasMore &&
     !isLoadingHistory &&
-    filteredHistory.length >= 10
+    filteredHistory.length >= 10 &&
+    (!hasFilters || filteredHistory.length >= 10)
   )
 
   const sentinelRef = useRef(null)
@@ -393,45 +351,29 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [onNewGame, resetBoard, toast])
 
   const openMatchDetail = useCallback(async (entry, options = {}) => {
-    if (!entry) return
     const { syncRoute = true } = options
-
-    const currentBoardGames = useAppDataStore.getState().boardGames
-    const initialMatch = attachMatchThumbnail(entry, currentBoardGames)
-
-    // Lưu vào store TRƯỚC KHI chuyển route để trang mới mount đọc được ngay lập tức
-    setActiveMatchDetail(initialMatch)
-    setSelectedMatch(initialMatch)
+    if (syncRoute) router.push(`/history/${entry.id}`)
     setIsDetailMenuOpen(false)
+    setIsLoadingMatchDetail(true)
 
-    if (syncRoute) {
-      router.push(`/history/${entry.id}`)
-    }
-
-    // Revalidate ngầm dưới nền: lấy toàn bộ chi tiết điểm số / categories mới nhất
     try {
       const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
-      const currentGames = cachedBoardGames?.length ? cachedBoardGames : currentBoardGames
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
       const normalizedMatch = detail.scoreRows?.length
         ? matchWithRows
-        : alignScoreRowsWithBoardGame(matchWithRows, currentGames)
-      const finalMatch = attachMatchThumbnail(normalizedMatch, currentGames)
-      setActiveMatchDetail(finalMatch)
-      setSelectedMatch(finalMatch)
-    } catch (err) {
-      console.warn('Cannot sync match detail:', err)
-      if (!entry.players?.length) {
-        toast('Không tải được chi tiết bảng điểm')
-      }
+        : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
+      setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
+    } catch {
+      toast('Khong tai duoc chi tiet bang diem')
+    } finally {
+      setIsLoadingMatchDetail(false)
     }
-  }, [fetchBoardGames, router, setActiveMatchDetail, toast])
+  }, [fetchBoardGames, router, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
       if (selectedMatch) {
         setSelectedMatch(null)
-        setActiveMatchDetail(null)
         setIsDetailMenuOpen(false)
       }
       return
@@ -439,53 +381,18 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
     if (String(selectedMatch?.id || '') === routeDetailMatchId) return
 
-    const { activeMatchDetail, cachedMatchDetails, history, boardGames } = useAppDataStore.getState()
-    if (activeMatchDetail && String(activeMatchDetail.id) === routeDetailMatchId) {
-      setSelectedMatch(activeMatchDetail)
-      return
-    }
-    if (cachedMatchDetails?.[routeDetailMatchId]) {
-      setSelectedMatch(cachedMatchDetails[routeDetailMatchId])
-      return
-    }
+    const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
+    if (!entry) return
 
-    const entry = history.find((item) => String(item.id) === routeDetailMatchId)
-    if (entry) {
-      openMatchDetail(entry, { syncRoute: false })
-      return
-    }
-
-    // Trường hợp mở trực tiếp URL /history/[id] mà dữ liệu chưa có trong history store
-    let isMounted = true
-    Promise.all([getMatch(routeDetailMatchId), fetchBoardGames()])
-      .then(([detail, cachedBoardGames]) => {
-        if (!isMounted) return
-        const currentGames = cachedBoardGames?.length ? cachedBoardGames : boardGames
-        const normalizedMatch = alignScoreRowsWithBoardGame(detail, currentGames)
-        const finalMatch = attachMatchThumbnail(normalizedMatch, currentGames)
-        setActiveMatchDetail(finalMatch)
-        setSelectedMatch(finalMatch)
-      })
-      .catch(() => {
-        if (isMounted) toast('Không tải được chi tiết bảng điểm')
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [routeDetailMatchId, selectedMatch, openMatchDetail, fetchBoardGames, setActiveMatchDetail, toast])
+    openMatchDetail(entry, { syncRoute: false })
+  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
     setSelectedPlayerName('')
     setMyMatchesOnly(false)
     setSearchTerm('')
-    fetchHistory({
-      force: true,
-      page: 1,
-      limit: 10,
-    }).catch(() => {})
-  }, [fetchHistory])
+  }, [])
 
   const confirmDelete = useCallback(async () => {
     if (!matchToDelete) return
@@ -629,26 +536,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   if (routeDetailMatchId && !selectedMatch) {
     return (
-      <div className="screen score-screen history-detail-screen" aria-busy="true">
-        <Header
-          title="Bảng Điểm"
-          onBack={() => {
-            setIsDetailMenuOpen(false)
-            router.push('/history')
-          }}
-        />
-        <div className="detail-content">
-          <section className="match-summary-strip match-summary-skeleton">
-            <div className="game-card-skeleton-thumb" />
-            <div className="match-skeleton-info">
-              <div className="game-card-skeleton-line title" />
-              <div className="game-card-skeleton-line short" />
-            </div>
-          </section>
-          <section className="score-board history-score-board match-grid-skeleton">
-            <div className="match-grid-skeleton-card" />
-          </section>
-        </div>
+      <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
+        <LoadingOverlay label="Đang tải..." />
       </div>
     )
   }
@@ -691,8 +580,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       <div
         ref={detailScreenRef}
         className="screen score-screen history-detail-screen loading-shell"
-        aria-busy={isExportingImage}
+        aria-busy={isLoadingMatchDetail || isExportingImage}
       >
+        {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         {isExportingImage ? <LoadingOverlay label="Đang tạo ảnh..." /> : null}
         <Header title="Bảng Điểm"
           onBack={() => {
@@ -834,11 +724,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
       <PullToRefresh onRefresh={async () => {
         try {
-          await Promise.all([
-            fetchHistory({ force: true }),
-            fetchAllBoardGames({ force: true }),
-            fetchUsers({ force: true }),
-          ])
+          await fetchHistory({ force: true })
         } catch (err) {
           toast('Không thể làm mới lịch sử đấu')
         }
@@ -886,22 +772,22 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               </>
             ) : null}
 
-            {!isLoadingHistory && filteredHistory.length === 0 ? (
-              hasFilters ? (
-                <EmptyState
-                  imageSrc="/not-found.png"
-                  title="Không tìm thấy ván đấu!"
-                  actionText="Xóa bộ lọc"
-                  onAction={clearFilters}
-                />
-              ) : (
-                <EmptyState
-                  imageSrc="/not-found.png"
-                  title="Chưa có ván đấu nào được ghi lại!"
-                  actionText="Tạo ván mới"
-                  onAction={handleNewGame}
-                />
-              )
+            {!isLoadingHistory && historyWithThumbnails.length === 0 ? (
+              <EmptyState
+                imageSrc="/not-found.png"
+                title="Chưa có ván đấu nào được ghi lại!"
+                actionText="Tạo ván mới"
+                onAction={handleNewGame}
+              />
+            ) : null}
+
+            {!isLoadingHistory && historyWithThumbnails.length > 0 && filteredHistory.length === 0 ? (
+              <EmptyState
+                imageSrc="/not-found.png"
+                title="Không tìm thấy ván đấu!"
+                actionText="Xóa bộ lọc"
+                onAction={clearFilters}
+              />
             ) : null}
 
             {filteredHistory.map((entry, index) => {
