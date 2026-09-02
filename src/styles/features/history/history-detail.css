@@ -294,35 +294,3 @@
   font-size: 14px;
   line-height: 15px;
 }
-
-.match-summary-skeleton {
-  align-items: center;
-}
-
-.match-summary-skeleton .game-card-skeleton-thumb {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(90deg, var(--color-card-soft) 0%, #f7ede5 45%, var(--color-card-soft) 90%);
-  background-size: 220% 100%;
-  animation: game-card-skeleton-pulse 1.4s ease-in-out infinite;
-}
-
-.match-skeleton-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.match-grid-skeleton {
-  padding: var(--space-4);
-}
-
-.match-grid-skeleton-card {
-  width: 100%;
-  height: 180px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(90deg, var(--color-card-soft) 0%, #f7ede5 45%, var(--color-card-soft) 90%);
-  background-size: 220% 100%;
-  animation: game-card-skeleton-pulse 1.4s ease-in-out infinite;
-}
