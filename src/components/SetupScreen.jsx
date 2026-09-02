@@ -14,7 +14,6 @@ import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
-import { useAuthStore } from '../store/authStore'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
 
 const GAME_IMAGE_THEMES = [
@@ -135,9 +134,6 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
   useEffect(() => {
     async function loadSetupData() {
-      // Gọi làm mới profile ngầm
-      useAuthStore.getState().refreshProfile().catch(() => {})
-
       try {
         await Promise.all([fetchBoardGames(), fetchUsers()])
       } catch {
@@ -152,6 +148,29 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     setSetupStep(initialStep)
   }, [homeResetToken, initialStep])
 
+  const isInitialMount = useRef(true)
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
+    const timer = setTimeout(() => {
+      fetchBoardGames({
+        force: true,
+        page: 1,
+        limit: 10,
+        search: gameSearchTerm.trim() || undefined,
+        playerCount: playerCountFilter || undefined,
+      }).catch(() => {
+        toast('Không tải được danh sách trò chơi')
+      })
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [gameSearchTerm, playerCountFilter, fetchBoardGames, toast])
+
   const selectedGame = useMemo(
     () => gameList.find((game) => game.name === gameName) || null,
     [gameList, gameName]
@@ -163,32 +182,15 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     const labels = gameList.flatMap(getGenreLabels)
     return [...new Set(labels)].filter(Boolean)
   }, [gameList])
-  const filteredGames = useMemo(() => {
-    const keyword = gameSearchTerm.trim().toLowerCase()
-    const playerCount = Number(playerCountFilter)
 
-    return gameList.filter((game) => {
-      const gameGenres = getGenreLabels(game)
-      const matchesName = !keyword || game.name.toLowerCase().includes(keyword)
-      const matchesPlayers = !playerCountFilter || (
-        getMinPlayers(game) <= playerCount && getMaxPlayers(game) >= playerCount
-      )
-      const matchesGenres = selectedGenres.length === 0 || selectedGenres.some((genre) => (
-        gameGenres.includes(genre)
-      ))
-
-      return matchesName && matchesPlayers && matchesGenres
-    })
-  }, [gameList, gameSearchTerm, playerCountFilter, selectedGenres])
-
-  const hasGameFilters = Boolean(gameSearchTerm.trim() || playerCountFilter || selectedGenres.length > 0)
+  const filteredGames = gameList
+  const hasGameFilters = Boolean(gameSearchTerm.trim() || playerCountFilter)
 
   const canLoadMoreGames = Boolean(
     setupStep === 'games' &&
     boardGamesHasMore &&
     !isLoadingGames &&
-    filteredGames.length >= 10 &&
-    (!hasGameFilters || filteredGames.length >= 10)
+    gameList.length >= 10
   )
 
   const sentinelGamesRef = useRef(null)

@@ -42,6 +42,7 @@ export function GameFlowShell() {
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {flow === 'overview' ? (
             <GameOverviewScreen
+              key={boardGameId}
               boardGameId={boardGameId}
               toast={showToast}
               onBack={showHome}
