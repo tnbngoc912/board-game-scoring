@@ -277,6 +277,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   )
 
   const isInitialHistoryMount = useRef(true)
+  const prevFiltersRef = useRef({
+    selectedGameName: '',
+    selectedPlayerName: '',
+    myMatchesOnly: false,
+    searchTerm: '',
+  })
 
   useEffect(() => {
     if (isInitialHistoryMount.current) {
@@ -284,18 +290,38 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       return
     }
 
-    const boardGame = gamesLookup.find((g) => g.name === selectedGameName)
-    const boardGameId = boardGame?.id || boardGame?._id || undefined
+    const prev = prevFiltersRef.current
+    if (
+      prev.selectedGameName === selectedGameName &&
+      prev.selectedPlayerName === selectedPlayerName &&
+      prev.myMatchesOnly === myMatchesOnly &&
+      prev.searchTerm === searchTerm
+    ) {
+      return
+    }
 
-    let targetUserId = undefined
-    if (myMatchesOnly && currentUser?.id) {
-      targetUserId = currentUser.id
-    } else if (selectedPlayerName) {
-      const user = users.find((u) => u.name === selectedPlayerName)
-      targetUserId = user?.id || user?._id || undefined
+    prevFiltersRef.current = {
+      selectedGameName,
+      selectedPlayerName,
+      myMatchesOnly,
+      searchTerm,
     }
 
     const timer = setTimeout(() => {
+      const state = useAppDataStore.getState()
+      const lookup = state.allBoardGames.length ? state.allBoardGames : state.boardGames
+      const boardGame = lookup.find((g) => g.name === selectedGameName)
+      const boardGameId = boardGame?.id || boardGame?._id || undefined
+
+      let targetUserId = undefined
+      const authUser = useAuthStore.getState().user
+      if (myMatchesOnly && authUser?.id) {
+        targetUserId = authUser.id
+      } else if (selectedPlayerName) {
+        const user = state.users.find((u) => u.name === selectedPlayerName)
+        targetUserId = user?.id || user?._id || undefined
+      }
+
       fetchHistory({
         force: true,
         page: 1,
@@ -309,7 +335,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [selectedGameName, selectedPlayerName, myMatchesOnly, searchTerm, gamesLookup, users, currentUser, fetchHistory, toast])
+  }, [selectedGameName, selectedPlayerName, myMatchesOnly, searchTerm, fetchHistory, toast])
 
   const filteredHistory = historyWithThumbnails
   const hasFilters = Boolean(selectedGameName || selectedPlayerName || myMatchesOnly || searchTerm.trim())
@@ -422,12 +448,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setSelectedPlayerName('')
     setMyMatchesOnly(false)
     setSearchTerm('')
-    fetchHistory({
-      force: true,
-      page: 1,
-      limit: 10,
-    }).catch(() => {})
-  }, [fetchHistory])
+  }, [])
 
   const confirmDelete = useCallback(async () => {
     if (!matchToDelete) return
