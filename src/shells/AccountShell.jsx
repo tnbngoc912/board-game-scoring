@@ -32,10 +32,6 @@ export function AccountShell() {
     setIsPushEnabled(hasEnabledFcmNotifications())
   }, [])
 
-  useEffect(() => {
-    refreshProfile().catch(() => {})
-  }, [refreshProfile])
-
   function handleLogout() {
     logout()
     router.replace('/')
