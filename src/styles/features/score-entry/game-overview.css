@@ -157,6 +157,13 @@
   grid-column: 1 / -1;
 }
 
+.overview-stat-loading {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-subtext);
+  opacity: 0.7;
+}
+
 /* Leaderboard Section */
 .overview-leaderboard-section {
   margin: 0 var(--space-4) 0;

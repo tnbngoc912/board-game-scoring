@@ -222,6 +222,15 @@ export async function getBoardGameOverview(boardGameId, { leaderboardLimit } = {
   return normalizeBoardGameOverview(payload, boardGameId)
 }
 
+export async function getMyBoardGameRecord(boardGameId) {
+  if (!boardGameId) return null
+  const payload = await request(`/board-games/${boardGameId}/my-record`)
+  const data = payload?.data || payload
+  return {
+    highestScore: data?.highest_score ?? null,
+  }
+}
+
 export async function getMatches(params = {}) {
   const searchParams = new URLSearchParams()
 

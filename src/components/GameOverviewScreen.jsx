@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Plus } from 'lucide-react'
-import { getBoardGameOverview } from '../api/backendService'
+import { getBoardGameOverview, getMyBoardGameRecord } from '../api/backendService'
 import { useGameStore } from '../store/gameStore'
 import { useGameSessionStore } from '../store/gameSessionStore'
 import { LoadingOverlay } from './LoadingOverlay'
@@ -27,6 +27,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const initialCached = hydrateOverviewIfNeeded(boardGameId)
   const [overview, setLocalOverview] = useState(initialCached)
   const [isLoading, setIsLoading] = useState(!initialCached)
+  const [userRecord, setUserRecord] = useState(initialCached?.userRecord || null)
+  const [isRecordLoading, setIsRecordLoading] = useState(!initialCached?.userRecord)
 
   useEffect(() => {
     const freshCached = hydrateOverviewIfNeeded(boardGameId)
@@ -34,6 +36,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     setIsLoading(!freshCached)
     if (freshCached) {
       applyBoardGameOverview(freshCached)
+      if (freshCached.userRecord) {
+        setUserRecord(freshCached.userRecord)
+        setIsRecordLoading(false)
+      }
     }
   }, [boardGameId, hydrateOverviewIfNeeded, applyBoardGameOverview])
 
@@ -73,6 +79,46 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
       isMounted = false
     }
   }, [boardGameId, toast, applyBoardGameOverview, hydrateOverviewIfNeeded, setOverview])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadRecord() {
+      if (!boardGameId) return
+      if (overview?.scoringType === 'WINNER_ONLY') {
+        setIsRecordLoading(false)
+        return
+      }
+
+      const cached = hydrateOverviewIfNeeded(boardGameId)
+      if (cached?.userRecord) {
+        setUserRecord(cached.userRecord)
+        setIsRecordLoading(false)
+        return
+      }
+
+      setIsRecordLoading(true)
+      try {
+        const record = await getMyBoardGameRecord(boardGameId)
+        if (!isMounted) return
+        setUserRecord(record)
+        if (cached) {
+          const updated = { ...cached, userRecord: record }
+          setOverview(boardGameId, updated)
+        }
+      } catch {
+        if (!isMounted) return
+        setUserRecord(null)
+      } finally {
+        if (isMounted) setIsRecordLoading(false)
+      }
+    }
+
+    loadRecord()
+    return () => {
+      isMounted = false
+    }
+  }, [boardGameId, overview?.scoringType, hydrateOverviewIfNeeded, setOverview])
 
   const isMatchCurrentGame = overview && (overview.id === boardGameId || overview._id === boardGameId)
   const activeOverview = isMatchCurrentGame ? overview : initialCached
@@ -139,9 +185,13 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <div className="overview-stat-card overview-stat-card--full">
               <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
               <strong className="overview-stat-value">
-                {overview.userRecord?.highestScore != null
-                  ? `${overview.userRecord.highestScore} điểm`
-                  : 'Chưa có kỷ lục'}
+                {isRecordLoading ? (
+                  <span className="overview-stat-loading">Đang tải...</span>
+                ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
+                  `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+                ) : (
+                  'Chưa có kỷ lục'
+                )}
               </strong>
             </div>
           )}
