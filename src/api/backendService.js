@@ -228,6 +228,8 @@ export async function getMyBoardGameRecord(boardGameId) {
   const data = payload?.data || payload
   return {
     highestScore: data?.highest_score ?? null,
+    rank: data?.rank ?? null,
+    wins: data?.wins ?? 0,
   }
 }
 

@@ -7,6 +7,7 @@ import { useGameSessionStore } from '../store/gameSessionStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
+import { LeaderboardItemCard } from './LeaderboardItemCard'
 import { Icon } from './ui/Icon';
 import { usePermissions } from '../hooks/usePermissions'
 import { useAuthStore } from '../store/authStore'
@@ -143,7 +144,13 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const leaders = (activeOverview.leaderboard || []).slice(0, 3)
+  const allLeaders = activeOverview.leaderboard || []
+  const leaders = allLeaders.slice(0, 3)
+  const currentUserId = String(currentUser?._id || currentUser?.id || '')
+  const userLeaderboardItem = allLeaders.find(
+    (item) => String(item.user_id) === currentUserId
+  )
+  const showUserRanking = Boolean(userLeaderboardItem && userLeaderboardItem.rank > 3)
 
   return (
     <div className="game-overview-screen">
@@ -218,38 +225,31 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         <section className="overview-leaderboard-section">
           <h3 className="overview-section-title">Bảng xếp hạng</h3>
           <div className="overview-leaderboard-list" aria-label="Bảng xếp hạng">
-            {leaders.map((item) => {
-              let rankClass = 'rank-other'
-              if (item.rank === 1) rankClass = 'rank-1'
-              else if (item.rank === 2) rankClass = 'rank-2'
-              else if (item.rank === 3) rankClass = 'rank-3'
-
-              return (
-                <article key={item.user_id} className="leaderboard-item-card">
-                  <div className="leaderboard-player-info">
-                    <div className={`leaderboard-rank ${rankClass}`}>
-                      #{item.rank}
-                    </div>
-                    <div className="leaderboard-avatar">
-                      {(item.avatar_url || item.avatarUrl) ? (
-                        <Image src={item.avatar_url || item.avatarUrl} alt="" width={40} height={40} />
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                      )}
-                    </div>
-                    <h4 className="leaderboard-name">{item.name}</h4>
-                  </div>
-                  <div className="leaderboard-wins-box">
-                    <span className="leaderboard-wins-label">Thắng</span>
-                    <strong className="leaderboard-wins-count">{item.wins}</strong>
-                  </div>
-                </article>
-              )
-            })}
+            {leaders.map((item) => (
+              <LeaderboardItemCard
+                key={item.user_id}
+                rank={item.rank}
+                name={item.name}
+                avatarUrl={item.avatar_url || item.avatarUrl}
+                wins={item.wins}
+              />
+            ))}
           </div>
         </section>
+
+        {showUserRanking && (
+          <section className="overview-leaderboard-section">
+            <h3 className="overview-section-title">Xếp hạng của bạn</h3>
+            <div className="overview-leaderboard-list" aria-label="Xếp hạng của bạn">
+              <LeaderboardItemCard
+                rank={userLeaderboardItem.rank}
+                name={userLeaderboardItem.name || currentUser?.name || 'Bạn'}
+                avatarUrl={userLeaderboardItem.avatar_url || userLeaderboardItem.avatarUrl || currentUser?.avatar_url || currentUser?.avatarUrl}
+                wins={userLeaderboardItem.wins}
+              />
+            </div>
+          </section>
+        )}
 
         {canCreate && (
           <button className="overview-action-btn" onClick={onCreateScore}>
