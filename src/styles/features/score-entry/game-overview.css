@@ -191,11 +191,29 @@
   color: var(--color-muted);
 }
 
-.overview-stat-loading {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-subtext);
-  opacity: 0.7;
+.overview-record-skeleton {
+  display: block;
+  width: 90px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(
+    90deg,
+    rgba(230, 218, 208, 0.45) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(230, 218, 208, 0.45) 100%
+  );
+  background-size: 220% 100%;
+  animation: overview-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes overview-skeleton-pulse {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
 }
 
 /* Leaderboard Section */

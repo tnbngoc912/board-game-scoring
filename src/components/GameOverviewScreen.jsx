@@ -196,7 +196,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
                 <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
                 <strong className="overview-stat-value">
                   {isRecordLoading ? (
-                    <span className="overview-stat-loading">Đang tải...</span>
+                    <span className="overview-record-skeleton" aria-label="Đang tải điểm kỷ lục" />
                   ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
                     `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
                   ) : (
