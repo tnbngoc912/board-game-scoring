@@ -9,6 +9,7 @@ import { EmptyState } from './ui/EmptyState'
 import { Header } from './Header'
 import { Icon } from './ui/Icon';
 import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
 
 function formatLastPlayed(value) {
   if (!value) return '--/--/----'
@@ -18,6 +19,7 @@ function formatLastPlayed(value) {
 }
 
 export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }) {
+  const currentUser = useAuthStore((state) => state.user)
   const applyBoardGameOverview = useGameStore((state) => state.applyBoardGameOverview)
   const hydrateOverviewIfNeeded = useGameSessionStore((state) => state.hydrateOverviewIfNeeded)
   const setOverview = useGameSessionStore((state) => state.setOverview)
@@ -183,16 +185,32 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
           </div>
           {overview.scoringType !== 'WINNER_ONLY' && (
             <div className="overview-stat-card overview-stat-card--full">
-              <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
-              <strong className="overview-stat-value">
-                {isRecordLoading ? (
-                  <span className="overview-stat-loading">Đang tải...</span>
-                ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
-                  `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+              <div className="overview-record-info">
+                <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
+                <strong className="overview-stat-value">
+                  {isRecordLoading ? (
+                    <span className="overview-stat-loading">Đang tải...</span>
+                  ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
+                    `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+                  ) : (
+                    'Chưa có kỷ lục'
+                  )}
+                </strong>
+              </div>
+              <div className="overview-record-avatar" aria-label="Avatar của bạn">
+                {(currentUser?.avatar_url || currentUser?.avatarUrl) ? (
+                  <Image
+                    src={currentUser.avatar_url || currentUser.avatarUrl}
+                    alt={currentUser.name || 'Avatar'}
+                    width={44}
+                    height={44}
+                  />
                 ) : (
-                  'Chưa có kỷ lục'
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
                 )}
-              </strong>
+              </div>
             </div>
           )}
         </section>
