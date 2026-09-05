@@ -153,6 +153,10 @@
   color: var(--color-text-strong);
 }
 
+.overview-stat-card--full {
+  grid-column: 1 / -1;
+}
+
 /* Leaderboard Section */
 .overview-leaderboard-section {
   margin: 0 var(--space-4) 0;

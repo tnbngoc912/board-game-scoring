@@ -135,6 +135,16 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <span className="overview-stat-label">Chơi gần đây</span>
             <strong className="overview-stat-value">{formatLastPlayed(overview.stats?.last_played_at)}</strong>
           </div>
+          {overview.scoringType !== 'WINNER_ONLY' && (
+            <div className="overview-stat-card overview-stat-card--full">
+              <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
+              <strong className="overview-stat-value">
+                {overview.userRecord?.highestScore != null
+                  ? `${overview.userRecord.highestScore} điểm`
+                  : 'Chưa có kỷ lục'}
+              </strong>
+            </div>
+          )}
         </section>
 
         <section className="overview-leaderboard-section">
