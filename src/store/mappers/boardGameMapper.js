@@ -43,9 +43,14 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
       last_played_at: overviewStats.latest_match?.play_date || null,
     } : null),
     leaderboard: source.leaderboard || overviewStats?.leaderboard || [],
+    highestScore: overviewStats?.highest_score ?? null,
+    highestScorePlayer: overviewStats?.highest_score_player ?? null,
     userRecord: source.user_record
       ? {
           highestScore: source.user_record.highest_score ?? null,
+          rank: source.user_record.rank ?? null,
+          wins: source.user_record.wins ?? 0,
+          lastPlaces: source.user_record.last_places ?? 0,
         }
       : source.userRecord || null,
     category: Array.isArray(source.categories) && source.categories[0]
