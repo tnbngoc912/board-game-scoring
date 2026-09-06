@@ -854,6 +854,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               const [startColor, endColor] = getGameImageTheme(index)
               const topWinners = getTopWinners(entry)
               const winnerNames = topWinners.map((player) => player.name).join(', ')
+              const isOptimistic = Boolean(entry.isOptimistic)
 
               return (
                 <GameCard
@@ -863,22 +864,38 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   thumbnailUrl={entry.thumbnailUrl}
                   fallbackText={entry.gameName?.slice(0, 2).toUpperCase() || 'BG'}
                   background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
-                  className="game-card--history"
+                  className={`game-card--history ${isOptimistic ? 'game-card--optimistic' : ''}`}
                   role="button"
                   tabIndex={0}
-                  onClick={() => openMatchDetail(entry)}
+                  onClick={() => {
+                    if (isOptimistic) {
+                      toast('Ván đấu đang được đồng bộ lên máy chủ, vui lòng đợi trong giây lát...')
+                      return
+                    }
+                    openMatchDetail(entry)
+                  }}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      if (isOptimistic) return
+                      openMatchDetail(entry)
+                    }
                   }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.02 }}
                 >
                   <p>{entry.playedAt}</p>
-                  <div className="history-winner-line">
-                    <Image src="/crown.svg" width={16} height={14} alt='' />
-                    <span>{winnerNames || 'Chua co nguoi thang'}</span>
-                  </div>
+                  {isOptimistic ? (
+                    <div className="history-optimistic-status">
+                      <span className="history-optimistic-spinner" aria-hidden="true" />
+                      <span>Đang đồng bộ lên hệ thống...</span>
+                    </div>
+                  ) : (
+                    <div className="history-winner-line">
+                      <Image src="/crown.svg" width={16} height={14} alt='' />
+                      <span>{winnerNames || 'Chua co nguoi thang'}</span>
+                    </div>
+                  )}
                 </GameCard>
               )
             })}

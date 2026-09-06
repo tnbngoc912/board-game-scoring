@@ -266,6 +266,29 @@ export const useAppDataStore = create((set, get) => ({
     set({ historyFetchedAt: 0 })
   },
 
+  addOptimisticMatch(match) {
+    set((state) => ({
+      history: [match, ...state.history.filter((m) => m.id !== match.id)],
+    }))
+  },
+
+  resolveOptimisticMatch(tempId, realMatch = null) {
+    set((state) => ({
+      history: state.history.map((m) => {
+        if (m.id === tempId) {
+          return realMatch ? { ...realMatch, isOptimistic: false } : null
+        }
+        return m
+      }).filter(Boolean),
+    }))
+  },
+
+  removeOptimisticMatch(tempId) {
+    set((state) => ({
+      history: state.history.filter((m) => m.id !== tempId),
+    }))
+  },
+
   async fetchUserGameStats(userId, { force = false } = {}) {
     if (!userId) return []
     const { userGameStats, userGameStatsFetchedAt } = get()
