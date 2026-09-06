@@ -260,7 +260,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
                 </strong>
               </div>
               <div className="overview-metric-icon" aria-hidden="true">
-                <Icon src="/cup.png" size={36} color="var(--color-brand)" />
+                <Icon src="/cup.png" size={40} color="var(--color-brand)" />
               </div>
             </div>
 
@@ -272,7 +272,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
                 </strong>
               </div>
               <div className="overview-metric-icon" aria-hidden="true">
-                <Icon src="/dislike.png" size={36} color="var(--color-brand)" />
+                <Icon src="/dislike.png" size={40} color="var(--color-brand)" />
               </div>
             </div>
 
