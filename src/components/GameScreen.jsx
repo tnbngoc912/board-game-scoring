@@ -145,6 +145,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     return ''
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('idle') // 'idle' | 'saving' | 'success'
   const isTotalScoreOnly = scoringType === 'TOTAL_SCORE_ONLY'
   const isWinnerOnly = scoringType === 'WINNER_ONLY'
 
@@ -289,7 +290,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   }
 
   async function handleSave() {
-    if (isSaving) return
+    if (isSaving || saveStatus === 'success') return
 
     if (isWinnerOnly && !winnerPlayerId) {
       toast('Vui lòng chọn người thắng')
@@ -297,6 +298,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     }
 
     setIsSaving(true)
+    setSaveStatus('saving')
     try {
       // Đợi nốt các ảnh đang upload dở (nếu đã xong từ trước thì 0ms)
       const finalImageAttachments = await resolveImageAttachments(memoryImages)
@@ -321,6 +323,9 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           ...(isWinnerOnly ? { winnerIds } : { playerScores }),
           imageAttachments: finalImageAttachments,
         })
+
+        setSaveStatus('success')
+        await new Promise((res) => setTimeout(res, 450))
 
         toast('Đã cập nhật kết quả bảng điểm')
 
@@ -351,15 +356,21 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           matchDescription,
           finalImageAttachments
         )
-        toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
         if (ok) {
+          setSaveStatus('success')
+          await new Promise((res) => setTimeout(res, 450))
+          toast('Đã lưu kết quả')
           memoryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl))
           setMemoryImages([])
           clearPlayers()
           onShowHistory()
+        } else {
+          toast('Không thể lưu kết quả')
+          setSaveStatus('idle')
         }
       }
     } catch (error) {
+      setSaveStatus('idle')
       toast(error instanceof Error ? error.message : 'Không thể lưu kết quả')
     } finally {
       setIsSaving(false)
@@ -452,8 +463,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   }
 
   return (
-    <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
-      {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
+    <div className="screen score-screen score-entry-screen" aria-busy={isSaving}>
       <Header
         title={isEditMode ? 'Chỉnh Sửa Bảng Điểm' : 'Nhập Điểm'}
         onClose={isEditMode ? handleCloseEdit : handleClose}
@@ -516,8 +526,28 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           onRemoveImage={handleRemoveMemoryImage}
         />
 
-        <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Đang lưu...' : 'Lưu kết quả'}
+        <button
+          className={`score-save-btn score-save-btn--${saveStatus}`}
+          onClick={handleSave}
+          disabled={isSaving || saveStatus === 'success'}
+        >
+          {saveStatus === 'saving' && (
+            <span className="save-btn-content">
+              <span className="save-btn-spinner" aria-hidden="true" />
+              <span>Đang lưu...</span>
+            </span>
+          )}
+          {saveStatus === 'success' && (
+            <span className="save-btn-content save-btn-content--success">
+              <svg className="save-btn-checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Đã lưu!</span>
+            </span>
+          )}
+          {saveStatus === 'idle' && (
+            <span>{isEditMode ? 'Cập nhật bảng điểm' : 'Lưu kết quả'}</span>
+          )}
         </button>
       </div>
     </div>
