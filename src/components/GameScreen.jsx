@@ -258,6 +258,36 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     }, 0)
   }
 
+  async function resolveImageAttachments(images) {
+    if (!images || images.length === 0) return []
+
+    return Promise.all(
+      images.map(async (image) => {
+        if (image.isExisting || (image.fileId && image.url)) {
+          return {
+            fileId: image.fileId,
+            url: image.url,
+            fileName: image.fileName || image.file?.name,
+          }
+        }
+        if (image.uploadPromise) {
+          const uploaded = await image.uploadPromise
+          return {
+            fileId: uploaded.fileId,
+            url: uploaded.url,
+            fileName: uploaded.fileName || image.file?.name,
+          }
+        }
+        const [uploaded] = await uploadMatchImages([image.file])
+        return {
+          fileId: uploaded?.fileId,
+          url: uploaded?.url,
+          fileName: uploaded?.fileName || image.file?.name,
+        }
+      })
+    )
+  }
+
   async function handleSave() {
     if (isSaving) return
 
@@ -268,22 +298,10 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
 
     setIsSaving(true)
     try {
+      // Đợi nốt các ảnh đang upload dở (nếu đã xong từ trước thì 0ms)
+      const finalImageAttachments = await resolveImageAttachments(memoryImages)
+
       if (isEditMode) {
-        const newImages = memoryImages.filter((image) => !image.isExisting)
-        let uploadedImages = []
-        if (newImages.length > 0) {
-          uploadedImages = await uploadMatchImages(newImages.map((image) => image.file))
-        }
-
-        const existingImages = memoryImages
-          .filter((image) => image.isExisting)
-          .map((image) => ({
-            fileId: image.fileId,
-            url: image.url,
-            fileName: image.fileName,
-          }))
-        const finalImageAttachments = [...existingImages, ...uploadedImages]
-
         let playerScores = null
         if (!isWinnerOnly) {
           playerScores = players.map((player) => ({
@@ -331,7 +349,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         const ok = await publishScores(
           isWinnerOnly ? winnerOnlyScores : draftScores,
           matchDescription,
-          memoryImages.map((image) => image.file)
+          finalImageAttachments
         )
         toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
         if (ok) {
@@ -372,16 +390,57 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     const imageFiles = Array.from(files || []).filter((file) => file.type.startsWith('image/'))
     if (imageFiles.length === 0) return
 
-    setMemoryImages((current) => {
-      const availableSlots = MAX_MEMORY_IMAGES - current.length
-      const nextImages = imageFiles.slice(0, availableSlots).map((file) => ({
-        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }))
+    const availableSlots = MAX_MEMORY_IMAGES - memoryImages.length
+    const filesToAdd = imageFiles.slice(0, availableSlots)
+    if (filesToAdd.length === 0) return
 
-      return [...current, ...nextImages]
+    const nextImages = filesToAdd.map((file) => {
+      const id = `${file.name}-${file.lastModified}-${crypto.randomUUID()}`
+      const previewUrl = URL.createObjectURL(file)
+
+      // Kích hoạt upload ngầm ngay lập tức
+      const uploadPromise = uploadMatchImages([file])
+        .then((uploadedList) => {
+          const uploaded = uploadedList[0]
+          if (uploaded) {
+            setMemoryImages((prev) =>
+              prev.map((item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      fileId: uploaded.fileId,
+                      url: uploaded.url,
+                      fileName: uploaded.fileName || file.name,
+                      status: 'done',
+                    }
+                  : item
+              )
+            )
+            return uploaded
+          }
+          throw new Error('Upload không thành công')
+        })
+        .catch((err) => {
+          console.error('Lỗi upload ảnh ngầm:', err)
+          setMemoryImages((prev) =>
+            prev.map((item) =>
+              item.id === id ? { ...item, status: 'error' } : item
+            )
+          )
+          throw err
+        })
+
+      return {
+        id,
+        file,
+        previewUrl,
+        isExisting: false,
+        status: 'uploading',
+        uploadPromise,
+      }
     })
+
+    setMemoryImages((current) => [...current, ...nextImages])
   }
 
   function handleRemoveMemoryImage(imageId) {
@@ -481,6 +540,16 @@ function MemoryImageUploader({ images, disabled, onAddImages, onRemoveImage }) {
         {images.map((image) => (
           <div key={image.id} className="score-memory-card">
             <img src={image.previewUrl} alt="Hình ảnh kỉ niệm" />
+            {image.status === 'uploading' && (
+              <div className="score-memory-uploading" title="Đang tải lên...">
+                <div className="score-memory-spinner" />
+              </div>
+            )}
+            {image.status === 'error' && (
+              <div className="score-memory-error" title="Tải ảnh thất bại">
+                <span>!</span>
+              </div>
+            )}
             <button
               type="button"
               className="score-memory-remove"

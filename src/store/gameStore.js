@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { useAppDataStore } from './appDataStore'
 import {
   createMatch,
+  createFullMatch,
   ensureBoardGame,
   syncUserByName,
   updateMatchScores,
@@ -255,44 +256,64 @@ export const useGameStore = create(
         return true
       },
 
-      async publishScores(scoreRows, description = '', memoryImageFiles = []) {
-        const { gameName, scoringType, players, categories, playDateTime } = get()
+      async publishScores(scoreRows, description = '', memoryImagesInput = []) {
+        const { boardGameId, gameName, scoringType, players, categories, playDateTime } = get()
         const publishedScores = scoringType === 'WINNER_ONLY'
           ? scoreRows
           : ensureScoreRows(categories, players, scoreRows)
 
         set({ syncStatus: 'syncing' })
         try {
+          // 1. Đồng bộ người chơi (chỉ gọi API sync nếu player chưa có apiUserId)
           const syncedUsers = await Promise.all(players.map(async (player) => {
             if (player.apiUserId) return { id: player.apiUserId, name: player.name }
             return syncUserByName(player.name)
           }))
-          const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
-          const match = await createMatch(boardGame.id, syncedUsers.map((user) => user.id), playDateTime)
+
+          // 2. Sử dụng trực tiếp boardGameId sẵn có từ store, tránh query tải lại toàn bộ list game
+          let effectiveBoardGameId = boardGameId
+          if (!effectiveBoardGameId) {
+            const boardGame = await ensureBoardGame(gameName || 'Khong ten', categories)
+            effectiveBoardGameId = boardGame.id
+          }
 
           const playersWithApiIds = players.map((player, index) => ({
             ...player,
             apiUserId: syncedUsers[index].id,
           }))
+
           const playerScores = scoringType === 'WINNER_ONLY'
             ? null
             : syncedUsers.map((user, index) => {
               const player = players[index]
-
               return {
                 user_id: user.id,
                 scores: buildApiScoresForPlayer(player.id, publishedScores),
               }
             })
-          const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
-          const imageAttachments = memoryImageFiles.length > 0
-            ? await uploadMatchImages(memoryImageFiles)
-            : []
 
-          await updateMatchScores(match.id, {
+          const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
+
+          // 3. Xử lý ảnh kỷ niệm: hỗ trợ cả ảnh đã upload sẵn (background) hoặc upload fallback
+          let imageAttachments = []
+          if (Array.isArray(memoryImagesInput) && memoryImagesInput.length > 0) {
+            if (memoryImagesInput[0]?.fileId || memoryImagesInput[0]?.url) {
+              imageAttachments = memoryImagesInput
+            } else {
+              imageAttachments = await uploadMatchImages(memoryImagesInput)
+            }
+          }
+
+          // 4. Tạo ván đấu và lưu điểm toàn diện trong 1 request duy nhất (POST /matches/full)
+          await createFullMatch({
+            boardGameId: effectiveBoardGameId,
+            players: scoringType === 'WINNER_ONLY'
+              ? syncedUsers.map((user) => ({ user_id: user.id }))
+              : playerScores,
+            winnerIds: scoringType === 'WINNER_ONLY' ? winnerIds : null,
             description: description.trim() || '',
-            ...(scoringType === 'WINNER_ONLY' ? { winnerIds } : { playerScores }),
             imageAttachments,
+            playDate: playDateTime,
           })
 
           set({
