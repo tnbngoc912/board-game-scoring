@@ -87,18 +87,7 @@
 
 .game-card--optimistic {
   position: relative;
-  border: 1.5px dashed var(--color-brand, #10B981) !important;
-  opacity: 0.95;
-  animation: optimistic-card-glow 2s ease-in-out infinite;
-}
-
-@keyframes optimistic-card-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
-  }
+  opacity: 0.92;
 }
 
 .history-optimistic-status {
@@ -106,19 +95,16 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 600;
-  color: #10B981;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-top: 4px;
+  font-weight: 500;
+  color: var(--color-subtext);
+  margin-top: 2px;
 }
 
 .history-optimistic-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(16, 185, 129, 0.3);
-  border-top-color: #10B981;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-top-color: var(--color-brand, #10B981);
   border-radius: 50%;
   animation: optimistic-spin 0.8s linear infinite;
 }
@@ -128,4 +114,5 @@
     transform: rotate(360deg);
   }
 }
+
 
