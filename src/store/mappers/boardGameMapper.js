@@ -42,7 +42,12 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
       total_played: overviewStats.total_matches_count || 0,
       last_played_at: overviewStats.latest_match?.play_date || null,
     } : null),
-    leaderboard: (source.leaderboard || overviewStats?.leaderboard || []).slice(0, 3),
+    leaderboard: source.leaderboard || overviewStats?.leaderboard || [],
+    userRecord: source.user_record
+      ? {
+          highestScore: source.user_record.highest_score ?? null,
+        }
+      : source.userRecord || null,
     category: Array.isArray(source.categories) && source.categories[0]
       ? source.categories[0]
       : Array.isArray(source.category_ids) && source.category_ids[0]

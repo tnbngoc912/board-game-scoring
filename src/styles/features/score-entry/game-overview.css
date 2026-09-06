@@ -153,6 +153,69 @@
   color: var(--color-text-strong);
 }
 
+.overview-stat-card--full {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overview-record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overview-record-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-round);
+  overflow: hidden;
+  background: var(--color-bg-strong);
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(147, 101, 63, 0.2);
+  flex-shrink: 0;
+}
+
+.overview-record-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overview-record-avatar svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-muted);
+}
+
+.overview-record-skeleton {
+  display: block;
+  width: 90px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(
+    90deg,
+    rgba(230, 218, 208, 0.45) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(230, 218, 208, 0.45) 100%
+  );
+  background-size: 220% 100%;
+  animation: overview-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes overview-skeleton-pulse {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
 /* Leaderboard Section */
 .overview-leaderboard-section {
   margin: 0 var(--space-4) 0;
