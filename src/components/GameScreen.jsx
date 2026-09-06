@@ -296,12 +296,10 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       return
     }
 
-    setIsSaving(true)
-    try {
-      // Đợi nốt các ảnh đang upload dở (nếu đã xong từ trước thì 0ms)
-      const finalImageAttachments = await resolveImageAttachments(memoryImages)
-
-      if (isEditMode) {
+    if (isEditMode) {
+      setIsSaving(true)
+      try {
+        const finalImageAttachments = await resolveImageAttachments(memoryImages)
         let playerScores = null
         if (!isWinnerOnly) {
           playerScores = players.map((player) => ({
@@ -336,8 +334,18 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         if (onSaveEdit) {
           await onSaveEdit()
         }
-      } else {
-        const winnerOnlyScores = [{
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Không thể lưu kết quả')
+      } finally {
+        setIsSaving(false)
+      }
+      return
+    }
+
+    // === OPTIMISTIC UI: CHUYỂN TRANG NGAY LẬP TỨC TRONG 0MS ===
+    const currentMemoryImages = [...memoryImages]
+    const currentDraftScores = isWinnerOnly
+      ? [{
           id: 'winner',
           name: 'Winner',
           type: 'number',
@@ -346,24 +354,37 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
             return scores
           }, {}),
         }]
+      : draftScores
+    const currentDescription = matchDescription
+
+    // Chuyển ngay sang trang Lịch sử, dọn dẹp state ở client tức thì
+    setMemoryImages([])
+    clearPlayers()
+    onShowHistory()
+    toast('Đang đồng bộ ván đấu lên hệ thống...')
+
+    // Tác vụ lưu chạy ngầm trong background
+    ;(async () => {
+      try {
+        const finalImageAttachments = await resolveImageAttachments(currentMemoryImages)
         const ok = await publishScores(
-          isWinnerOnly ? winnerOnlyScores : draftScores,
-          matchDescription,
+          currentDraftScores,
+          currentDescription,
           finalImageAttachments
         )
-        toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
         if (ok) {
-          memoryImages.forEach((image) => URL.revokeObjectURL(image.previewUrl))
-          setMemoryImages([])
-          clearPlayers()
-          onShowHistory()
+          toast('✅ Đã lưu kết quả ván đấu thành công!')
+        } else {
+          toast('⚠️ Lưu ván đấu thất bại, vui lòng kiểm tra kết nối!')
         }
+      } catch (err) {
+        toast('⚠️ Lỗi: ' + (err instanceof Error ? err.message : 'Không thể lưu kết quả'))
+      } finally {
+        currentMemoryImages.forEach((image) => {
+          if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+        })
       }
-    } catch (error) {
-      toast(error instanceof Error ? error.message : 'Không thể lưu kết quả')
-    } finally {
-      setIsSaving(false)
-    }
+    })()
   }
 
   function handleClose() {
@@ -452,8 +473,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   }
 
   return (
-    <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
-      {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
+    <div className="screen score-screen score-entry-screen" aria-busy={isSaving}>
       <Header
         title={isEditMode ? 'Chỉnh Sửa Bảng Điểm' : 'Nhập Điểm'}
         onClose={isEditMode ? handleCloseEdit : handleClose}
