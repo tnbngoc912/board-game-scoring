@@ -152,9 +152,19 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   )
   const showUserRanking = Boolean(userLeaderboardItem && userLeaderboardItem.rank > 3)
 
+  const rightElement = canCreate ? (
+    <button
+      className="overview-add-btn"
+      onClick={onCreateScore}
+      aria-label="Tạo bảng điểm"
+    >
+      <Image src="/plus-white-icon.svg" alt="Tạo bảng điểm" width={32} height={32} />
+    </button>
+  ) : null
+
   return (
     <div className="game-overview-screen">
-      <Header onBack={onBack} />
+      <Header onBack={onBack} rightElement={rightElement} />
 
       <main className="overview-content">
         <section className="overview-game-banner">
@@ -193,22 +203,20 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
           {overview.scoringType !== 'WINNER_ONLY' && (
             <div className="overview-stat-card overview-stat-card--full">
               <div className="overview-record-info">
-                <span className="overview-stat-label">Điểm kỷ lục của bạn</span>
+                <span className="overview-stat-label">Điểm kỷ lục</span>
                 <strong className="overview-stat-value">
-                  {isRecordLoading ? (
-                    <span className="overview-record-skeleton" aria-label="Đang tải điểm kỷ lục" />
-                  ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
-                    `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+                  {overview.highestScore != null && overview.highestScore > 0 ? (
+                    `${overview.highestScore} điểm`
                   ) : (
                     'Chưa có kỷ lục'
                   )}
                 </strong>
               </div>
-              <div className="overview-record-avatar" aria-label="Avatar của bạn">
-                {(currentUser?.avatar_url || currentUser?.avatarUrl) ? (
+              <div className="overview-record-avatar" aria-label="Avatar người giữ kỷ lục">
+                {overview.highestScorePlayer?.avatar_url ? (
                   <Image
-                    src={currentUser.avatar_url || currentUser.avatarUrl}
-                    alt={currentUser.name || 'Avatar'}
+                    src={overview.highestScorePlayer.avatar_url}
+                    alt={overview.highestScorePlayer.name || 'Kỷ lục game'}
                     width={44}
                     height={44}
                   />
@@ -251,12 +259,65 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
           </section>
         )}
 
-        {canCreate && (
-          <button className="overview-action-btn" onClick={onCreateScore}>
-            <Icon src="/add_icon.png" color="#FFFF" size={24} />
-            <p className="overview-action-btn-text">Tạo bảng điểm</p>
-          </button>
-        )}
+        <section className="overview-leaderboard-section">
+          <h3 className="overview-section-title">Thành tựu của bạn</h3>
+          <div className="overview-achievements-grid" aria-label="Thành tựu của bạn">
+            <div className="overview-stat-card overview-stat-card--with-icon">
+              <div className="overview-record-info">
+                <span className="overview-stat-label">Số ván thắng</span>
+                <strong className="overview-stat-value">
+                  {userRecord?.wins ?? userLeaderboardItem?.wins ?? 0}
+                </strong>
+              </div>
+              <div className="overview-metric-icon" aria-hidden="true">
+                <Icon src="/cup.png" size={40} color="var(--color-brand)" />
+              </div>
+            </div>
+
+            <div className="overview-stat-card overview-stat-card--with-icon">
+              <div className="overview-record-info">
+                <span className="overview-stat-label">Số ván chót</span>
+                <strong className="overview-stat-value">
+                  {userRecord?.lastPlaces ?? 0}
+                </strong>
+              </div>
+              <div className="overview-metric-icon" aria-hidden="true">
+                <Icon src="/dislike.png" size={40} color="var(--color-brand)" />
+              </div>
+            </div>
+
+            {overview.scoringType !== 'WINNER_ONLY' && (
+              <div className="overview-stat-card overview-stat-card--full">
+                <div className="overview-record-info">
+                  <span className="overview-stat-label">Kỷ lục của bạn</span>
+                  <strong className="overview-stat-value">
+                    {isRecordLoading ? (
+                      <span className="overview-record-skeleton" aria-label="Đang tải điểm kỷ lục" />
+                    ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
+                      `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+                    ) : (
+                      'Chưa có kỷ lục'
+                    )}
+                  </strong>
+                </div>
+                <div className="overview-record-avatar" aria-label="Avatar của bạn">
+                  {(currentUser?.avatar_url || currentUser?.avatarUrl) ? (
+                    <Image
+                      src={currentUser.avatar_url || currentUser.avatarUrl}
+                      alt={currentUser.name || 'Avatar'}
+                      width={44}
+                      height={44}
+                    />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   )

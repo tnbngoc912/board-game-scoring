@@ -11,7 +11,7 @@ export function LeaderboardItemCard({ rank, name, avatarUrl, wins = 0 }) {
     <article className="leaderboard-item-card">
       <div className="leaderboard-player-info">
         <div className={`leaderboard-rank ${rankClass}`}>
-          #{rank}
+          {typeof rank === 'number' ? `#${rank}` : '-'}
         </div>
         <div className="leaderboard-avatar">
           {avatarUrl ? (
