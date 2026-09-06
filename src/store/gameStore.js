@@ -256,8 +256,10 @@ export const useGameStore = create(
         return true
       },
 
-      async publishScores(scoreRows, description = '', memoryImagesInput = []) {
-        const { boardGameId, gameName, scoringType, players, categories, playDateTime } = get()
+      async publishScores(scoreRows, description = '', memoryImagesInput = [], playersOverride = null) {
+        const storeState = get()
+        const players = (playersOverride && playersOverride.length > 0) ? playersOverride : storeState.players
+        const { boardGameId, gameName, scoringType, categories, playDateTime } = storeState
         const publishedScores = scoringType === 'WINNER_ONLY'
           ? scoreRows
           : ensureScoreRows(categories, players, scoreRows)

@@ -344,12 +344,13 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
 
     // === OPTIMISTIC UI: CHUYỂN TRANG NGAY LẬP TỨC TRONG 0MS ===
     const currentMemoryImages = [...memoryImages]
+    const currentPlayers = [...players]
     const currentDraftScores = isWinnerOnly
       ? [{
           id: 'winner',
           name: 'Winner',
           type: 'number',
-          scores: players.reduce((scores, player) => {
+          scores: currentPlayers.reduce((scores, player) => {
             scores[player.id] = player.id === winnerPlayerId ? 1 : 0
             return scores
           }, {}),
@@ -357,9 +358,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       : draftScores
     const currentDescription = matchDescription
 
-    // Chuyển ngay sang trang Lịch sử, dọn dẹp state ở client tức thì
-    setMemoryImages([])
-    clearPlayers()
+    // Chuyển ngay sang trang Lịch sử tức thì trong 0ms
     onShowHistory()
     toast('Đang đồng bộ ván đấu lên hệ thống...')
 
@@ -370,9 +369,13 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         const ok = await publishScores(
           currentDraftScores,
           currentDescription,
-          finalImageAttachments
+          finalImageAttachments,
+          currentPlayers
         )
         if (ok) {
+          clearPlayers()
+          setMemoryImages([])
+          useAppDataStore.getState().fetchHistory({ force: true })
           toast('✅ Đã lưu kết quả ván đấu thành công!')
         } else {
           toast('⚠️ Lưu ván đấu thất bại, vui lòng kiểm tra kết nối!')
