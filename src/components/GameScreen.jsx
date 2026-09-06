@@ -452,8 +452,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   }
 
   return (
-    <div className="screen score-screen score-entry-screen loading-shell" aria-busy={isSaving}>
-      {isSaving ? <LoadingOverlay label="Đang lưu..." /> : null}
+    <div className="screen score-screen score-entry-screen" aria-busy={isSaving}>
       <Header
         title={isEditMode ? 'Chỉnh Sửa Bảng Điểm' : 'Nhập Điểm'}
         onClose={isEditMode ? handleCloseEdit : handleClose}
@@ -517,7 +516,14 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         />
 
         <button className="score-save-btn" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Đang lưu...' : 'Lưu kết quả'}
+          {isSaving ? (
+            <span className="save-btn-content">
+              <span className="save-btn-spinner" aria-hidden="true" />
+              <span>Đang lưu...</span>
+            </span>
+          ) : (
+            'Lưu kết quả'
+          )}
         </button>
       </div>
     </div>

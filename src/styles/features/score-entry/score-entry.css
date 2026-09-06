@@ -635,9 +635,29 @@
   background: var(--color-brand);
   color: var(--color-white);
   font-size: 18px;
-  line-height: 20px;
-  font-weight: 700;
   box-shadow: var(--shadow-card);
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.score-entry-screen .score-save-btn:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.save-btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.save-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: score-memory-spin 0.8s linear infinite;
 }
 
 .score-entry-screen .score-entry-main-block {
