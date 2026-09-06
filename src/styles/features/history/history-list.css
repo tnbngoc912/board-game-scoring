@@ -87,7 +87,8 @@
 
 .game-card--optimistic {
   position: relative;
-  opacity: 0.92;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .history-optimistic-status {
@@ -95,16 +96,19 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--color-subtext);
-  margin-top: 2px;
+  font-weight: 600;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 3px 8px;
+  border-radius: 8px;
+  margin-top: 4px;
 }
 
 .history-optimistic-spinner {
-  width: 13px;
-  height: 13px;
-  border: 2px solid rgba(0, 0, 0, 0.15);
-  border-top-color: var(--color-brand, #10B981);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(16, 185, 129, 0.25);
+  border-top-color: #059669;
   border-radius: 50%;
   animation: optimistic-spin 0.8s linear infinite;
 }

@@ -404,6 +404,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           if (ok) {
             clearPlayers()
             setMemoryImages([])
+            // Giữ trạng thái hiển thị mượt mà tối thiểu 600ms
+            await new Promise((res) => setTimeout(res, 600))
             await useAppDataStore.getState().fetchHistory({ force: true })
             useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
             triggerGlobalToast('✅ Đã lưu kết quả ván đấu thành công!')

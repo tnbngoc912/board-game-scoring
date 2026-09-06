@@ -198,11 +198,15 @@ export const useAppDataStore = create((set, get) => ({
         const totalResults = res?.totalResults || items.length
         const hasMore = page < totalPages
 
+        const optimisticItems = (get().history || []).filter((m) => m.isOptimistic)
+        const nonOptimisticItems = items.filter((item) => !item.isOptimistic)
+        const combined = [...optimisticItems, ...nonOptimisticItems]
+
         set({
-          history: items,
+          history: combined,
           historyPage: page,
           historyTotalPages: totalPages,
-          historyTotalResults: totalResults,
+          historyTotalResults: totalResults + optimisticItems.length,
           historyHasMore: hasMore,
           historyFetchedAt: Date.now(),
           isLoadingHistory: false,
