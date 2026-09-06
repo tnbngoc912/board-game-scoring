@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { useAppDataStore } from '../store/appDataStore'
+import { useGameSessionStore } from '../store/gameSessionStore'
 import { deleteMatch, getMatch } from '../api/backendService'
 import { LoadingOverlay } from './LoadingOverlay'
 import { GameCard } from './GameCard'
@@ -457,6 +458,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     try {
       await deleteMatch(matchToDelete.id)
       removeHistoryMatch(matchToDelete.id)
+      const deletedBgId = matchToDelete?.board_game_id || matchToDelete?.boardGameId || matchToDelete?.board_game?.id
+      useAppDataStore.getState().invalidateHistory()
+      useAppDataStore.getState().invalidateBoardGames()
+      useAppDataStore.getState().invalidateUsers()
+      useAppDataStore.getState().invalidateUserGameStats()
+      if (deletedBgId) {
+        useGameSessionStore.getState().invalidateOverview(deletedBgId)
+      } else {
+        useGameSessionStore.getState().invalidateOverview()
+      }
+
+      Promise.allSettled([
+        useAppDataStore.getState().fetchBoardGames({ force: true }),
+        useAppDataStore.getState().fetchAllBoardGames({ force: true }),
+        useAppDataStore.getState().fetchHistory({ force: true }),
+        useAuthStore.getState().refreshProfile(),
+      ])
+
       if (selectedMatch?.id === matchToDelete.id) setSelectedMatch(null)
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)

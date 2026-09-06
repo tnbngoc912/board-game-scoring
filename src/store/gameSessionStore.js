@@ -48,6 +48,18 @@ export const useGameSessionStore = create((set, get) => ({
     return get().overviewByGameId[boardGameId] || null
   },
 
+  invalidateOverview(boardGameId) {
+    if (!boardGameId) {
+      set({ overviewByGameId: {} })
+      return
+    }
+    set((state) => {
+      const next = { ...state.overviewByGameId }
+      delete next[boardGameId]
+      return { overviewByGameId: next }
+    })
+  },
+
   resetSession() {
     set({
       flow: 'overview',

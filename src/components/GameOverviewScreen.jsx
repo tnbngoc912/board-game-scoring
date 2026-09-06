@@ -53,16 +53,14 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
       if (!boardGameId) return
 
       const cached = hydrateOverviewIfNeeded(boardGameId)
-      // Nếu đã có sẵn dữ liệu từ trang chủ thì dùng luôn 100%, KHÔNG gọi API nữa
       if (cached) {
         applyBoardGameOverview(cached)
         setLocalOverview(cached)
         setIsLoading(false)
-        return
+      } else {
+        setIsLoading(true)
       }
 
-      // Chỉ gọi API khi chưa có dữ liệu trong cache (do F5 hoặc mở trực tiếp link)
-      setIsLoading(true)
       try {
         const data = await getBoardGameOverview(boardGameId)
         if (!isMounted) return
@@ -71,7 +69,9 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
         setLocalOverview(data)
       } catch (error) {
         if (!isMounted) return
-        toast(error?.message || 'Không tải được thông tin game')
+        if (!cached) {
+          toast(error?.message || 'Không tải được thông tin game')
+        }
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -97,21 +97,24 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
       if (cached?.userRecord) {
         setUserRecord(cached.userRecord)
         setIsRecordLoading(false)
-        return
+      } else {
+        setIsRecordLoading(true)
       }
 
-      setIsRecordLoading(true)
       try {
         const record = await getMyBoardGameRecord(boardGameId)
         if (!isMounted) return
         setUserRecord(record)
-        if (cached) {
-          const updated = { ...cached, userRecord: record }
+        const currentOverview = hydrateOverviewIfNeeded(boardGameId) || cached
+        if (currentOverview) {
+          const updated = { ...currentOverview, userRecord: record }
           setOverview(boardGameId, updated)
         }
       } catch {
         if (!isMounted) return
-        setUserRecord(null)
+        if (!cached?.userRecord) {
+          setUserRecord(null)
+        }
       } finally {
         if (isMounted) setIsRecordLoading(false)
       }
