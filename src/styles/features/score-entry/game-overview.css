@@ -50,6 +50,18 @@
   padding: 0;
 }
 
+.overview-add-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  justify-self: end;
+  padding: 0;
+}
+
 .overview-content {
   display: flex;
   flex-direction: column;

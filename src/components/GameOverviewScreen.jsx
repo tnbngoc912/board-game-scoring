@@ -152,9 +152,19 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   )
   const showUserRanking = Boolean(userLeaderboardItem && userLeaderboardItem.rank > 3)
 
+  const rightElement = canCreate ? (
+    <button
+      className="overview-add-btn"
+      onClick={onCreateScore}
+      aria-label="Tạo bảng điểm"
+    >
+      <Image src="/plus-white-icon.svg" alt="Tạo bảng điểm" width={32} height={32} />
+    </button>
+  ) : null
+
   return (
     <div className="game-overview-screen">
-      <Header onBack={onBack} />
+      <Header onBack={onBack} rightElement={rightElement} />
 
       <main className="overview-content">
         <section className="overview-game-banner">
@@ -308,13 +318,6 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             )}
           </div>
         </section>
-
-        {canCreate && (
-          <button className="overview-action-btn" onClick={onCreateScore}>
-            <Icon src="/add_icon.png" color="#FFFF" size={24} />
-            <p className="overview-action-btn-text">Tạo bảng điểm</p>
-          </button>
-        )}
       </main>
     </div>
   )
