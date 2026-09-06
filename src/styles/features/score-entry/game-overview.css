@@ -161,6 +161,27 @@
   justify-content: space-between;
 }
 
+.overview-stat-card--with-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overview-metric-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.overview-achievements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
 .overview-record-info {
   display: flex;
   flex-direction: column;

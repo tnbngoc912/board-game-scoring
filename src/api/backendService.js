@@ -230,6 +230,7 @@ export async function getMyBoardGameRecord(boardGameId) {
     highestScore: data?.highest_score ?? null,
     rank: data?.rank ?? null,
     wins: data?.wins ?? 0,
+    lastPlaces: data?.last_places ?? 0,
   }
 }
 
