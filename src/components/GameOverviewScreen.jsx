@@ -237,10 +237,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
         {(showUserRanking || overview.scoringType !== 'WINNER_ONLY') && (
           <section className="overview-leaderboard-section">
-            {showUserRanking && (
-              <h3 className="overview-section-title">Xếp hạng của bạn</h3>
-            )}
-            <div className="overview-leaderboard-list" aria-label="Xếp hạng của bạn">
+            <h3 className="overview-section-title">Thành tích của bạn</h3>
+            <div className="overview-leaderboard-list" aria-label="Thành tích của bạn">
               {showUserRanking && (
                 <LeaderboardItemCard
                   rank={userLeaderboardItem.rank}
