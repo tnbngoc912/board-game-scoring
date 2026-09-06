@@ -7,6 +7,8 @@ import { ScoreGrid } from './score/ScoreGrid'
 import { Header } from './Header'
 import Image from "next/image"
 import { useAppDataStore } from '../store/appDataStore'
+import { useGameSessionStore } from '../store/gameSessionStore'
+import { useAuthStore } from '../store/authStore'
 import { updateMatchScores, uploadMatchImages } from '../api/backendService'
 import { formatPlayedAt } from '../store/mappers/matchMapper'
 
@@ -328,6 +330,19 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         useAppDataStore.getState().invalidateBoardGames()
         useAppDataStore.getState().invalidateUsers()
         useAppDataStore.getState().invalidateUserGameStats()
+        const targetBoardGameId = matchToEdit?.board_game_id || matchToEdit?.boardGameId || boardGameId
+        if (targetBoardGameId) {
+          useGameSessionStore.getState().invalidateOverview(targetBoardGameId)
+        } else {
+          useGameSessionStore.getState().invalidateOverview()
+        }
+
+        Promise.allSettled([
+          useAppDataStore.getState().fetchBoardGames({ force: true }),
+          useAppDataStore.getState().fetchAllBoardGames({ force: true }),
+          useAppDataStore.getState().fetchHistory({ force: true }),
+          useAuthStore.getState().refreshProfile(),
+        ])
 
         memoryImages.forEach((image) => {
           if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)

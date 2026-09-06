@@ -135,14 +135,18 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
   useEffect(() => {
     async function loadSetupData() {
       try {
-        await Promise.all([fetchBoardGames(), fetchUsers()])
+        const shouldForce = homeResetToken > 0
+        await Promise.all([
+          fetchBoardGames({ force: shouldForce }),
+          fetchUsers({ force: shouldForce }),
+        ])
       } catch {
         toast('Không tải được dữ liệu')
       }
     }
 
     loadSetupData()
-  }, [fetchBoardGames, fetchUsers, toast])
+  }, [fetchBoardGames, fetchUsers, toast, homeResetToken])
 
   useEffect(() => {
     setSetupStep(initialStep)

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useAppDataStore } from './appDataStore'
+import { useGameSessionStore } from './gameSessionStore'
+import { useAuthStore } from './authStore'
 import {
   createMatch,
   createFullMatch,
@@ -323,6 +325,19 @@ export const useGameStore = create(
           useAppDataStore.getState().invalidateBoardGames()
           useAppDataStore.getState().invalidateUsers()
           useAppDataStore.getState().invalidateUserGameStats()
+          if (effectiveBoardGameId) {
+            useGameSessionStore.getState().invalidateOverview(effectiveBoardGameId)
+          } else {
+            useGameSessionStore.getState().invalidateOverview()
+          }
+
+          Promise.allSettled([
+            useAppDataStore.getState().fetchBoardGames({ force: true }),
+            useAppDataStore.getState().fetchAllBoardGames({ force: true }),
+            useAppDataStore.getState().fetchHistory({ force: true }),
+            useAuthStore.getState().refreshProfile(),
+          ])
+
           set({ syncStatus: 'synced' })
           return true
         } catch {
