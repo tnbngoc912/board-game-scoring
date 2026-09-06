@@ -317,6 +317,47 @@ export async function createMatch(boardGameId, playerIds, playDate = null) {
   }
 }
 
+export async function createFullMatch({
+  boardGameId,
+  players,
+  winnerIds = null,
+  description = '',
+  imageAttachments = [],
+  playDate = null,
+}) {
+  let formattedPlayDate = null
+  if (playDate) {
+    const [datePart, timePart] = playDate.split('T')
+    if (datePart && timePart) {
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hours, minutes] = timePart.split(':').map(Number)
+      const localDate = new Date(year, month - 1, day, hours, minutes)
+      if (!Number.isNaN(localDate.getTime())) {
+        formattedPlayDate = localDate.toISOString()
+      }
+    }
+  }
+
+  const payload = await request('/matches/full', {
+    method: 'POST',
+    body: JSON.stringify({
+      board_game_id: boardGameId,
+      players,
+      ...(winnerIds && winnerIds.length > 0 ? { winner_ids: winnerIds } : {}),
+      description,
+      image_attachments: imageAttachments,
+      ...(formattedPlayDate ? { play_date: formattedPlayDate } : {}),
+    }),
+  })
+  const match = unwrapEntity(payload, ['match'])
+
+  return {
+    ...match,
+    id: getEntityId(match),
+    players: payload?.players || [],
+  }
+}
+
 export async function getMatch(matchId) {
   const payload = await request(`/matches/${matchId}`)
   return normalizeMatchDetail(payload)

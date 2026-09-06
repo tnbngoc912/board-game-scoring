@@ -1,4 +1,4 @@
-import { getEntityId } from './entityMapper'
+import { getEntityId } from './entityMapper.js'
 
 export function normalizeScoreColumn(column, index = 0) {
   return {
@@ -10,8 +10,8 @@ export function normalizeScoreColumn(column, index = 0) {
 }
 
 export function normalizeBoardGame(game) {
-  const genres = game.genres || game.category_ids || game.categoryIds || game.categories || []
-  const scoreColumns = game.score_columns || game.scoreColumns || game.categories || []
+  const genres = game.genres || game.category_ids || []
+  const scoreColumns = game.score_columns || game.scoreColumns || []
 
   return {
     ...game,
@@ -53,10 +53,6 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
           lastPlaces: source.user_record.last_places ?? 0,
         }
       : source.userRecord || null,
-    category: Array.isArray(source.categories) && source.categories[0]
-      ? source.categories[0]
-      : Array.isArray(source.category_ids) && source.category_ids[0]
-        ? source.category_ids[0]
-        : (source.category || {})
+    category: source.category_ids?.[0] || source.genres?.[0] || source.category || {},
   }
 }
