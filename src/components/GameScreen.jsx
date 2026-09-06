@@ -357,68 +357,72 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           }, {}),
         }]
       : draftScores
-    const currentDescription = matchDescription.trim()
-
-    // Tạo thẻ Optimistic Match tạm thời để hiển thị ngay lập tức trên đỉnh History
-    const tempMatchId = `optimistic-${Date.now()}`
-    const now = new Date()
-    const optimisticMatch = {
-      id: tempMatchId,
-      gameName: gameName || 'Ván đấu mới',
-      gameId: boardGameId || '',
-      description: currentDescription || '',
-      playedAt: now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      playedAtRaw: now.toISOString(),
-      thumbnailUrl: boardGameOverview?.thumbnail_url || '',
-      isOptimistic: true,
-      players: currentPlayers.map((p) => ({
-        id: p.id,
-        name: p.name,
-        total: isWinnerOnly ? (p.id === winnerPlayerId ? 1 : 0) : getDraftTotal(p.id),
-      })),
-      winner: isWinnerOnly
-        ? currentPlayers.find((p) => p.id === winnerPlayerId)
-        : null,
-    }
-
-    // Đưa ngay thẻ này lên đầu danh sách Lịch sử
-    useAppDataStore.getState().addOptimisticMatch(optimisticMatch)
-
-    // Phát Toast thông báo toàn cục (hiển thị xuyên route)
-    triggerGlobalToast('⏳ Đang đồng bộ ván đấu lên hệ thống...', 3000)
-
-    // Chuyển ngay sang trang Lịch sử tức thì trong 0ms
-    onShowHistory()
-
-    // Tác vụ lưu chạy ngầm trong background
-    ;(async () => {
-      try {
-        const finalImageAttachments = await resolveImageAttachments(currentMemoryImages)
-        const ok = await publishScores(
-          currentDraftScores,
-          currentDescription,
-          finalImageAttachments,
-          currentPlayers
-        )
-        if (ok) {
-          clearPlayers()
-          setMemoryImages([])
-          await useAppDataStore.getState().fetchHistory({ force: true })
-          useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
-          triggerGlobalToast('✅ Đã lưu kết quả ván đấu thành công!')
-        } else {
-          useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
-          triggerGlobalToast('⚠️ Lưu ván đấu thất bại, vui lòng kiểm tra kết nối!')
-        }
-      } catch (err) {
-        useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
-        triggerGlobalToast('⚠️ Lỗi: ' + (err instanceof Error ? err.message : 'Không thể lưu kết quả'))
-      } finally {
-        currentMemoryImages.forEach((image) => {
-          if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
-        })
+    try {
+      const currentDescription = matchDescription.trim()
+      // Tạo thẻ Optimistic Match tạm thời để hiển thị ngay lập tức trên đỉnh History
+      const tempMatchId = `optimistic-${Date.now()}`
+      const now = new Date()
+      const effectiveBoardGameId = useGameStore.getState().boardGameId || ''
+      const optimisticMatch = {
+        id: tempMatchId,
+        gameName: displayGameName || 'Ván đấu mới',
+        gameId: effectiveBoardGameId,
+        description: currentDescription || '',
+        playedAt: displayPlayedAt || (now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })),
+        playedAtRaw: now.toISOString(),
+        thumbnailUrl: displayThumbnail || '',
+        isOptimistic: true,
+        players: currentPlayers.map((p) => ({
+          id: p.id,
+          name: p.name,
+          total: isWinnerOnly ? (p.id === winnerPlayerId ? 1 : 0) : getDraftTotal(p.id),
+        })),
+        winner: isWinnerOnly
+          ? currentPlayers.find((p) => p.id === winnerPlayerId)
+          : null,
       }
-    })()
+
+      // Đưa ngay thẻ này lên đầu danh sách Lịch sử
+      useAppDataStore.getState().addOptimisticMatch(optimisticMatch)
+
+      // Phát Toast thông báo toàn cục (hiển thị xuyên route)
+      triggerGlobalToast('⏳ Đang đồng bộ ván đấu lên hệ thống...', 3000)
+
+      // Chuyển ngay sang trang Lịch sử tức thì trong 0ms
+      onShowHistory()
+
+      // Tác vụ lưu chạy ngầm trong background
+      ;(async () => {
+        try {
+          const finalImageAttachments = await resolveImageAttachments(currentMemoryImages)
+          const ok = await publishScores(
+            currentDraftScores,
+            currentDescription,
+            finalImageAttachments,
+            currentPlayers
+          )
+          if (ok) {
+            clearPlayers()
+            setMemoryImages([])
+            await useAppDataStore.getState().fetchHistory({ force: true })
+            useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
+            triggerGlobalToast('✅ Đã lưu kết quả ván đấu thành công!')
+          } else {
+            useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
+            triggerGlobalToast('⚠️ Lưu ván đấu thất bại, vui lòng kiểm tra kết nối!')
+          }
+        } catch (err) {
+          useAppDataStore.getState().removeOptimisticMatch(tempMatchId)
+          triggerGlobalToast('⚠️ Lỗi: ' + (err instanceof Error ? err.message : 'Không thể lưu kết quả'))
+        } finally {
+          currentMemoryImages.forEach((image) => {
+            if (!image.isExisting) URL.revokeObjectURL(image.previewUrl)
+          })
+        }
+      })()
+    } catch (error) {
+      toast('Lỗi: ' + (error instanceof Error ? error.message : 'Không thể lưu kết quả'))
+    }
   }
 
   function handleClose() {
