@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getBoardGames, getMatches, getUsers, getUserGameStats } from '../api/backendService'
+import { preloadImages } from '../utils/imagePreloader'
 
 const BOARD_GAMES_TTL = 5 * 60 * 1000
 const USERS_TTL = 5 * 60 * 1000
@@ -67,6 +68,7 @@ export const useAppDataStore = create((set, get) => ({
           allBoardGamesFetchedAt: Date.now(),
           isLoadingAllBoardGames: false,
         })
+        preloadImages(items.map((i) => i.thumbnail_url || i.thumbnailUrl))
         return items
       })
       .catch((error) => {
@@ -85,6 +87,7 @@ export const useAppDataStore = create((set, get) => ({
     const filterKeyChanged = getFilterKey(boardGamesFilters) !== getFilterKey(filters)
 
     if (!force && !filterKeyChanged && page === 1 && isFresh(boardGamesFetchedAt, BOARD_GAMES_TTL) && boardGames.length > 0) {
+      preloadImages(boardGames.map((i) => i.thumbnail_url || i.thumbnailUrl))
       return boardGames
     }
 
@@ -107,6 +110,7 @@ export const useAppDataStore = create((set, get) => ({
           boardGamesFetchedAt: Date.now(),
           isLoadingBoardGames: false,
         })
+        preloadImages(items.map((i) => i.thumbnail_url || i.thumbnailUrl))
         return items
       })
       .catch((error) => {
@@ -147,6 +151,7 @@ export const useAppDataStore = create((set, get) => ({
         boardGamesHasMore: hasMore,
         isLoadingMoreBoardGames: false,
       })
+      preloadImages(uniqueNewItems.map((i) => i.thumbnail_url || i.thumbnailUrl))
       return updatedGames
     } catch (error) {
       set({ isLoadingMoreBoardGames: false })
@@ -185,6 +190,7 @@ export const useAppDataStore = create((set, get) => ({
     const filterKeyChanged = getFilterKey(historyFilters) !== getFilterKey(filters)
 
     if (!force && !filterKeyChanged && page === 1 && isFresh(historyFetchedAt, HISTORY_TTL) && history.length > 0) {
+      preloadImages(history.map((i) => i.thumbnailUrl || i.thumbnail_url))
       return history
     }
 
@@ -207,6 +213,7 @@ export const useAppDataStore = create((set, get) => ({
           historyFetchedAt: Date.now(),
           isLoadingHistory: false,
         })
+        preloadImages(items.map((i) => i.thumbnailUrl || i.thumbnail_url))
         return items
       })
       .catch((error) => {
@@ -247,6 +254,7 @@ export const useAppDataStore = create((set, get) => ({
         historyHasMore: hasMore,
         isLoadingMoreHistory: false,
       })
+      preloadImages(uniqueNewItems.map((i) => i.thumbnailUrl || i.thumbnail_url))
       return updatedHistory
     } catch (error) {
       set({ isLoadingMoreHistory: false })
