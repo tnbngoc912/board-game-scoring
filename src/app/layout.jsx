@@ -64,6 +64,13 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={barlow.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(!sessionStorage.getItem('bg_splash_shown')){document.documentElement.classList.add('is-splash-active');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#93653f');}}catch(e){}`,
+          }}
+        />
+      </head>
       <ScrollRestorer />
       <body className={barlow.className} suppressHydrationWarning>
         <SplashScreen />

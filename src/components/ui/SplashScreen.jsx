@@ -13,16 +13,43 @@ export function SplashScreen() {
         setIsVisible(true)
         sessionStorage.setItem('bg_splash_shown', 'true')
 
+        // Kích hoạt class và đổi theme-color sang #93653f cho vùng safe-area trên iPhone
+        document.documentElement.classList.add('is-splash-active')
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', '#93653f')
+        }
+
         const timer = setTimeout(() => {
           setIsExiting(true)
+
+          // Trả lại theme-color mặc định cho giao diện app chính
+          if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', '#f5eedf')
+          }
+
           const exitTimer = setTimeout(() => {
             setIsVisible(false)
+            document.documentElement.classList.remove('is-splash-active')
           }, 350)
 
           return () => clearTimeout(exitTimer)
         }, 1000)
 
-        return () => clearTimeout(timer)
+        return () => {
+          clearTimeout(timer)
+          document.documentElement.classList.remove('is-splash-active')
+          if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', '#f5eedf')
+          }
+        }
+      } else {
+        // Đã hiển thị trước đó trong phiên, dọn dẹp trạng thái nếu có
+        document.documentElement.classList.remove('is-splash-active')
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', '#f5eedf')
+        }
       }
     } catch (err) {
       // Bỏ qua lỗi nếu trình duyệt chặn sessionStorage
