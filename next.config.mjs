@@ -13,13 +13,13 @@ const withPWA = withPWAInit({
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
-      urlPattern: /^https?:\/\/.*\.(?:png|jpg|jpeg|svg|webp|gif)(\?.*)?$/i,
+      urlPattern: /^https?:\/\/(?:.*\.(?:png|jpg|jpeg|svg|webp|gif)|.*googleusercontent\.com\/.*)(\?.*)?$/i,
       handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'remote-game-thumbnails',
         expiration: {
-          maxEntries: 120,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 ngày
+          maxEntries: 200,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 ngày
         },
       },
     },

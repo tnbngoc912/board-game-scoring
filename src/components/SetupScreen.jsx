@@ -417,7 +417,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                           type="button"
                           key={game.id || game.name}
                           title={game.name}
-                          thumbnailUrl={game.thumbnail_url}
+                          thumbnailUrl={game.thumbnail_url || game.thumbnailUrl}
                           fallbackText={game.name?.slice(0, 2).toUpperCase() || 'BG'}
                           background={`linear-gradient(135deg, ${startColor}, ${endColor})`}
                           onClick={() => handleChooseGame(game)}

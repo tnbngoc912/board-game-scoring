@@ -166,6 +166,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const detailScreenRef = useRef(null)
   const receiptCardRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
+  const isClosingDetailRef = useRef(false)
+  const closedMatchIdRef = useRef(null)
 
   useEffect(() => {
     if (!selectedMatch) {
@@ -401,40 +403,144 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
   const openMatchDetail = useCallback(async (entry, options = {}) => {
     const { syncRoute = true } = options
-    if (syncRoute) router.push(`/history/${entry.id}`)
+    if (syncRoute && typeof window !== 'undefined') {
+      const targetUrl = `/history/${entry.id}`
+      if (window.location.pathname !== targetUrl) {
+        window.history.pushState({ matchDetailOpen: true, matchId: entry.id }, '', targetUrl)
+      }
+    }
     setIsDetailMenuOpen(false)
+
+    // Hiển thị ngay lập tức dữ liệu sơ bộ từ entry (optimistic)
+    const cachedBoardGames = useAppDataStore.getState().allBoardGames.length
+      ? useAppDataStore.getState().allBoardGames
+      : useAppDataStore.getState().boardGames
+    const quickNormalized = alignScoreRowsWithBoardGame(entry, cachedBoardGames)
+    setSelectedMatch(attachMatchThumbnail(quickNormalized, cachedBoardGames))
+
     setIsLoadingMatchDetail(true)
 
     try {
-      const [detail, cachedBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
+      const [detail, freshBoardGames] = await Promise.all([getMatch(entry.id), fetchBoardGames()])
       const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: entry.scoreRows || [] }
       const normalizedMatch = detail.scoreRows?.length
         ? matchWithRows
-        : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
-      setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
+        : alignScoreRowsWithBoardGame(matchWithRows, freshBoardGames)
+      setSelectedMatch(attachMatchThumbnail(normalizedMatch, freshBoardGames))
     } catch {
-      toast('Khong tai duoc chi tiet bang diem')
+      toast('Không tải được chi tiết bảng điểm')
     } finally {
       setIsLoadingMatchDetail(false)
     }
-  }, [fetchBoardGames, router, toast])
+  }, [fetchBoardGames, toast])
+
+  const handleCloseDetail = useCallback(() => {
+    if (selectedMatch) {
+      closedMatchIdRef.current = String(selectedMatch.id)
+    }
+    isClosingDetailRef.current = true
+    setIsDetailMenuOpen(false)
+    setSelectedMatch(null)
+    setIsEditingMatch(false)
+    if (typeof window !== 'undefined') {
+      if (window.history.state?.matchDetailOpen) {
+        window.history.back()
+      } else if (window.location.pathname.startsWith('/history/')) {
+        if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+          window.history.back()
+        } else {
+          router.push('/history')
+        }
+      }
+    }
+    setTimeout(() => {
+      isClosingDetailRef.current = false
+      closedMatchIdRef.current = null
+    }, 500)
+  }, [router, selectedMatch])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === 'undefined') return
+      const match = window.location.pathname.match(/^\/history\/(.+)$/)
+      if (match?.[1]) {
+        const id = match[1]
+        if (isClosingDetailRef.current || closedMatchIdRef.current === id) return
+
+        if (String(selectedMatch?.id || '') !== id) {
+          const entry = historyWithThumbnails.find((item) => String(item.id) === id)
+          if (entry) {
+            openMatchDetail(entry, { syncRoute: false })
+          } else {
+            setIsLoadingMatchDetail(true)
+            Promise.all([getMatch(id), fetchBoardGames()])
+              .then(([detail, cachedBoardGames]) => {
+                const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: [] }
+                const normalizedMatch = detail.scoreRows?.length
+                  ? matchWithRows
+                  : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
+                setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
+              })
+              .catch(() => {
+                toast('Không tải được chi tiết bảng điểm')
+              })
+              .finally(() => {
+                setIsLoadingMatchDetail(false)
+              })
+          }
+        }
+      } else {
+        isClosingDetailRef.current = true
+        setSelectedMatch(null)
+        setIsDetailMenuOpen(false)
+        setIsEditingMatch(false)
+        setTimeout(() => {
+          isClosingDetailRef.current = false
+          closedMatchIdRef.current = null
+        }, 500)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [historyWithThumbnails, openMatchDetail, selectedMatch?.id, fetchBoardGames, toast])
 
   useEffect(() => {
     if (!routeDetailMatchId) {
-      if (selectedMatch) {
+      if (selectedMatch && typeof window !== 'undefined' && !window.location.pathname.startsWith('/history/')) {
         setSelectedMatch(null)
         setIsDetailMenuOpen(false)
       }
       return
     }
 
+    if (isClosingDetailRef.current || (closedMatchIdRef.current && closedMatchIdRef.current === routeDetailMatchId)) {
+      return
+    }
+
     if (String(selectedMatch?.id || '') === routeDetailMatchId) return
 
     const entry = historyWithThumbnails.find((item) => String(item.id) === routeDetailMatchId)
-    if (!entry) return
-
-    openMatchDetail(entry, { syncRoute: false })
-  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails])
+    if (entry) {
+      openMatchDetail(entry, { syncRoute: false })
+    } else {
+      setIsLoadingMatchDetail(true)
+      Promise.all([getMatch(routeDetailMatchId), fetchBoardGames()])
+        .then(([detail, cachedBoardGames]) => {
+          const matchWithRows = detail.scoreRows?.length ? detail : { ...detail, scoreRows: [] }
+          const normalizedMatch = detail.scoreRows?.length
+            ? matchWithRows
+            : alignScoreRowsWithBoardGame(matchWithRows, cachedBoardGames)
+          setSelectedMatch(attachMatchThumbnail(normalizedMatch, cachedBoardGames))
+        })
+        .catch(() => {
+          toast('Không tải được chi tiết bảng điểm')
+        })
+        .finally(() => {
+          setIsLoadingMatchDetail(false)
+        })
+    }
+  }, [routeDetailMatchId, selectedMatch, historyWithThumbnails, openMatchDetail, fetchBoardGames, toast])
 
   const clearFilters = useCallback(() => {
     setSelectedGameName('')
@@ -472,7 +578,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       setMatchToDelete(null)
       setIsDetailMenuOpen(false)
       toast('Đã xóa bảng điểm')
-      router.push('/history')
+      if (typeof window !== 'undefined' && window.history.state?.matchDetailOpen) {
+        window.history.back()
+      } else {
+        router.push('/history')
+      }
     } catch {
       toast('Không thể xóa bảng điểm')
     } finally {
@@ -601,27 +711,23 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
   }, [isExportingImage, receiptDataUrls, selectedMatch, toast])
 
-  if (routeDetailMatchId && !selectedMatch) {
-    return (
-      <div className="screen score-screen history-detail-screen loading-shell" aria-busy="true">
-        <LoadingOverlay label="Đang tải..." />
-      </div>
-    )
-  }
+  const renderDetailView = () => {
+    if (!selectedMatch) return null
 
-  if (selectedMatch) {
     if (isEditingMatch) {
       return (
-        <GameScreen
-          toast={toast}
-          matchToEdit={selectedMatch}
-          onCloseEdit={() => setIsEditingMatch(false)}
-          onSaveEdit={async () => {
-            setIsEditingMatch(false)
-            const detail = await getMatch(selectedMatch.id)
-            setSelectedMatch(detail)
-          }}
-        />
+        <div className="history-detail-overlay">
+          <GameScreen
+            toast={toast}
+            matchToEdit={selectedMatch}
+            onCloseEdit={() => setIsEditingMatch(false)}
+            onSaveEdit={async () => {
+              setIsEditingMatch(false)
+              const detail = await getMatch(selectedMatch.id)
+              setSelectedMatch(detail)
+            }}
+          />
+        </div>
       )
     }
 
@@ -646,16 +752,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     return (
       <div
         ref={detailScreenRef}
-        className="screen score-screen history-detail-screen loading-shell"
+        className="screen score-screen history-detail-screen history-detail-overlay loading-shell"
         aria-busy={isLoadingMatchDetail || isExportingImage}
       >
         {isLoadingMatchDetail ? <LoadingOverlay label="Đang tải..." /> : null}
         {isExportingImage ? <LoadingOverlay label="Đang tạo ảnh..." /> : null}
-        <Header title="Bảng Điểm"
-          onBack={() => {
-            setIsDetailMenuOpen(false)
-            router.push('/history')
-          }}
+        <Header
+          title="Bảng Điểm"
+          onBack={handleCloseDetail}
           rightElement={
             <Icon
               src="/more-menu.png"
@@ -784,10 +888,16 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     )
   }
 
+  const isDetailActive = Boolean(selectedMatch)
 
   return (
-    <div className="screen history-screen has-ptr">
-      <Header />
+    <>
+      <div
+        className="screen history-screen has-ptr"
+        aria-hidden={isDetailActive}
+        style={isDetailActive ? { pointerEvents: 'none' } : undefined}
+      >
+        <Header />
 
       <PullToRefresh onRefresh={async () => {
         try {
@@ -920,6 +1030,9 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         onConfirm={confirmDelete}
       />
     </div>
+
+    {renderDetailView()}
+  </>
   )
 }
 
