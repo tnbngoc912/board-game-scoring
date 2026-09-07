@@ -9,6 +9,7 @@ import { Toast } from '../components/Toast'
 import { Header } from '../components/Header'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 import { Icon } from '../components/ui/Icon'
+import { useIsStandalone } from '../hooks/useIsStandalone'
 import { disableFcmNotifications, enableFcmNotifications, hasEnabledFcmNotifications } from '../api/firebaseNotifications'
 
 export function AccountShell() {
@@ -17,16 +18,7 @@ export function AccountShell() {
   const { message, visible, show: showToast } = useToast()
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
-    }
-  }, [])
+  const isStandalone = useIsStandalone()
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -65,7 +57,7 @@ export function AccountShell() {
   return (
     <ProtectedScreen>
       <div className="app-shell screen-account">
-        <div className={`account-screen${isStandalone ? ' has-ptr' : ''}`}>
+        <div className="account-screen has-ptr">
           <Header />
 
           <PullToRefresh onRefresh={async () => {

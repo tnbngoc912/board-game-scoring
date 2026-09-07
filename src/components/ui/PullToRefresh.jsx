@@ -1,21 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { RotateCw } from 'lucide-react'
 import '../../styles/components/pull-to-refresh.css'
+import { useIsStandalone } from '../../hooks/useIsStandalone'
 
 const PULL_THRESHOLD = 60 // Khoảng cách kéo tối thiểu bằng px để kích hoạt refresh
 const ACTIVATION_THRESHOLD = 12 // Khoảng cách trễ ban đầu trước khi nhận diện là hành vi kéo làm mới có chủ đích
 
-function checkIsStandalone() {
-  if (typeof window === 'undefined') return false
-  return Boolean(
-    window.navigator.standalone ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-  )
-}
-
 export function PullToRefresh({ children, onRefresh }) {
-  const [isStandalone, setIsStandalone] = useState(checkIsStandalone)
+  const isStandalone = useIsStandalone()
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -40,11 +32,6 @@ export function PullToRefresh({ children, onRefresh }) {
   useEffect(() => {
     onRefreshRef.current = onRefresh
   }, [onRefresh])
-
-  // 1. Kiểm tra xem ứng dụng có đang chạy ở chế độ standalone hay không (đảm bảo đồng bộ sau mount)
-  useEffect(() => {
-    setIsStandalone(checkIsStandalone())
-  }, [])
 
   // 2. Chỉ đăng ký các touch listener nếu chạy ở chế độ standalone
   useEffect(() => {

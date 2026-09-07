@@ -10,6 +10,7 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
 import { Header } from '../components/Header'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
+import { useIsStandalone } from '../hooks/useIsStandalone'
 
 // Framer motion variants cho hiệu ứng xuất hiện mượt mà
 const containerVariants = {
@@ -272,16 +273,7 @@ function AchievementsSkeleton() {
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(!user?.stats)
-  const [isStandalone, setIsStandalone] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
-    }
-  }, [])
+  const isStandalone = useIsStandalone()
 
   useEffect(() => {
     async function loadData() {
@@ -320,7 +312,7 @@ export function AchievementsShell() {
   return (
     <ProtectedScreen>
       <div className="app-shell screen-achievements">
-        <div className={`achievements-screen${isStandalone ? ' has-ptr' : ''}`}>
+        <div className="achievements-screen has-ptr">
           <Header />
 
           <PullToRefresh onRefresh={async () => {
