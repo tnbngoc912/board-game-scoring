@@ -270,10 +270,20 @@ function AchievementsSkeleton() {
   )
 }
 
+// Biến cờ ghi nhớ trạng thái đã chạy animation thành tựu trong phiên làm việc
+let hasPlayedAchievementsAnimation = false
+
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(!user?.stats)
   const isStandalone = useIsStandalone()
+  const [shouldAnimate] = useState(!hasPlayedAchievementsAnimation)
+
+  useEffect(() => {
+    if (!hasPlayedAchievementsAnimation) {
+      hasPlayedAchievementsAnimation = true
+    }
+  }, [])
 
   useEffect(() => {
     async function loadData() {
@@ -343,7 +353,7 @@ export function AchievementsShell() {
                 <motion.div
                   className="achievements-cards-container"
                   variants={containerVariants}
-                  initial="hidden"
+                  initial={shouldAnimate ? 'hidden' : false}
                   animate="visible"
                 >
                   {/* 2. User Profile Banner Card */}
