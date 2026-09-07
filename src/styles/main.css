@@ -23,6 +23,7 @@
 @import './components/navigation.css';
 @import './components/search.css';
 @import './components/toast.css';
+@import './components/splash-screen.css';
 
 /* features */
 @import './features/auth/login.css';
