@@ -166,6 +166,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const detailScreenRef = useRef(null)
   const receiptCardRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
+  const isClosingDetailRef = useRef(false)
+  const closedMatchIdRef = useRef(null)
 
   useEffect(() => {
     if (!selectedMatch) {
@@ -433,6 +435,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [fetchBoardGames, toast])
 
   const handleCloseDetail = useCallback(() => {
+    if (selectedMatch) {
+      closedMatchIdRef.current = String(selectedMatch.id)
+    }
+    isClosingDetailRef.current = true
     setIsDetailMenuOpen(false)
     setSelectedMatch(null)
     setIsEditingMatch(false)
@@ -447,7 +453,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         }
       }
     }
-  }, [router])
+    setTimeout(() => {
+      isClosingDetailRef.current = false
+      closedMatchIdRef.current = null
+    }, 500)
+  }, [router, selectedMatch])
 
   useEffect(() => {
     const handlePopState = () => {
@@ -455,6 +465,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       const match = window.location.pathname.match(/^\/history\/(.+)$/)
       if (match?.[1]) {
         const id = match[1]
+        if (isClosingDetailRef.current || closedMatchIdRef.current === id) return
+
         if (String(selectedMatch?.id || '') !== id) {
           const entry = historyWithThumbnails.find((item) => String(item.id) === id)
           if (entry) {
@@ -478,9 +490,14 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           }
         }
       } else {
+        isClosingDetailRef.current = true
         setSelectedMatch(null)
         setIsDetailMenuOpen(false)
         setIsEditingMatch(false)
+        setTimeout(() => {
+          isClosingDetailRef.current = false
+          closedMatchIdRef.current = null
+        }, 500)
       }
     }
 
@@ -494,6 +511,10 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
         setSelectedMatch(null)
         setIsDetailMenuOpen(false)
       }
+      return
+    }
+
+    if (isClosingDetailRef.current || (closedMatchIdRef.current && closedMatchIdRef.current === routeDetailMatchId)) {
       return
     }
 
@@ -691,14 +712,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [isExportingImage, receiptDataUrls, selectedMatch, toast])
 
   const renderDetailView = () => {
-    if (routeDetailMatchId && !selectedMatch) {
-      return (
-        <div className="screen score-screen history-detail-screen history-detail-overlay loading-shell" aria-busy="true">
-          <LoadingOverlay label="Đang tải..." />
-        </div>
-      )
-    }
-
     if (!selectedMatch) return null
 
     if (isEditingMatch) {
@@ -875,7 +888,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     )
   }
 
-  const isDetailActive = Boolean(selectedMatch || (routeDetailMatchId && !selectedMatch))
+  const isDetailActive = Boolean(selectedMatch)
 
   return (
     <>
