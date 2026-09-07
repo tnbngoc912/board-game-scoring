@@ -1,6 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import Image from "next/image"
 
 export function GameCard({
   as = 'button',
@@ -24,7 +23,15 @@ export function GameCard({
         aria-hidden="true"
       >
         {thumbnailUrl ? (
-          <Image loading="lazy" alt="" width={80} height={80} src={thumbnailUrl} />
+          <img
+            src={thumbnailUrl}
+            alt=""
+            width={80}
+            height={80}
+            loading="eager"
+            decoding="sync"
+            className="game-card-img"
+          />
         ) : (
           <span>{fallbackText}</span>
         )}
