@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { getOptimizedImageUrl } from '../utils/imagePreloader'
 
 export function GameCard({
   as = 'button',
@@ -14,6 +15,7 @@ export function GameCard({
   ...props
 }) {
   const MotionComponent = as === 'article' ? 'article' : 'button'
+  const imageSrc = getOptimizedImageUrl(thumbnailUrl, 160)
 
   return (
     <MotionComponent className={`game-card ${className}`.trim()} {...props}>
@@ -22,14 +24,15 @@ export function GameCard({
         style={{ background }}
         aria-hidden="true"
       >
-        {thumbnailUrl ? (
+        {imageSrc ? (
           <img
-            src={thumbnailUrl}
+            src={imageSrc}
             alt=""
             width={80}
             height={80}
             loading="eager"
             decoding="sync"
+            fetchPriority="high"
             className="game-card-img"
           />
         ) : (
