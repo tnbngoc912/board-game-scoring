@@ -3,6 +3,7 @@ import '../index.css'
 import { ScrollRestorer } from '../components/navigation/ScrollRestorer'
 import { FcmForegroundListener } from '../components/notifications/FcmForegroundListener'
 import { IosInstallPrompt } from '../components/IosInstallPrompt'
+import { SplashScreen } from '../components/ui/SplashScreen'
 
 const barlow = Barlow_Semi_Condensed({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -63,8 +64,16 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={barlow.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(!sessionStorage.getItem('bg_splash_shown')){document.documentElement.classList.add('is-splash-active');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#93653f');}}catch(e){}`,
+          }}
+        />
+      </head>
       <ScrollRestorer />
       <body className={barlow.className} suppressHydrationWarning>
+        <SplashScreen />
         <FcmForegroundListener />
         {children}
         <IosInstallPrompt />
