@@ -44,8 +44,10 @@ body > div:first-child {
 }
 
 .screen.has-ptr,
-.account-screen.has-ptr,
-.achievements-screen.has-ptr {
+.screen.home-screen,
+.screen.history-screen,
+.account-screen,
+.achievements-screen {
   overflow-y: hidden !important;
   display: flex;
   flex-direction: column;

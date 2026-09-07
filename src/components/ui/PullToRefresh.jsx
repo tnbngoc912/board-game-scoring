@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { RotateCw } from 'lucide-react'
 import '../../styles/components/pull-to-refresh.css'
+import { useIsStandalone } from '../../hooks/useIsStandalone'
 
 const PULL_THRESHOLD = 60 // Khoảng cách kéo tối thiểu bằng px để kích hoạt refresh
 const ACTIVATION_THRESHOLD = 12 // Khoảng cách trễ ban đầu trước khi nhận diện là hành vi kéo làm mới có chủ đích
 
 export function PullToRefresh({ children, onRefresh }) {
-  const [isStandalone, setIsStandalone] = useState(false)
+  const isStandalone = useIsStandalone()
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -31,17 +32,6 @@ export function PullToRefresh({ children, onRefresh }) {
   useEffect(() => {
     onRefreshRef.current = onRefresh
   }, [onRefresh])
-
-  // 1. Kiểm tra xem ứng dụng có đang chạy ở chế độ standalone hay không
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone =
-        window.navigator.standalone ||
-        window.matchMedia('(display-mode: standalone)').matches ||
-        new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(Boolean(standalone))
-    }
-  }, [])
 
   // 2. Chỉ đăng ký các touch listener nếu chạy ở chế độ standalone
   useEffect(() => {
@@ -158,47 +148,45 @@ export function PullToRefresh({ children, onRefresh }) {
     }
   }, [isStandalone])
 
-  // Nếu không phải chế độ standalone, trả về container cuộn mặc định và không có hiệu ứng gì
-  if (!isStandalone) {
-    return (
-      <div className="pull-to-refresh-container normal-scroll">
-        {children}
-      </div>
-    )
-  }
-
   const indicatorVisible = isRefreshing || pullDistance > 0
 
   return (
-    <div ref={containerRef} className="pull-to-refresh-container">
-      <div
-        className="pull-to-refresh-indicator"
-        style={{
-          transform: isRefreshing
-            ? 'translateY(28px) scale(1)'
-            : indicatorVisible
-            ? `translateY(${Math.min(pullDistance * 0.7, 44)}px) scale(${Math.min(0.6 + (pullDistance / PULL_THRESHOLD) * 0.4, 1)})`
-            : 'translateY(-20px) scale(0.6)',
-          opacity: isRefreshing
-            ? 1
-            : indicatorVisible
-            ? Math.min(pullDistance / (PULL_THRESHOLD * 0.7), 1)
-            : 0,
-          transition: isPulling.current
-            ? 'none'
-            : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease',
-        }}
-      >
-        <div className="pull-indicator-circle">
-          <RotateCw
-            className={`pull-indicator-icon ${isRefreshing ? 'spinning' : ''}`}
-            style={{
-              transform: isRefreshing ? 'none' : `rotate(${pullDistance * 6}deg)`,
-            }}
-            size={18}
-          />
+    <div
+      ref={containerRef}
+      className={`pull-to-refresh-container${!isStandalone ? ' normal-scroll' : ''}`}
+    >
+      {isStandalone && (
+        <div
+          className={`pull-to-refresh-indicator${indicatorVisible ? ' is-active' : ''}`}
+          aria-hidden={!indicatorVisible}
+          style={{
+            transform: isRefreshing
+              ? 'translateY(28px) scale(1)'
+              : indicatorVisible
+              ? `translateY(${Math.min(pullDistance * 0.7, 44)}px) scale(${Math.min(0.6 + (pullDistance / PULL_THRESHOLD) * 0.4, 1)})`
+              : 'translateY(-20px) scale(0.6)',
+            opacity: isRefreshing
+              ? 1
+              : indicatorVisible
+              ? Math.min(pullDistance / (PULL_THRESHOLD * 0.7), 1)
+              : 0,
+            visibility: indicatorVisible ? 'visible' : 'hidden',
+            transition: isPulling.current
+              ? 'none'
+              : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease, visibility 0.2s ease',
+          }}
+        >
+          <div className="pull-indicator-circle">
+            <RotateCw
+              className={`pull-indicator-icon ${isRefreshing ? 'spinning' : ''}`}
+              style={{
+                transform: isRefreshing ? 'none' : `rotate(${pullDistance * 6}deg)`,
+              }}
+              size={18}
+            />
+          </div>
         </div>
-      </div>
+      )}
       <div className="pull-to-refresh-content">
         {children}
       </div>

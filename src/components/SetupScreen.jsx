@@ -15,6 +15,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
+import { useIsStandalone } from '../hooks/useIsStandalone'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -69,16 +70,7 @@ function getCurrentLocalDateTimeValue() {
 
 export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'games', onBackFromConfig, onChooseGame }) {
   const [setupStep, setSetupStep] = useState(initialStep)
-  const [isStandalone, setIsStandalone] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
-    }
-  }, [])
+  const isStandalone = useIsStandalone()
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
@@ -349,7 +341,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
 
 
   return (
-    <div className={`screen${setupStep === 'games' ? ' home-screen' : ''}${setupStep === 'games' && isStandalone ? ' has-ptr' : ''}`}>
+    <div className={`screen${setupStep === 'games' ? ' home-screen has-ptr' : ''}`}>
       {setupStep === 'games' ? (
         <>
           <Header />
