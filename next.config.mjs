@@ -1,4 +1,5 @@
 import withPWAInit from 'next-pwa'
+import runtimeCaching from 'next-pwa/cache.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 
@@ -10,12 +11,24 @@ const withPWA = withPWAInit({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      urlPattern: /^https?:\/\/.*\.(?:png|jpg|jpeg|svg|webp|gif)(\?.*)?$/i,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'remote-game-thumbnails',
+        expiration: {
+          maxEntries: 120,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 ngày
+        },
+      },
+    },
+    ...runtimeCaching,
+  ],
 })
 
 const nextConfig = {
-  experimental: {
-    outputFileTracingRoot: __dirname,
-  },
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       {

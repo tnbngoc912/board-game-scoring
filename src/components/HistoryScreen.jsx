@@ -21,6 +21,7 @@ import { Button } from './ui/Button'
 import { GameScreen } from './GameScreen'
 import { MatchCommentsSection } from './MatchCommentsSection'
 import { MatchReceiptCard } from './score/MatchReceiptCard'
+import { useIsStandalone } from '../hooks/useIsStandalone'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -161,7 +162,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const [receiptDataUrls, setReceiptDataUrls] = useState([])
   const [lightboxImageIndex, setLightboxImageIndex] = useState(null)
   const [isEditingMatch, setIsEditingMatch] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
+  const isStandalone = useIsStandalone()
   const detailScreenRef = useRef(null)
   const receiptCardRef = useRef(null)
   const resetBoard = useGameStore((state) => state.resetBoard)
@@ -178,15 +179,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       setReceiptDataUrls([])
     }
   }, [selectedMatch])
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
-    }
-  }, [])
 
   const currentUser = useAuthStore((state) => state.user)
   const { match } = usePermissions()
@@ -794,7 +786,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
 
   return (
-    <div className={`screen history-screen${isStandalone ? ' has-ptr' : ''}`}>
+    <div className="screen history-screen has-ptr">
       <Header />
 
       <PullToRefresh onRefresh={async () => {
@@ -889,9 +881,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') openMatchDetail(entry)
                   }}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.02 }}
                 >
                   <p>{entry.playedAt}</p>
                   <div className="history-winner-line">

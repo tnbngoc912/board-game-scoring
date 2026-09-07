@@ -10,6 +10,7 @@ import { BottomNav } from '../components/navigation/BottomNav'
 import { useAuthStore } from '../store/authStore'
 import { Header } from '../components/Header'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
+import { useIsStandalone } from '../hooks/useIsStandalone'
 
 // Framer motion variants cho hiệu ứng xuất hiện mượt mà
 const containerVariants = {
@@ -269,17 +270,18 @@ function AchievementsSkeleton() {
   )
 }
 
+// Biến cờ ghi nhớ trạng thái đã chạy animation thành tựu trong phiên làm việc
+let hasPlayedAchievementsAnimation = false
+
 export function AchievementsShell() {
   const { user, refreshProfile } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(!user?.stats)
-  const [isStandalone, setIsStandalone] = useState(false)
+  const isStandalone = useIsStandalone()
+  const [shouldAnimate] = useState(!hasPlayedAchievementsAnimation)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const standalone = window.navigator.standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches ||
-                         new URLSearchParams(window.location.search).get('test-pwa') === 'true'
-      setIsStandalone(standalone)
+    if (!hasPlayedAchievementsAnimation) {
+      hasPlayedAchievementsAnimation = true
     }
   }, [])
 
@@ -320,7 +322,7 @@ export function AchievementsShell() {
   return (
     <ProtectedScreen>
       <div className="app-shell screen-achievements">
-        <div className={`achievements-screen${isStandalone ? ' has-ptr' : ''}`}>
+        <div className="achievements-screen has-ptr">
           <Header />
 
           <PullToRefresh onRefresh={async () => {
@@ -351,7 +353,7 @@ export function AchievementsShell() {
                 <motion.div
                   className="achievements-cards-container"
                   variants={containerVariants}
-                  initial="hidden"
+                  initial={shouldAnimate ? 'hidden' : false}
                   animate="visible"
                 >
                   {/* 2. User Profile Banner Card */}
