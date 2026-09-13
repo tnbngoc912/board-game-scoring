@@ -138,10 +138,12 @@ export function normalizeMatchDetail(payload) {
         name: player.user_id?.name || player.name,
         total: player.total_score ?? 0,
         rank: player.rank ?? index + 1,
+        seat_order: player.seat_order ?? index + 1,
         isWinner: Boolean(player.is_winner || winnerIds.has(id)),
         scores: player.scores || {},
       }
     })
+    .sort((a, b) => (a.seat_order ?? 0) - (b.seat_order ?? 0))
   const winner = normalizedPlayers.find((player) => player.isWinner)
   const scoreRowsFromColumns = scoreColumns.map((column, index) => ({
     ...normalizeScoreColumn(column, index),

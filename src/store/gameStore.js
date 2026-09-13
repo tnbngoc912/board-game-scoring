@@ -290,6 +290,7 @@ export const useGameStore = create(
               const player = players[index]
               return {
                 user_id: user.id,
+                seat_order: index + 1,
                 scores: buildApiScoresForPlayer(player.id, publishedScores),
               }
             })
@@ -310,7 +311,7 @@ export const useGameStore = create(
           await createFullMatch({
             boardGameId: effectiveBoardGameId,
             players: scoringType === 'WINNER_ONLY'
-              ? syncedUsers.map((user) => ({ user_id: user.id }))
+              ? syncedUsers.map((user, index) => ({ user_id: user.id, seat_order: index + 1 }))
               : playerScores,
             winnerIds: scoringType === 'WINNER_ONLY' ? winnerIds : null,
             description: description.trim() || '',
