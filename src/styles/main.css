@@ -17,6 +17,7 @@
 @import './components/pull-to-refresh.css';
 @import './components/match-comments.css';
 @import './components/match-receipt.css';
+@import './components/match-detail-skeleton.css';
 
 
 @import './components/modal.css';

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Gamepad2 } from 'lucide-react'
@@ -186,6 +187,8 @@ function LeastRecentGroupCard({ game }) {
 }
 
 function TopRecordsGroupCard({ topRecordGames }) {
+  const router = useRouter()
+
   return (
     <motion.div variants={cardItemVariants} className="achievements-group-card">
       <div className="achievements-group-header">
@@ -194,7 +197,13 @@ function TopRecordsGroupCard({ topRecordGames }) {
       <div className="achievements-group-list">
         {topRecordGames.length > 0 ? (
           topRecordGames.map((game, idx) => (
-            <div className="achievements-list-item" key={game.board_game_id || idx}>
+            <div
+              className="achievements-list-item"
+              key={game.board_game_id || idx}
+              onClick={() => {
+                if (game.match_id) router.push(`/history/${game.match_id}?from=achievements`)
+              }}
+            >
               <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />
               <div className="achievements-list-item-info">
                 <span className="achievements-list-item-title" title={game.name}>

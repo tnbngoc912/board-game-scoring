@@ -1,0 +1,134 @@
+/* Match Detail Skeleton Styles */
+
+.match-detail-skeleton {
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* Shimmer animation cao cap */
+.match-detail-skeleton .skeleton-box {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgba(215, 176, 142, 0.22) 0%,
+    rgba(247, 237, 229, 0.8) 50%,
+    rgba(215, 176, 142, 0.22) 100%
+  );
+  background-size: 200% 100%;
+  animation: match-detail-skeleton-shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes match-detail-skeleton-shimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+/* 1. Summary Strip Skeleton */
+.match-detail-skeleton .match-summary-strip {
+  gap: 12px;
+}
+
+.match-detail-skeleton .detail-thumb.skeleton-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.match-summary-skeleton-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.match-summary-skeleton-info .skeleton-title {
+  width: 55%;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.match-summary-skeleton-info .skeleton-subtitle {
+  width: 35%;
+  height: 14px;
+  border-radius: 4px;
+}
+
+/* 2. Score Grid Skeleton */
+.match-detail-skeleton .player-header .skeleton-player-name {
+  width: 46px;
+  height: 16px;
+  border-radius: 4px;
+  margin: 0 auto;
+}
+
+.match-detail-skeleton .score-grid-label .skeleton-category-name {
+  width: 64px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.match-detail-skeleton .readonly-score-box .skeleton-score-val {
+  width: 30px;
+  height: 18px;
+  border-radius: 4px;
+  margin: 0 auto;
+}
+
+.match-detail-skeleton .score-grid-winner .skeleton-total-val {
+  width: 32px;
+  height: 20px;
+  border-radius: 4px;
+  margin: 0 auto;
+}
+
+/* 3. Comments Skeleton */
+.match-detail-skeleton .skeleton-comments-count {
+  width: 40px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.match-detail-skeleton .match-comment-avatar.skeleton-box {
+  border-radius: 50%;
+  border: 1px solid rgba(209, 203, 199, 0.5);
+  background: linear-gradient(
+    90deg,
+    rgba(215, 176, 142, 0.22) 0%,
+    rgba(247, 237, 229, 0.8) 50%,
+    rgba(215, 176, 142, 0.22) 100%
+  );
+  background-size: 200% 100%;
+  animation: match-detail-skeleton-shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.match-detail-skeleton .skeleton-comment-user {
+  width: 85px;
+  height: 15px;
+  border-radius: 4px;
+}
+
+.match-detail-skeleton .skeleton-comment-time {
+  width: 95px;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.match-detail-skeleton .skeleton-comment-line-1 {
+  width: 85%;
+  height: 15px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.match-detail-skeleton .skeleton-comment-line-2 {
+  width: 55%;
+  height: 15px;
+  border-radius: 4px;
+  margin-top: 4px;
+}

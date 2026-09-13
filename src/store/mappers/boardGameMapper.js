@@ -48,6 +48,7 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
     userRecord: source.user_record
       ? {
           highestScore: source.user_record.highest_score ?? null,
+          highestScoreMatchId: source.user_record.highest_score_match_id ?? null,
           rank: source.user_record.rank ?? null,
           wins: source.user_record.wins ?? 0,
           lastPlaces: source.user_record.last_places ?? 0,

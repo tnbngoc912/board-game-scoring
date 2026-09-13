@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Plus } from 'lucide-react'
 import { getBoardGameOverview, getMyBoardGameRecord } from '../api/backendService'
@@ -20,6 +21,7 @@ function formatLastPlayed(value) {
 }
 
 export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }) {
+  const router = useRouter()
   const currentUser = useAuthStore((state) => state.user)
   const applyBoardGameOverview = useGameStore((state) => state.applyBoardGameOverview)
   const hydrateOverviewIfNeeded = useGameSessionStore((state) => state.hydrateOverviewIfNeeded)
@@ -204,7 +206,15 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <strong className="overview-stat-value">{formatLastPlayed(overview.stats?.last_played_at)}</strong>
           </div>
           {overview.scoringType !== 'WINNER_ONLY' && (
-            <div className="overview-stat-card overview-stat-card--full">
+            <div
+              className="overview-stat-card overview-stat-card--full"
+              onClick={() => {
+                const matchId = overview.highestScorePlayer?.match_id
+                if (matchId) {
+                  router.push(`/history/${matchId}?from=game`)
+                }
+              }}
+            >
               <div className="overview-record-info">
                 <span className="overview-stat-label">Điểm kỷ lục</span>
                 <strong className="overview-stat-value">
@@ -290,7 +300,13 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             </div>
 
             {overview.scoringType !== 'WINNER_ONLY' && (
-              <div className="overview-stat-card overview-stat-card--full">
+              <div
+                className="overview-stat-card overview-stat-card--full"
+                onClick={() => {
+                  const matchId = userRecord?.highestScoreMatchId
+                  if (matchId) router.push(`/history/${matchId}?from=game`)
+                }}
+              >
                 <div className="overview-record-info">
                   <span className="overview-stat-label">Kỷ lục của bạn</span>
                   <strong className="overview-stat-value">
