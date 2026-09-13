@@ -11,6 +11,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
+import { MatchDetailSkeleton } from './history/MatchDetailSkeleton'
 import { PullToRefresh } from './ui/PullToRefresh'
 import { useAuthStore } from '../store/authStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -723,19 +724,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const renderDetailView = () => {
     if (!selectedMatch) {
       if (routeDetailMatchId && !closedMatchIdRef.current) {
-        return (
-          <div
-            ref={detailScreenRef}
-            className="screen score-screen history-detail-screen history-detail-overlay loading-shell"
-            aria-busy="true"
-          >
-            <LoadingOverlay label="Đang tải..." />
-            <Header
-              title="Bảng Điểm"
-              onBack={handleCloseDetail}
-            />
-          </div>
-        )
+        return <MatchDetailSkeleton onBack={handleCloseDetail} />
       }
       return null
     }
