@@ -443,22 +443,21 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     setIsDetailMenuOpen(false)
     setIsEditingMatch(false)
     if (typeof window !== 'undefined') {
-      const isExternalReferrer = Boolean(
-        document.referrer && !document.referrer.includes(window.location.host)
-      )
+      const searchParams = new URLSearchParams(window.location.search)
+      const from = searchParams.get('from')
 
       if (window.history.state?.matchDetailOpen) {
         setSelectedMatch(null)
         window.history.back()
-      } else if (window.location.pathname.startsWith('/history/')) {
-        if (!isExternalReferrer && window.history.length > 1) {
-          router.back()
-        } else {
-          setSelectedMatch(null)
-          router.push('/history')
-        }
+      } else if (from === 'achievements') {
+        router.push('/achievements')
+      } else if (from === 'game') {
+        router.push('/game')
+      } else if (window.history.length > 1) {
+        router.back()
       } else {
         setSelectedMatch(null)
+        router.push('/history')
       }
     }
     setTimeout(() => {

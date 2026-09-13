@@ -201,7 +201,7 @@ function TopRecordsGroupCard({ topRecordGames }) {
               className="achievements-list-item"
               key={game.board_game_id || idx}
               onClick={() => {
-                if (game.match_id) router.push(`/history/${game.match_id}`)
+                if (game.match_id) router.push(`/history/${game.match_id}?from=achievements`)
               }}
             >
               <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />

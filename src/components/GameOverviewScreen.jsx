@@ -211,7 +211,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
               onClick={() => {
                 const matchId = overview.highestScorePlayer?.match_id
                 if (matchId) {
-                  router.push(`/history/${matchId}`)
+                  router.push(`/history/${matchId}?from=game`)
                 }
               }}
             >
@@ -304,7 +304,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
                 className="overview-stat-card overview-stat-card--full"
                 onClick={() => {
                   const matchId = userRecord?.highestScoreMatchId
-                  if (matchId) router.push(`/history/${matchId}`)
+                  if (matchId) router.push(`/history/${matchId}?from=game`)
                 }}
               >
                 <div className="overview-record-info">
