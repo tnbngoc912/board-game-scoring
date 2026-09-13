@@ -438,6 +438,8 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const handleCloseDetail = useCallback(() => {
     if (selectedMatch) {
       closedMatchIdRef.current = String(selectedMatch.id)
+    } else if (routeDetailMatchId) {
+      closedMatchIdRef.current = String(routeDetailMatchId)
     }
     isClosingDetailRef.current = true
     setIsDetailMenuOpen(false)
@@ -464,7 +466,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
       isClosingDetailRef.current = false
       closedMatchIdRef.current = null
     }, 500)
-  }, [router, selectedMatch])
+  }, [router, selectedMatch, routeDetailMatchId])
 
   useEffect(() => {
     const handlePopState = () => {
@@ -719,7 +721,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [isExportingImage, receiptDataUrls, selectedMatch, toast])
 
   const renderDetailView = () => {
-    if (!selectedMatch) return null
+    if (!selectedMatch) {
+      if (routeDetailMatchId && !closedMatchIdRef.current) {
+        return (
+          <div
+            ref={detailScreenRef}
+            className="screen score-screen history-detail-screen history-detail-overlay loading-shell"
+            aria-busy="true"
+          >
+            <LoadingOverlay label="Đang tải..." />
+            <Header
+              title="Bảng Điểm"
+              onBack={handleCloseDetail}
+            />
+          </div>
+        )
+      }
+      return null
+    }
 
     if (isEditingMatch) {
       return (
