@@ -11,6 +11,7 @@ import { GameCard } from './GameCard'
 import Image from "next/image"
 import { ScoreGrid } from "./score/ScoreGrid"
 import { Header } from './Header'
+import { MatchDetailSkeleton } from './history/MatchDetailSkeleton'
 import { PullToRefresh } from './ui/PullToRefresh'
 import { useAuthStore } from '../store/authStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -438,27 +439,35 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   const handleCloseDetail = useCallback(() => {
     if (selectedMatch) {
       closedMatchIdRef.current = String(selectedMatch.id)
+    } else if (routeDetailMatchId) {
+      closedMatchIdRef.current = String(routeDetailMatchId)
     }
     isClosingDetailRef.current = true
     setIsDetailMenuOpen(false)
-    setSelectedMatch(null)
     setIsEditingMatch(false)
     if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const from = searchParams.get('from')
+
       if (window.history.state?.matchDetailOpen) {
+        setSelectedMatch(null)
         window.history.back()
-      } else if (window.location.pathname.startsWith('/history/')) {
-        if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
-          window.history.back()
-        } else {
-          router.push('/history')
-        }
+      } else if (from === 'achievements') {
+        router.push('/achievements')
+      } else if (from === 'game') {
+        router.push('/game')
+      } else if (window.history.length > 1) {
+        router.back()
+      } else {
+        setSelectedMatch(null)
+        router.push('/history')
       }
     }
     setTimeout(() => {
       isClosingDetailRef.current = false
       closedMatchIdRef.current = null
     }, 500)
-  }, [router, selectedMatch])
+  }, [router, selectedMatch, routeDetailMatchId])
 
   useEffect(() => {
     const handlePopState = () => {
@@ -713,7 +722,12 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
   }, [isExportingImage, receiptDataUrls, selectedMatch, toast])
 
   const renderDetailView = () => {
-    if (!selectedMatch) return null
+    if (!selectedMatch) {
+      if (routeDetailMatchId && !closedMatchIdRef.current) {
+        return <MatchDetailSkeleton onBack={handleCloseDetail} />
+      }
+      return null
+    }
 
     if (isEditingMatch) {
       return (
