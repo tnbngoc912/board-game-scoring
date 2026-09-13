@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname, useRouter } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
@@ -869,15 +870,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           toast={toast}
         />
 
-        {isDetailMenuOpen ? (
-          <button
-            className="detail-menu-dismiss"
-            type="button"
-            onClick={() => setIsDetailMenuOpen(false)}
-            aria-label="Dong tuy chon"
-          />
-        ) : null}
-
         <DeleteConfirmDialog
           entry={matchToDelete}
           isDeleting={isDeleting}
@@ -1038,6 +1030,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
 
 function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const hasImages = images.length > 0
   const isOpen = activeIndex !== null && hasImages
   const activeImage = isOpen ? images[activeIndex] : null
@@ -1066,6 +1063,9 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
   useEffect(() => {
     if (!isOpen) return undefined
 
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
     function handleKeyDown(event) {
       if (event.key === 'Escape') onClose()
       if (event.key === 'ArrowLeft') showPrevious()
@@ -1073,7 +1073,10 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
     }
 
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [isOpen, onClose, showNext, showPrevious])
 
   useEffect(() => {
@@ -1200,9 +1203,9 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
     }
   }, [activeImage, activeIndex, toast])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
-  return (
+  return createPortal(
     <div className="memory-lightbox" role="dialog" aria-modal="true" aria-label="Xem hình ảnh kỉ niệm">
       <button className="memory-lightbox-backdrop" type="button" onClick={onClose} aria-label="Đóng hình ảnh" />
       <div className="memory-lightbox-content">
@@ -1245,54 +1248,92 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
           <div className="memory-lightbox-count">{activeIndex + 1}/{images.length}</div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
-function DetailActionMenu({ isOpen, onEdit, onDelete, onShare, onDownloadImage, canEdit, canDelete }) {
-  if (!isOpen) return null
+function DetailActionMenu({ isOpen, onClose, onEdit, onDelete, onShare, onDownloadImage, canEdit, canDelete }) {
+  const [mounted, setMounted] = useState(false)
+  const menuRef = useRef(null)
 
-  return (
-    <div className="detail-action-menu" role="menu" aria-label="Tùy chọn bảng điểm">
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onDownloadImage}>
-        <span className="detail-action-icon" aria-hidden="true">
-          <Icon src="/download.png" size={24} color="var(--color-brand)" />
-        </span>
-        <span>Tải hình bảng điểm</span>
-      </button>
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-      <button type="button" role="menuitem" className="detail-action-item" onClick={onShare}>
-        <span className="detail-action-icon" aria-hidden="true">
-          <Icon src="/share.png" size={24} color="var(--color-brand)" />
-        </span>
-        <span>Gửi link bảng điểm</span>
-      </button>
+  useEffect(() => {
+    if (!isOpen) return undefined
 
-      {canEdit && (
-        <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+    const handlePointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        const isMenuBtn = event.target.closest?.('.overview-header .score-menu-btn, .overview-header [aria-label="Tùy chọn"]')
+        if (!isMenuBtn) {
+          onClose?.()
+        }
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen, onClose])
+
+  if (!isOpen || !mounted) return null
+
+  return createPortal(
+    <>
+      <button
+        className="detail-menu-dismiss"
+        type="button"
+        onClick={onClose}
+        aria-label="Đóng tùy chọn"
+      />
+      <div ref={menuRef} className="detail-action-menu" role="menu" aria-label="Tùy chọn bảng điểm">
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onDownloadImage}>
           <span className="detail-action-icon" aria-hidden="true">
-            <Icon src="/edit_square_fill.png" size={24} color="var(--color-brand)" />
+            <Icon src="/download.png" size={24} color="var(--color-brand)" />
           </span>
-          <span>Chỉnh sửa bảng điểm</span>
+          <span>Tải hình bảng điểm</span>
         </button>
-      )}
 
-      {canDelete && (
-        <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
+        <button type="button" role="menuitem" className="detail-action-item" onClick={onShare}>
           <span className="detail-action-icon" aria-hidden="true">
-            <Icon src="/trash.png" size={24} color="var(--color-brand)" />
+            <Icon src="/share.png" size={24} color="var(--color-brand)" />
           </span>
-          <span>Xóa bảng điểm</span>
+          <span>Gửi link bảng điểm</span>
         </button>
-      )}
-    </div>
+
+        {canEdit && (
+          <button type="button" role="menuitem" className="detail-action-item" onClick={onEdit}>
+            <span className="detail-action-icon" aria-hidden="true">
+              <Icon src="/edit_square_fill.png" size={24} color="var(--color-brand)" />
+            </span>
+            <span>Chỉnh sửa bảng điểm</span>
+          </button>
+        )}
+
+        {canDelete && (
+          <button type="button" role="menuitem" className="detail-action-item" onClick={onDelete}>
+            <span className="detail-action-icon" aria-hidden="true">
+              <Icon src="/trash.png" size={24} color="var(--color-brand)" />
+            </span>
+            <span>Xóa bảng điểm</span>
+          </button>
+        )}
+      </div>
+    </>,
+    document.body
   )
 }
 
 function DeleteConfirmDialog({ entry, isDeleting, onCancel, onConfirm }) {
-  if (!entry) return null
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  return (
+  if (!entry || !mounted) return null
+
+  return createPortal(
     <div className="confirm-backdrop" role="presentation">
       <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-history-title">
         <h2 id="delete-history-title">Xóa bảng điểm</h2>
@@ -1314,6 +1355,7 @@ function DeleteConfirmDialog({ entry, isDeleting, onCancel, onConfirm }) {
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
