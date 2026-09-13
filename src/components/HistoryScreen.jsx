@@ -1255,9 +1255,27 @@ function MemoryImageLightbox({ images, activeIndex, onClose, onChange, toast }) 
 
 function DetailActionMenu({ isOpen, onClose, onEdit, onDelete, onShare, onDownloadImage, canEdit, canDelete }) {
   const [mounted, setMounted] = useState(false)
+  const menuRef = useRef(null)
+
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const handlePointerDown = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        const isMenuBtn = event.target.closest?.('.overview-header .score-menu-btn, .overview-header [aria-label="Tùy chọn"]')
+        if (!isMenuBtn) {
+          onClose?.()
+        }
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen, onClose])
 
   if (!isOpen || !mounted) return null
 
@@ -1269,7 +1287,7 @@ function DetailActionMenu({ isOpen, onClose, onEdit, onDelete, onShare, onDownlo
         onClick={onClose}
         aria-label="Đóng tùy chọn"
       />
-      <div className="detail-action-menu" role="menu" aria-label="Tùy chọn bảng điểm">
+      <div ref={menuRef} className="detail-action-menu" role="menu" aria-label="Tùy chọn bảng điểm">
         <button type="button" role="menuitem" className="detail-action-item" onClick={onDownloadImage}>
           <span className="detail-action-icon" aria-hidden="true">
             <Icon src="/download.png" size={24} color="var(--color-brand)" />

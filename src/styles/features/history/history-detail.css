@@ -81,7 +81,10 @@
   width: 100%;
   max-width: 600px;
   background: var(--color-card);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
 }
 
 .detail-action-item {
@@ -111,10 +114,11 @@
 
 .detail-menu-dismiss {
   position: fixed;
-  inset: 0;
+  top: 56px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 70;
-  width: 100vw;
-  height: 100vh;
   border: 0;
   background: rgba(0, 0, 0, 0.32);
 }
