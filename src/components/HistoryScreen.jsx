@@ -441,17 +441,24 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
     }
     isClosingDetailRef.current = true
     setIsDetailMenuOpen(false)
-    setSelectedMatch(null)
     setIsEditingMatch(false)
     if (typeof window !== 'undefined') {
+      const isExternalReferrer = Boolean(
+        document.referrer && !document.referrer.includes(window.location.host)
+      )
+
       if (window.history.state?.matchDetailOpen) {
+        setSelectedMatch(null)
         window.history.back()
       } else if (window.location.pathname.startsWith('/history/')) {
-        if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
-          window.history.back()
+        if (!isExternalReferrer && window.history.length > 1) {
+          router.back()
         } else {
+          setSelectedMatch(null)
           router.push('/history')
         }
+      } else {
+        setSelectedMatch(null)
       }
     }
     setTimeout(() => {
