@@ -184,7 +184,7 @@ function LeastRecentGroupCard({ game }) {
                 Lần cuối chơi hồi {formatDate(game.last_played_at)}
               </span>
             </div>
-            <Icon src="/arrow-right.png" size={16} color="#A3988F" />
+            <Icon src="/arrow-right.png" size={24} color="#A3988F" />
           </div>
         ) : (
           <span className="achievements-empty-inline">Chưa có dữ liệu</span>
@@ -221,7 +221,7 @@ function TopRecordsGroupCard({ topRecordGames }) {
                   {game.best_score} điểm
                 </span>
               </div>
-              <Icon src="/arrow-right.png" size={16} color="#A3988F" />
+              <Icon src="/arrow-right.png" size={24} color="#A3988F" />
             </div>
           ))
         ) : (
