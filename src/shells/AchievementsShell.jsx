@@ -160,6 +160,8 @@ function HighlightGameCard({ label, game }) {
 }
 
 function LeastRecentGroupCard({ game }) {
+  const router = useRouter()
+
   return (
     <motion.div variants={cardItemVariants} className="achievements-group-card">
       <div className="achievements-group-header">
@@ -167,7 +169,12 @@ function LeastRecentGroupCard({ game }) {
       </div>
       <div className="achievements-group-list">
         {game ? (
-          <div className="achievements-list-item">
+          <div
+            className="achievements-list-item"
+            onClick={() => {
+              if (game.match_id) router.push(`/history/${game.match_id}?from=achievements`)
+            }}
+          >
             <GameThumb src={game.thumbnail_url} alt={game.name} size={48} />
             <div className="achievements-list-item-info">
               <span className="achievements-list-item-title" title={game.name}>
@@ -177,6 +184,7 @@ function LeastRecentGroupCard({ game }) {
                 Lần cuối chơi hồi {formatDate(game.last_played_at)}
               </span>
             </div>
+            <Icon src="/arrow-right.png" size={24} color="#A3988F" />
           </div>
         ) : (
           <span className="achievements-empty-inline">Chưa có dữ liệu</span>
@@ -213,6 +221,7 @@ function TopRecordsGroupCard({ topRecordGames }) {
                   {game.best_score} điểm
                 </span>
               </div>
+              <Icon src="/arrow-right.png" size={24} color="#A3988F" />
             </div>
           ))
         ) : (
