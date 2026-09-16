@@ -106,7 +106,7 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
       .map((p) => ({
         id: String(p.userId || p.id || p.user?._id || ''),
         name: p.name || p.user?.name || 'Người chơi',
-        avatarUrl: p.avatarUrl || p.avatar_url || p.user?.avatar_url || '',
+        avatarUrl: p.avatarUrl || p.avatar_url || p.user?.avatar_url || p.user_id?.avatar_url || '',
       }))
       .filter((p) => {
         if (!p.id || !p.name || seen.has(p.id)) return false
@@ -355,30 +355,35 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
       {currentUser ? (
         <form className="match-comment-form-container" onSubmit={handleSubmit}>
           {mentionQuery !== null && filteredPlayers.length > 0 ? (
-            <div className="match-comment-mention-bar" role="listbox" aria-label="Gợi ý người chơi để tag">
-              <span className="match-comment-mention-label">Nhắc đến:</span>
-              <div className="match-comment-mention-chips">
+            <div className="match-comment-mention-popover" role="listbox" aria-label="Gợi ý người chơi để tag">
+              <div className="match-comment-mention-popover-header">
+                <span>Gợi ý tag ({filteredPlayers.length})</span>
+              </div>
+              <div className="match-comment-mention-list">
                 {filteredPlayers.map((player) => (
                   <button
                     key={player.id}
                     type="button"
-                    className="match-comment-mention-chip"
+                    className="match-comment-mention-item"
                     onClick={() => handleSelectPlayer(player)}
                   >
-                    {player.avatarUrl ? (
-                      <Image
-                        src={player.avatarUrl}
-                        alt=""
-                        width={20}
-                        height={20}
-                        className="match-comment-mention-chip-avatar"
-                      />
-                    ) : (
-                      <span className="match-comment-mention-chip-avatar-placeholder">
-                        {player.name.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <span className="match-comment-mention-chip-name">{player.name}</span>
+                    <div className="match-comment-mention-item-avatar">
+                      {player.avatarUrl ? (
+                        <img
+                          src={player.avatarUrl}
+                          alt=""
+                          className="match-comment-mention-avatar-img"
+                        />
+                      ) : (
+                        <span className="match-comment-mention-avatar-initial">
+                          {player.name.slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="match-comment-mention-item-info">
+                      <span className="match-comment-mention-item-name">{player.name}</span>
+                      <span className="match-comment-mention-item-sub">Người chơi trong ván</span>
+                    </div>
                   </button>
                 ))}
               </div>
