@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { getMatchComments, createMatchComment, deleteMatchComment } from '../api/backendService'
 import { connectMatchComments } from '../api/matchRealtime'
 import { Icon } from './ui/Icon'
-import { Button } from './ui/Button'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
+import { MentionSuggestionPopover } from './MentionSuggestionPopover'
 
 function normalizeComment(comment) {
   return {
@@ -354,40 +354,11 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
 
       {currentUser ? (
         <form className="match-comment-form-container" onSubmit={handleSubmit}>
-          {mentionQuery !== null && filteredPlayers.length > 0 ? (
-            <div className="match-comment-mention-popover" role="listbox" aria-label="Gợi ý người chơi để tag">
-              <div className="match-comment-mention-popover-header">
-                <span>Gợi ý tag ({filteredPlayers.length})</span>
-              </div>
-              <div className="match-comment-mention-list">
-                {filteredPlayers.map((player) => (
-                  <button
-                    key={player.id}
-                    type="button"
-                    className="match-comment-mention-item"
-                    onClick={() => handleSelectPlayer(player)}
-                  >
-                    <div className="match-comment-mention-item-avatar">
-                      {player.avatarUrl ? (
-                        <img
-                          src={player.avatarUrl}
-                          alt=""
-                          className="match-comment-mention-avatar-img"
-                        />
-                      ) : (
-                        <span className="match-comment-mention-avatar-initial">
-                          {player.name.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="match-comment-mention-item-info">
-                      <span className="match-comment-mention-item-name">{player.name}</span>
-                      <span className="match-comment-mention-item-sub">Người chơi trong ván</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+          {mentionQuery !== null ? (
+            <MentionSuggestionPopover
+              players={filteredPlayers}
+              onSelect={handleSelectPlayer}
+            />
           ) : null}
 
           <div className="match-comment-form">
