@@ -298,6 +298,9 @@
   font-weight: 400;
   font-size: 16px;
   line-height: 19px;
+  letter-spacing: normal;
+  word-spacing: normal;
+  border: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
   z-index: 1;
@@ -310,9 +313,10 @@
 .match-comment-input-tag {
   color: var(--color-wood-primary, #93653F);
   font-weight: 700;
-  background: rgba(147, 101, 63, 0.14);
-  border-radius: 4px;
-  padding: 1px 4px;
+  background: rgba(147, 101, 63, 0.15);
+  border-radius: 2px;
+  padding: 0;
+  margin: 0;
 }
 
 .match-comment-form textarea {
@@ -336,6 +340,8 @@
   font-weight: 400;
   font-size: 16px;
   line-height: 19px;
+  letter-spacing: normal;
+  word-spacing: normal;
   white-space: pre;
   overflow-x: auto;
   overflow-y: hidden;
