@@ -382,10 +382,10 @@ export async function getMatchComments(matchId) {
   return unwrapList(payload)
 }
 
-export async function createMatchComment(matchId, content, mentions = []) {
+export async function createMatchComment(matchId, content) {
   const payload = await request(`/matches/${matchId}/comments`, {
     method: 'POST',
-    body: JSON.stringify({ content, mentions }),
+    body: JSON.stringify({ content }),
   })
   return unwrapEntity(payload, ['comment'])
 }

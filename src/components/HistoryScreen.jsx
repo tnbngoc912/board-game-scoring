@@ -871,7 +871,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
 
           <MatchCommentsSection
             matchId={selectedMatch.id}
-            players={players}
             currentUser={currentUser}
             toast={toast}
           />

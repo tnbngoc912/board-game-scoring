@@ -136,7 +136,6 @@ export function normalizeMatchDetail(payload) {
         id,
         userId: id,
         name: player.user_id?.name || player.name,
-        avatarUrl: player.user_id?.avatar_url || player.user_id?.avatarUrl || player.avatar_url || player.avatarUrl || '',
         total: player.total_score ?? 0,
         rank: player.rank ?? index + 1,
         seat_order: player.seat_order ?? index + 1,
