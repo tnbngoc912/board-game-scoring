@@ -27,8 +27,22 @@ const withPWA = withPWAInit({
   ],
 })
 
+const BACKEND_TARGET = process.env.BACKEND_PROXY_TARGET || 'https://boardgame-scorer-backend.onrender.com'
+
 const nextConfig = {
   outputFileTracingRoot: __dirname,
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${BACKEND_TARGET}/api/v1/:path*`,
+      },
+      {
+        source: '/socket.io/:path*',
+        destination: `${BACKEND_TARGET}/socket.io/:path*`,
+      },
+    ]
+  },
   images: {
     remotePatterns: [
       {
