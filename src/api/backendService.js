@@ -4,7 +4,16 @@ import { getEntityId, unwrapEntity, unwrapList } from '../store/mappers/entityMa
 import { normalizeMatch, normalizeMatchDetail } from '../store/mappers/matchMapper'
 import { compressImage } from '../utils/imageCompressor'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || `https://boardgame-scorer-backend.onrender.com/api/v1`
+function resolveApiBaseUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  // Nếu trỏ thẳng tới onrender.com hoặc để trống, dùng relative path /api/v1 để đi qua Vercel Proxy (chống nhà mạng VN chặn)
+  if (!envUrl || envUrl.includes('boardgame-scorer-backend.onrender.com')) {
+    return '/api/v1'
+  }
+  return envUrl
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 const AUTH_TOKEN_KEY = 'scorekeeper_auth_token'
 let authToken = null
 
@@ -25,6 +34,10 @@ export function getCurrentAuthToken() {
 
 export function getRealtimeBaseUrl() {
   if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL
+  if (API_BASE_URL === '/api/v1' || API_BASE_URL.startsWith('/')) {
+    if (typeof window !== 'undefined') return window.location.origin
+    return ''
+  }
   return API_BASE_URL.replace(/\/api\/v1\/?$/, '')
 }
 
