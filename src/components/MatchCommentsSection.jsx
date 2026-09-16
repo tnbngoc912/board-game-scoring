@@ -71,6 +71,50 @@ function renderCommentContent(content) {
   return elements.length > 0 ? elements : content
 }
 
+function renderDraftWithMentions(text, players = []) {
+  if (!text) return null
+
+  const validNames = (players || [])
+    .map((p) => p.name)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+
+  if (validNames.length === 0) {
+    return text
+  }
+
+  const escaped = validNames.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const regex = new RegExp(`(^|\\s)@(${escaped.join('|')})(?=[\\s,;.!?]|$)`, 'g')
+
+  const parts = []
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    const prefix = match[1]
+    const name = match[2]
+    const tagStartIndex = match.index + prefix.length
+
+    if (tagStartIndex > lastIndex) {
+      parts.push(text.slice(lastIndex, tagStartIndex))
+    }
+
+    parts.push(
+      <span key={`input-mention-${tagStartIndex}`} className="match-comment-input-tag">
+        @{name}
+      </span>
+    )
+
+    lastIndex = tagStartIndex + name.length + 1
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : text
+}
+
 function appendUniqueComment(comments, nextComment) {
   const normalized = normalizeComment(nextComment)
   if (!normalized.id) return comments
@@ -97,7 +141,14 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
   const [mentionQuery, setMentionQuery] = useState(null)
   const [mentionStartIndex, setMentionStartIndex] = useState(null)
   const textareaRef = React.useRef(null)
+  const backdropRef = React.useRef(null)
   const selectedMentionsRef = React.useRef(new Map())
+
+  const handleTextareaScroll = useCallback((event) => {
+    if (backdropRef.current) {
+      backdropRef.current.scrollLeft = event.target.scrollLeft
+    }
+  }, [])
 
   // Danh sách người chơi hợp lệ trong trận để tag
   const uniquePlayers = React.useMemo(() => {
@@ -363,9 +414,13 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
 
           <div className="match-comment-form">
             <div className="match-comment-input-wrapper">
+              <div ref={backdropRef} className="match-comment-input-backdrop" aria-hidden="true">
+                {renderDraftWithMentions(draft, uniquePlayers)}
+              </div>
               <textarea
                 ref={textareaRef}
                 value={draft}
+                onScroll={handleTextareaScroll}
                 onChange={(event) => {
                   setDraft(event.target.value)
                   checkMentionTrigger(event.target.value, event.target.selectionStart)
