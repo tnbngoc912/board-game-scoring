@@ -10,6 +10,7 @@ function normalizeComment(comment) {
   return {
     id: String(comment.id || comment._id || ''),
     content: comment.content || '',
+    mentions: Array.isArray(comment.mentions) ? comment.mentions : [],
     createdAt: comment.created_at || comment.createdAt || '',
     user: {
       id: comment.user?.id || comment.user?._id || comment.user_id || '',
@@ -32,6 +33,44 @@ function formatCommentTime(value) {
   }).replace(',', ' -')
 }
 
+function extractMentionIds(content) {
+  const ids = []
+  const regex = /@\[[^\]]+\]\(([^)]+)\)/g
+  let match
+  while ((match = regex.exec(content)) !== null) {
+    ids.push(match[1])
+  }
+  return Array.from(new Set(ids))
+}
+
+function renderCommentContent(content) {
+  if (!content) return ''
+  const regex = /@\[([^\]]+)\]\(([^)]+)\)/g
+  const elements = []
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      elements.push(content.substring(lastIndex, match.index))
+    }
+    const name = match[1]
+    const userId = match[2]
+    elements.push(
+      <span key={`${userId}-${match.index}`} className="match-comment-mention" data-user-id={userId}>
+        @{name}
+      </span>
+    )
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < content.length) {
+    elements.push(content.substring(lastIndex))
+  }
+
+  return elements.length > 0 ? elements : content
+}
+
 function appendUniqueComment(comments, nextComment) {
   const normalized = normalizeComment(nextComment)
   if (!normalized.id) return comments
@@ -46,13 +85,86 @@ function mergeUniqueComments(primaryComments, secondaryComments) {
   )
 }
 
-export function MatchCommentsSection({ matchId, currentUser, toast }) {
+export function MatchCommentsSection({ matchId, players = [], currentUser, toast }) {
   const [comments, setComments] = useState([])
   const [draft, setDraft] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [deletingIds, setDeletingIds] = useState(new Set())
   const [realtimeStatus, setRealtimeStatus] = useState('disconnected')
+
+  // Mention state
+  const [mentionQuery, setMentionQuery] = useState(null)
+  const [mentionStartIndex, setMentionStartIndex] = useState(null)
+  const textareaRef = React.useRef(null)
+
+  // Danh sách người chơi hợp lệ trong trận để tag
+  const uniquePlayers = React.useMemo(() => {
+    const seen = new Set()
+    return (players || [])
+      .map((p) => ({
+        id: String(p.userId || p.id || p.user?._id || ''),
+        name: p.name || p.user?.name || 'Người chơi',
+        avatarUrl: p.avatarUrl || p.avatar_url || p.user?.avatar_url || '',
+      }))
+      .filter((p) => {
+        if (!p.id || !p.name || seen.has(p.id)) return false
+        seen.add(p.id)
+        return true
+      })
+  }, [players])
+
+  const filteredPlayers = React.useMemo(() => {
+    if (mentionQuery === null) return []
+    const q = mentionQuery.toLowerCase()
+    if (!q) return uniquePlayers
+    return uniquePlayers.filter((p) => p.name.toLowerCase().includes(q))
+  }, [uniquePlayers, mentionQuery])
+
+  const checkMentionTrigger = useCallback((text, cursorPos) => {
+    if (cursorPos === undefined || cursorPos === null) {
+      setMentionQuery(null)
+      setMentionStartIndex(null)
+      return
+    }
+
+    const textBeforeCursor = text.slice(0, cursorPos)
+    const match = textBeforeCursor.match(/(?:^|\s)@([^\s@]*)$/)
+    if (match) {
+      const query = match[1]
+      const atIndex = textBeforeCursor.lastIndexOf('@' + query)
+      setMentionQuery(query)
+      setMentionStartIndex(atIndex)
+    } else {
+      setMentionQuery(null)
+      setMentionStartIndex(null)
+    }
+  }, [])
+
+  const handleSelectPlayer = useCallback(
+    (player) => {
+      if (mentionStartIndex === null || !textareaRef.current) return
+
+      const cursorPos = textareaRef.current.selectionStart || draft.length
+      const before = draft.slice(0, mentionStartIndex)
+      const after = draft.slice(cursorPos)
+      const tagText = `@[${player.name}](${player.id}) `
+      const nextDraft = before + tagText + after
+
+      setDraft(nextDraft)
+      setMentionQuery(null)
+      setMentionStartIndex(null)
+
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+          const newCursor = before.length + tagText.length
+          textareaRef.current.setSelectionRange(newCursor, newCursor)
+        }
+      }, 0)
+    },
+    [draft, mentionStartIndex]
+  )
 
   // Load comments & setup socket
   useEffect(() => {
@@ -105,10 +217,13 @@ export function MatchCommentsSection({ matchId, currentUser, toast }) {
     if (!content || isSending) return
 
     setIsSending(true)
+    const mentions = extractMentionIds(content)
     try {
-      const comment = await createMatchComment(matchId, content)
+      const comment = await createMatchComment(matchId, content, mentions)
       setComments((current) => appendUniqueComment(current, comment))
       setDraft('')
+      setMentionQuery(null)
+      setMentionStartIndex(null)
     } catch (error) {
       toast(error?.message || 'Không gửi được bình luận')
     } finally {
@@ -185,7 +300,7 @@ export function MatchCommentsSection({ matchId, currentUser, toast }) {
                     <strong className="match-comment-user">{comment.user.name}</strong>
                     <span className="match-comment-time">{formatCommentTime(comment.createdAt)}</span>
                   </div>
-                  <p className="match-comment-text">{comment.content}</p>
+                  <p className="match-comment-text">{renderCommentContent(comment.content)}</p>
                 </div>
                 
                 {canDelete ? (
@@ -216,25 +331,72 @@ export function MatchCommentsSection({ matchId, currentUser, toast }) {
       </div>
 
       {currentUser ? (
-        <form className="match-comment-form" onSubmit={handleSubmit}>
-          <div className="match-comment-input-wrapper">
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleDraftKeyDown}
-              placeholder="Để lại bình luận về ván chơi này..."
-              maxLength={1000}
-              rows={1}
-            />
+        <form className="match-comment-form-container" onSubmit={handleSubmit}>
+          {mentionQuery !== null && filteredPlayers.length > 0 ? (
+            <div className="match-comment-mention-bar" role="listbox" aria-label="Gợi ý người chơi để tag">
+              <span className="match-comment-mention-label">Nhắc đến:</span>
+              <div className="match-comment-mention-chips">
+                {filteredPlayers.map((player) => (
+                  <button
+                    key={player.id}
+                    type="button"
+                    className="match-comment-mention-chip"
+                    onClick={() => handleSelectPlayer(player)}
+                  >
+                    {player.avatarUrl ? (
+                      <Image
+                        src={player.avatarUrl}
+                        alt=""
+                        width={20}
+                        height={20}
+                        className="match-comment-mention-chip-avatar"
+                      />
+                    ) : (
+                      <span className="match-comment-mention-chip-avatar-placeholder">
+                        {player.name.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="match-comment-mention-chip-name">{player.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="match-comment-form">
+            <div className="match-comment-input-wrapper">
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value)
+                  checkMentionTrigger(event.target.value, event.target.selectionStart)
+                }}
+                onSelect={(event) => {
+                  checkMentionTrigger(event.target.value, event.target.selectionStart)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && mentionQuery !== null) {
+                    setMentionQuery(null)
+                    setMentionStartIndex(null)
+                    return
+                  }
+                  handleDraftKeyDown(event)
+                }}
+                placeholder="Để lại bình luận... Gõ @ để tag"
+                maxLength={1000}
+                rows={1}
+              />
+            </div>
+            <button
+              type="submit"
+              className="match-comment-send-btn"
+              disabled={!draft.trim() || isSending}
+              aria-label="Gửi bình luận"
+            >
+              <Icon src="/send.png" color="#FFFFFF" size={24} />
+            </button>
           </div>
-          <button
-            type="submit"
-            className="match-comment-send-btn"
-            disabled={!draft.trim() || isSending}
-            aria-label="Gửi bình luận"
-          >
-            <Icon src="/send.png" color="#FFFFFF" size={24} />
-          </button>
         </form>
       ) : (
         <p className="match-comments-empty">Đăng nhập để bình luận.</p>

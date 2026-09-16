@@ -335,3 +335,105 @@
 .match-comment-send-btn:not(:disabled):hover {
   opacity: 0.9;
 }
+
+/* Container cho Form & Thanh gợi ý Mention */
+.match-comment-form-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--space-2, 8px);
+}
+
+/* Thanh gợi ý người chơi khi gõ @ */
+.match-comment-mention-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--color-bg-light, #FFFDFB);
+  border: 1px solid var(--color-border-focus, #F2BC95);
+  border-radius: var(--radius-md, 12px);
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(147, 101, 63, 0.08);
+}
+
+.match-comment-mention-label {
+  font-family: 'Barlow Semi Condensed', var(--font-main), sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-gray-50, #8A7E75);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.match-comment-mention-chips {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.match-comment-mention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-card-soft, #FFF9F5);
+  border: 1px solid var(--color-border-focus, #F2BC95);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'Barlow Semi Condensed', var(--font-main), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-wood-primary, #93653F);
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.match-comment-mention-chip:active,
+.match-comment-mention-chip:hover {
+  background: var(--color-brand-100, #FDE4D2);
+  border-color: var(--color-wood-primary, #93653F);
+}
+
+.match-comment-mention-chip-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.match-comment-mention-chip-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-wood-primary, #93653F);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.match-comment-mention-chip-name {
+  line-height: 1.2;
+}
+
+/* Định dạng Badge người được Tag trong nội dung bình luận */
+.match-comment-mention {
+  display: inline;
+  color: var(--color-wood-primary, #93653F);
+  font-weight: 700;
+  background: rgba(147, 101, 63, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin: 0 1px;
+  word-break: break-word;
+}
