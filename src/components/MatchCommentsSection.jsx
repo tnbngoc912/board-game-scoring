@@ -97,6 +97,7 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
   const [mentionQuery, setMentionQuery] = useState(null)
   const [mentionStartIndex, setMentionStartIndex] = useState(null)
   const textareaRef = React.useRef(null)
+  const selectedMentionsRef = React.useRef(new Map())
 
   // Danh sách người chơi hợp lệ trong trận để tag
   const uniquePlayers = React.useMemo(() => {
@@ -148,9 +149,10 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
       const cursorPos = textareaRef.current.selectionStart || draft.length
       const before = draft.slice(0, mentionStartIndex)
       const after = draft.slice(cursorPos)
-      const tagText = `@[${player.name}](${player.id}) `
+      const tagText = `@${player.name} `
       const nextDraft = before + tagText + after
 
+      selectedMentionsRef.current.set(player.name, player.id)
       setDraft(nextDraft)
       setMentionQuery(null)
       setMentionStartIndex(null)
@@ -217,11 +219,31 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
     if (!content || isSending) return
 
     setIsSending(true)
-    const mentions = extractMentionIds(content)
+
+    let transformedContent = content
+    const mentionMap = new Map(selectedMentionsRef.current)
+
+    // Tự động map thêm nếu user tự gõ @Tên trùng tên người chơi trong ván
+    for (const p of uniquePlayers) {
+      if (p.name && p.id && !mentionMap.has(p.name)) {
+        if (transformedContent.includes(`@${p.name}`)) {
+          mentionMap.set(p.name, p.id)
+        }
+      }
+    }
+
+    for (const [name, id] of mentionMap.entries()) {
+      const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regex = new RegExp(`(^|\\s)@${escapedName}(?=\\s|$)`, 'g')
+      transformedContent = transformedContent.replace(regex, `$1@[${name}](${id})`)
+    }
+
+    const mentions = extractMentionIds(transformedContent)
     try {
-      const comment = await createMatchComment(matchId, content, mentions)
+      const comment = await createMatchComment(matchId, transformedContent, mentions)
       setComments((current) => appendUniqueComment(current, comment))
       setDraft('')
+      selectedMentionsRef.current.clear()
       setMentionQuery(null)
       setMentionStartIndex(null)
     } catch (error) {
@@ -229,7 +251,7 @@ export function MatchCommentsSection({ matchId, players = [], currentUser, toast
     } finally {
       setIsSending(false)
     }
-  }, [draft, isSending, matchId, toast])
+  }, [draft, isSending, matchId, uniquePlayers, toast])
 
   const handleDraftKeyDown = useCallback((event) => {
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent?.isComposing) return
