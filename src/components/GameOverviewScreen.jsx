@@ -90,10 +90,6 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
     async function loadRecord() {
       if (!boardGameId) return
-      if (overview?.scoringType === 'WINNER_ONLY') {
-        setIsRecordLoading(false)
-        return
-      }
 
       const cached = hydrateOverviewIfNeeded(boardGameId)
       if (cached?.userRecord) {
@@ -126,7 +122,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     return () => {
       isMounted = false
     }
-  }, [boardGameId, overview?.scoringType, hydrateOverviewIfNeeded, setOverview])
+  }, [boardGameId, hydrateOverviewIfNeeded, setOverview])
 
   const isMatchCurrentGame = overview && (overview.id === boardGameId || overview._id === boardGameId)
   const activeOverview = isMatchCurrentGame ? overview : initialCached
@@ -155,7 +151,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   const userLeaderboardItem = allLeaders.find(
     (item) => String(item.user_id) === currentUserId
   )
-  const showUserRanking = Boolean(userLeaderboardItem && userLeaderboardItem.rank > 3)
+  const activeUserRecord = userRecord || activeOverview.userRecord || null
+  const userRank = activeUserRecord?.rank ?? userLeaderboardItem?.rank ?? null
+  const userWins = activeUserRecord?.wins ?? userLeaderboardItem?.wins ?? 0
+  const showUserRanking = Boolean(userRank && userRank > 3)
 
   const rightElement = canCreate ? (
     <button
@@ -263,10 +262,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <h3 className="overview-section-title">Xếp hạng của bạn</h3>
             <div className="overview-leaderboard-list" aria-label="Xếp hạng của bạn">
               <LeaderboardItemCard
-                rank={userLeaderboardItem.rank}
-                name={userLeaderboardItem.name || currentUser?.name || 'Bạn'}
-                avatarUrl={userLeaderboardItem.avatar_url || userLeaderboardItem.avatarUrl || currentUser?.avatar_url || currentUser?.avatarUrl}
-                wins={userLeaderboardItem.wins}
+                rank={userRank}
+                name={currentUser?.name || userLeaderboardItem?.name || 'Bạn'}
+                avatarUrl={currentUser?.avatar_url || currentUser?.avatarUrl || userLeaderboardItem?.avatar_url || userLeaderboardItem?.avatarUrl}
+                wins={userWins}
               />
             </div>
           </section>
@@ -279,7 +278,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
               <div className="overview-record-info">
                 <span className="overview-stat-label">Số ván thắng</span>
                 <strong className="overview-stat-value">
-                  {userRecord?.wins ?? userLeaderboardItem?.wins ?? 0}
+                  {userWins}
                 </strong>
               </div>
               <div className="overview-metric-icon" aria-hidden="true">
@@ -291,7 +290,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
               <div className="overview-record-info">
                 <span className="overview-stat-label">Số ván chót</span>
                 <strong className="overview-stat-value">
-                  {userRecord?.lastPlaces ?? 0}
+                  {activeUserRecord?.lastPlaces ?? 0}
                 </strong>
               </div>
               <div className="overview-metric-icon" aria-hidden="true">
@@ -301,9 +300,11 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
 
             {overview.scoringType !== 'WINNER_ONLY' && (
               <div
-                className="overview-stat-card overview-stat-card--full"
+                className={`overview-stat-card overview-stat-card--full ${
+                  activeUserRecord?.highestScoreMatchId ? 'cursor-pointer' : ''
+                }`}
                 onClick={() => {
-                  const matchId = userRecord?.highestScoreMatchId
+                  const matchId = activeUserRecord?.highestScoreMatchId
                   if (matchId) router.push(`/history/${matchId}?from=game`)
                 }}
               >
@@ -312,8 +313,8 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
                   <strong className="overview-stat-value">
                     {isRecordLoading ? (
                       <span className="overview-record-skeleton" aria-label="Đang tải điểm kỷ lục" />
-                    ) : (userRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
-                      `${userRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
+                    ) : (activeUserRecord?.highestScore ?? overview.userRecord?.highestScore) != null ? (
+                      `${activeUserRecord?.highestScore ?? overview.userRecord?.highestScore} điểm`
                     ) : (
                       'Chưa có kỷ lục'
                     )}
