@@ -2,11 +2,11 @@
  * Nén ảnh bằng Canvas API và chuyển sang định dạng WebP (với fallback JPEG nếu trình duyệt không hỗ trợ).
  * @param {File} file - File ảnh gốc.
  * @param {Object} options - Tùy chọn nén.
- * @param {number} options.maxSize - Kích thước cạnh lớn nhất (mặc định 1200px - tối ưu cho mobile & web).
- * @param {number} options.quality - Chất lượng nén từ 0 đến 1 (mặc định 0.72).
+ * @param {number} options.maxSize - Kích thước cạnh lớn nhất (mặc định 1600px - sắc nét chuẩn HD cho mobile & web).
+ * @param {number} options.quality - Chất lượng nén từ 0 đến 1 (mặc định 0.82).
  * @returns {Promise<File>} File ảnh mới đã được nén dạng WebP hoặc JPEG.
  */
-export async function compressImage(file, { maxSize = 1200, quality = 0.72 } = {}) {
+export async function compressImage(file, { maxSize = 1600, quality = 0.82 } = {}) {
   // Chỉ nén nếu file là image
   if (!file || !file.type || !file.type.startsWith('image/')) {
     return file;
@@ -69,7 +69,7 @@ export async function compressImage(file, { maxSize = 1200, quality = 0.72 } = {
     if (!blob || blob.type === 'image/png') {
       outputType = 'image/jpeg';
       blob = await new Promise((resolve) => {
-        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.75);
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.82);
       });
     }
 
