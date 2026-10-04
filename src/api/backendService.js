@@ -459,12 +459,90 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
   })
 }
 
-export async function uploadMatchImages(files = []) {
+function uploadPutWithProgress(uploadUrl, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', uploadUrl)
+    xhr.setRequestHeader('Content-Type', file.type)
+
+    if (onProgress && xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.min(95, Math.round(25 + (event.loaded / event.total) * 70))
+          onProgress(percent)
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (onProgress) onProgress(100)
+        resolve(xhr)
+      } else {
+        reject(new Error(`R2 upload failed: ${xhr.status}`))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error('Network error during R2 upload'))
+    xhr.ontimeout = () => reject(new Error('R2 upload timeout'))
+    xhr.timeout = 30000
+
+    xhr.send(file)
+  })
+}
+
+function uploadFormDataWithProgress(path, formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const token = getAuthToken()
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${API_BASE_URL}${path}`)
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    }
+
+    if (onProgress && xhr.upload) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.min(95, Math.round(25 + (event.loaded / event.total) * 70))
+          onProgress(percent)
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (onProgress) onProgress(100)
+        try {
+          const payload = JSON.parse(xhr.responseText)
+          resolve(payload?.data || payload)
+        } catch {
+          resolve(null)
+        }
+      } else {
+        if (xhr.status === 401) {
+          triggerTokenExpired()
+        }
+        reject(new Error(`Upload failed: ${xhr.status}`))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error('Network error during upload'))
+    xhr.ontimeout = () => reject(new Error('Upload timeout'))
+    xhr.timeout = 35000
+
+    xhr.send(formData)
+  })
+}
+
+export async function uploadMatchImages(files = [], onProgress = null) {
   if (files.length === 0) return []
 
   const results = []
   for (const file of files) {
+    if (onProgress) onProgress(10)
     const fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.82 })
+    if (onProgress) onProgress(20)
+
     let uploadedItem = null
 
     // 1. Ưu tiên Cloudflare R2: Lấy Presigned URL và tải thẳng từ Client lên R2 Edge tại VN (~150ms)
@@ -474,22 +552,13 @@ export async function uploadMatchImages(files = []) {
       )
 
       if (presigned?.uploadUrl) {
-        const r2Response = await fetch(presigned.uploadUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': fileToUpload.type,
-          },
-          body: fileToUpload,
-        })
+        if (onProgress) onProgress(25)
+        await uploadPutWithProgress(presigned.uploadUrl, fileToUpload, onProgress)
 
-        if (r2Response.ok) {
-          uploadedItem = {
-            fileId: presigned.key,
-            url: presigned.publicUrl,
-            fileName: file.name,
-          }
-        } else {
-          console.warn('R2 direct upload status:', r2Response.status)
+        uploadedItem = {
+          fileId: presigned.key,
+          url: presigned.publicUrl,
+          fileName: file.name,
         }
       }
     } catch (r2Error) {
@@ -502,7 +571,7 @@ export async function uploadMatchImages(files = []) {
       formData.append('file', fileToUpload)
       formData.append('originalSize', file.size.toString())
 
-      const payload = await requestFormData('/upload', formData)
+      const payload = await uploadFormDataWithProgress('/upload', formData, onProgress).catch(() => requestFormData('/upload', formData))
       uploadedItem = {
         fileId: payload?.fileId,
         url: payload?.url,
@@ -510,6 +579,7 @@ export async function uploadMatchImages(files = []) {
       }
     }
 
+    if (onProgress) onProgress(100)
     results.push(uploadedItem)
   }
 
