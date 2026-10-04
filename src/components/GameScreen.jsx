@@ -73,6 +73,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const pathname = usePathname()
   const didRedirectRef = useRef(false)
   const memoryImagesRef = useRef([])
+  const uploadQueueRef = useRef(Promise.resolve())
   const {
     gameName: storeGameName,
     boardGameOverview: storeBoardGameOverview,
@@ -409,12 +410,16 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
     const filesToAdd = imageFiles.slice(0, availableSlots)
     if (filesToAdd.length === 0) return
 
+    let currentChain = uploadQueueRef.current
+
     const nextImages = filesToAdd.map((file) => {
       const id = `${file.name}-${file.lastModified}-${crypto.randomUUID()}`
       const previewUrl = URL.createObjectURL(file)
 
-      // Kích hoạt upload ngầm ngay lập tức
-      const uploadPromise = uploadMatchImages([file])
+      // Chạy tuần tự trong hàng đợi: ảnh trước xử lý xong mới đến ảnh sau, tránh nghẽn RAM & mạng
+      const uploadPromise = currentChain
+        .catch(() => {}) // Bỏ qua lỗi của ảnh trước để ảnh sau vẫn được xử lý tiếp
+        .then(() => uploadMatchImages([file]))
         .then((uploadedList) => {
           const uploaded = uploadedList[0]
           if (uploaded) {
@@ -445,6 +450,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           throw err
         })
 
+      currentChain = uploadPromise
+
       return {
         id,
         file,
@@ -455,6 +462,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       }
     })
 
+    uploadQueueRef.current = currentChain
     setMemoryImages((current) => [...current, ...nextImages])
   }
 
