@@ -419,7 +419,15 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       // Chạy tuần tự trong hàng đợi: ảnh trước xử lý xong mới đến ảnh sau, tránh nghẽn RAM & mạng
       const uploadPromise = currentChain
         .catch(() => {}) // Bỏ qua lỗi của ảnh trước để ảnh sau vẫn được xử lý tiếp
-        .then(() => uploadMatchImages([file]))
+        .then(() =>
+          uploadMatchImages([file], (percent) => {
+            setMemoryImages((prev) =>
+              prev.map((item) =>
+                item.id === id ? { ...item, progress: percent } : item
+              )
+            )
+          })
+        )
         .then((uploadedList) => {
           const uploaded = uploadedList[0]
           if (uploaded) {
@@ -432,6 +440,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
                       url: uploaded.url,
                       fileName: uploaded.fileName || file.name,
                       status: 'done',
+                      progress: 100,
                     }
                   : item
               )
@@ -458,6 +467,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         previewUrl,
         isExisting: false,
         status: 'uploading',
+        progress: 0,
         uploadPromise,
       }
     })
@@ -570,8 +580,11 @@ function MemoryImageUploader({ images, disabled, onAddImages, onRemoveImage }) {
           <div key={image.id} className="score-memory-card">
             <img src={image.previewUrl} alt="Hình ảnh kỉ niệm" />
             {image.status === 'uploading' && (
-              <div className="score-memory-uploading" title="Đang tải lên...">
-                <div className="score-memory-spinner" />
+              <div className="score-memory-uploading" title={`Đang tải lên ${image.progress ?? 0}%`}>
+                <div className="score-memory-spinner-box">
+                  <div className="score-memory-spinner" />
+                  <span className="score-memory-progress-percent">{image.progress ?? 0}%</span>
+                </div>
               </div>
             )}
             {image.status === 'error' && (

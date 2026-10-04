@@ -568,15 +568,35 @@
   display: grid;
   place-items: center;
   pointer-events: none;
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+}
+
+.score-memory-spinner-box {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
 }
 
 .score-memory-spinner {
-  width: 26px;
-  height: 26px;
-  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-top-color: #ffffff;
   border-radius: 50%;
   animation: score-memory-spin 0.8s linear infinite;
+}
+
+.score-memory-progress-percent {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes score-memory-spin {
