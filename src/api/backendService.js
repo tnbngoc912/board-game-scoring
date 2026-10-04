@@ -548,7 +548,7 @@ export async function uploadMatchImages(files = [], onProgress = null) {
     // 1. Ưu tiên Cloudflare R2: Lấy Presigned URL và tải thẳng từ Client lên R2 Edge tại VN (~150ms)
     try {
       const presigned = await request(
-        `/upload/presigned-url?fileName=${encodeURIComponent(fileToUpload.name)}&contentType=${encodeURIComponent(fileToUpload.type)}`
+        `/upload/presigned-url?fileName=${encodeURIComponent(fileToUpload.name)}&contentType=${encodeURIComponent(fileToUpload.type)}&folder=matches`
       )
 
       if (presigned?.uploadUrl) {
