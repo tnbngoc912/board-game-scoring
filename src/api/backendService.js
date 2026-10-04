@@ -468,8 +468,8 @@ export async function uploadMatchImages(files = []) {
 
   const results = []
   for (const file of files) {
-    // Luôn nén ảnh qua client canvas để đưa về kích thước 1200px tối ưu, dung lượng ~150KB - 250KB
-    const fileToUpload = await compressImage(file, { maxSize: 1200, quality: 0.72 })
+    // Luôn nén ảnh qua client canvas để đưa về kích thước 1600px sắc nét chuẩn HD (~350KB - 450KB)
+    const fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.82 })
 
     let uploadedItem = null
 
