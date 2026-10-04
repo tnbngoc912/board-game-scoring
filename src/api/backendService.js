@@ -460,26 +460,60 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
   })
 }
 
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'bgscore'
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'boardgame_preset'
+
 export async function uploadMatchImages(files = []) {
   if (files.length === 0) return []
 
   const results = []
   for (const file of files) {
-    const originalSize = file.size
     // Luôn nén ảnh qua client canvas để đưa về kích thước 1200px tối ưu, dung lượng ~150KB - 250KB
     const fileToUpload = await compressImage(file, { maxSize: 1200, quality: 0.72 })
 
-    const formData = new FormData()
-    formData.append('file', fileToUpload)
-    formData.append('originalSize', originalSize.toString())
+    let uploadedItem = null
 
-    const payload = await requestFormData('/upload', formData)
+    // 1. Ưu tiên Cloudinary Direct Upload: Tải thẳng từ Client lên CDN (< 300ms, không tốn RAM server)
+    try {
+      const cloudinaryFormData = new FormData()
+      cloudinaryFormData.append('file', fileToUpload)
+      cloudinaryFormData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
 
-    results.push({
-      fileId: payload?.fileId,
-      url: payload?.url,
-      fileName: payload?.fileName || file.name,
-    })
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: cloudinaryFormData,
+      })
+
+      if (response.ok) {
+        const payload = await response.json()
+        uploadedItem = {
+          fileId: payload.public_id,
+          url: payload.secure_url,
+          fileName: file.name,
+        }
+      } else {
+        const errorData = await response.json().catch(() => null)
+        console.warn('Cloudinary upload warning:', errorData?.error?.message || response.status)
+      }
+    } catch (err) {
+      console.warn('Lỗi kết nối Cloudinary, chuyển sang fallback:', err)
+    }
+
+    // 2. Fallback an toàn: Nếu Cloudinary tạm thời lỗi hoặc bị chặn mạng, tải qua Backend hiện tại
+    if (!uploadedItem) {
+      const formData = new FormData()
+      formData.append('file', fileToUpload)
+      formData.append('originalSize', file.size.toString())
+
+      const payload = await requestFormData('/upload', formData)
+      uploadedItem = {
+        fileId: payload?.fileId,
+        url: payload?.url,
+        fileName: payload?.fileName || file.name,
+      }
+    }
+
+    results.push(uploadedItem)
   }
 
   return results
