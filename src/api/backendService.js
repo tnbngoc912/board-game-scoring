@@ -95,29 +95,57 @@ async function request(path, options = {}) {
   return payload?.data !== undefined ? payload.data : payload
 }
 
-async function requestFormData(path, formData, options = {}) {
+async function requestFormData(path, formData, options = {}, retries = 2) {
   const token = getAuthToken()
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    method: options.method || 'POST',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-    body: formData,
-  })
+  const timeoutMs = options.timeout || 25000
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      triggerTokenExpired()
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        signal: controller.signal,
+        method: options.method || 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+        body: formData,
+      })
+
+      clearTimeout(timer)
+      const text = await response.text()
+      const payload = text ? JSON.parse(text) : null
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          triggerTokenExpired()
+        }
+        // Thử lại nếu gặp lỗi server tạm thời 502, 503, 504 khi còn lượt retry
+        if ([502, 503, 504].includes(response.status) && attempt < retries) {
+          console.warn(`Lỗi ${response.status} khi upload, đang thử lại lần ${attempt + 1}...`)
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
+      }
+
+      return payload?.data || payload
+    } catch (error) {
+      clearTimeout(timer)
+      const isAbort = error.name === 'AbortError'
+      const isNetworkError = error instanceof TypeError || isAbort
+
+      if (attempt < retries && isNetworkError) {
+        console.warn(`Upload thất bại (${error.message || 'Mạng yếu'}), đang thử lại lần ${attempt + 1}...`)
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+        continue
+      }
+      throw error
     }
-    throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
-
-  return payload?.data || payload
 }
 
 function slugify(value) {
@@ -435,14 +463,11 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
 export async function uploadMatchImages(files = []) {
   if (files.length === 0) return []
 
-  return Promise.all(files.map(async (file) => {
-    let fileToUpload = file
+  const results = []
+  for (const file of files) {
     const originalSize = file.size
-    const LIMIT_1MB = 1024 * 1024
-
-    if (file.size > LIMIT_1MB) {
-      fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.8 })
-    }
+    // Luôn nén ảnh qua client canvas để đưa về kích thước 1200px tối ưu, dung lượng ~150KB - 250KB
+    const fileToUpload = await compressImage(file, { maxSize: 1200, quality: 0.72 })
 
     const formData = new FormData()
     formData.append('file', fileToUpload)
@@ -450,12 +475,14 @@ export async function uploadMatchImages(files = []) {
 
     const payload = await requestFormData('/upload', formData)
 
-    return {
+    results.push({
       fileId: payload?.fileId,
       url: payload?.url,
       fileName: payload?.fileName || file.name,
-    }
-  }))
+    })
+  }
+
+  return results
 }
 
 export async function deleteMatch(matchId) {

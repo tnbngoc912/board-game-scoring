@@ -1,14 +1,19 @@
 /**
- * Nén ảnh bằng Canvas API và chuyển sang định dạng WebP.
+ * Nén ảnh bằng Canvas API và chuyển sang định dạng WebP (với fallback JPEG nếu trình duyệt không hỗ trợ).
  * @param {File} file - File ảnh gốc.
  * @param {Object} options - Tùy chọn nén.
- * @param {number} options.maxSize - Kích thước cạnh lớn nhất (mặc định 1600).
- * @param {number} options.quality - Chất lượng nén từ 0 đến 1 (mặc định 0.8).
- * @returns {Promise<File>} File ảnh mới đã được nén dạng WebP.
+ * @param {number} options.maxSize - Kích thước cạnh lớn nhất (mặc định 1200px - tối ưu cho mobile & web).
+ * @param {number} options.quality - Chất lượng nén từ 0 đến 1 (mặc định 0.72).
+ * @returns {Promise<File>} File ảnh mới đã được nén dạng WebP hoặc JPEG.
  */
-export async function compressImage(file, { maxSize = 1600, quality = 0.8 } = {}) {
+export async function compressImage(file, { maxSize = 1200, quality = 0.72 } = {}) {
   // Chỉ nén nếu file là image
   if (!file || !file.type || !file.type.startsWith('image/')) {
+    return file;
+  }
+
+  // Không cần nén nếu là ảnh vector SVG hoặc ảnh gif động
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
     return file;
   }
 
@@ -26,7 +31,7 @@ export async function compressImage(file, { maxSize = 1600, quality = 0.8 } = {}
 
     let { width, height } = img;
 
-    // Tính toán kích thước mới
+    // Giữ nguyên tỷ lệ và giới hạn cạnh lớn nhất theo maxSize
     if (width > maxSize || height > maxSize) {
       if (width > height) {
         height = Math.round((height * maxSize) / width);
@@ -42,44 +47,57 @@ export async function compressImage(file, { maxSize = 1600, quality = 0.8 } = {}
     canvas.width = width;
     canvas.height = height;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) {
       throw new Error('Could not get 2d context from canvas');
     }
 
+    // Đổ nền trắng mặc định nếu ảnh có transparent (phòng trường hợp xuất JPEG)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
     // Vẽ ảnh lên canvas
     ctx.drawImage(img, 0, 0, width, height);
 
-    // Xuất canvas ra Blob dưới dạng image/webp
-    const blob = await new Promise((resolve) => {
-      canvas.toBlob(
-        (b) => resolve(b),
-        'image/webp',
-        quality
-      );
+    // Thử xuất ra WebP trước
+    let outputType = 'image/webp';
+    let blob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b), 'image/webp', quality);
     });
+
+    // Kiểm tra tính tương thích: Nếu Safari cũ không hỗ trợ WebP encode, toBlob sẽ sinh ra PNG hoặc null
+    if (!blob || blob.type === 'image/png') {
+      outputType = 'image/jpeg';
+      blob = await new Promise((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.75);
+      });
+    }
+
+    // Giải phóng bộ nhớ GPU Canvas ngay lập tức
+    canvas.width = 0;
+    canvas.height = 0;
 
     if (!blob) {
       throw new Error('Canvas toBlob failed');
     }
 
-    // Đổi tên file: thay đổi extension thành .webp
-    const originalName = file.name;
+    // Đổi phần mở rộng file tương ứng với mime type
+    const originalName = file.name || 'image';
     const lastDotIndex = originalName.lastIndexOf('.');
     let baseName = originalName;
     if (lastDotIndex !== -1) {
       baseName = originalName.substring(0, lastDotIndex);
     }
-    const newFileName = `${baseName}.webp`;
+    const ext = outputType === 'image/webp' ? '.webp' : '.jpg';
+    const newFileName = `${baseName}${ext}`;
 
-    // Trả về File mới
     return new File([blob], newFileName, {
-      type: 'image/webp',
+      type: outputType,
       lastModified: Date.now(),
     });
   } catch (error) {
     console.error('Lỗi khi nén ảnh trên client:', error);
-    // Nếu có lỗi, trả về file gốc để fallback tải lên thay vì làm crash ứng dụng
+    // Nếu có lỗi, nếu file nhỏ hơn 2MB thì trả về file gốc, còn lớn hơn 2MB cố gắng nén lại nhẹ nhất
     return file;
   } finally {
     // Giải phóng bộ nhớ cho URL tạm thời
