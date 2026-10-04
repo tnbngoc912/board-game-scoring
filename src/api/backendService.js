@@ -95,29 +95,56 @@ async function request(path, options = {}) {
   return payload?.data !== undefined ? payload.data : payload
 }
 
-async function requestFormData(path, formData, options = {}) {
+async function requestFormData(path, formData, options = {}, retries = 2) {
   const token = getAuthToken()
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    method: options.method || 'POST',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-    body: formData,
-  })
+  const timeoutMs = options.timeout || 25000
 
-  const text = await response.text()
-  const payload = text ? JSON.parse(text) : null
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      triggerTokenExpired()
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        signal: controller.signal,
+        method: options.method || 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+        body: formData,
+      })
+
+      clearTimeout(timer)
+      const text = await response.text()
+      const payload = text ? JSON.parse(text) : null
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          triggerTokenExpired()
+        }
+        if ([502, 503, 504].includes(response.status) && attempt < retries) {
+          console.warn(`Lỗi ${response.status} khi upload, đang thử lại lần ${attempt + 1}...`)
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
+      }
+
+      return payload?.data || payload
+    } catch (error) {
+      clearTimeout(timer)
+      const isAbort = error.name === 'AbortError'
+      const isNetworkError = error instanceof TypeError || isAbort
+
+      if (attempt < retries && isNetworkError) {
+        console.warn(`Upload thất bại (${error.message || 'Mạng yếu'}), đang thử lại lần ${attempt + 1}...`)
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+        continue
+      }
+      throw error
     }
-    throw new Error(payload?.message || payload?.error || `API request failed: ${response.status}`)
   }
-
-  return payload?.data || payload
 }
 
 function slugify(value) {
@@ -435,27 +462,58 @@ export async function updateMatchScores(matchId, { description, playerScores, wi
 export async function uploadMatchImages(files = []) {
   if (files.length === 0) return []
 
-  return Promise.all(files.map(async (file) => {
-    let fileToUpload = file
-    const originalSize = file.size
-    const LIMIT_1MB = 1024 * 1024
+  const results = []
+  for (const file of files) {
+    const fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.82 })
+    let uploadedItem = null
 
-    if (file.size > LIMIT_1MB) {
-      fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.8 })
+    // 1. Ưu tiên Cloudflare R2: Lấy Presigned URL và tải thẳng từ Client lên R2 Edge tại VN (~150ms)
+    try {
+      const presigned = await request(
+        `/upload/presigned-url?fileName=${encodeURIComponent(fileToUpload.name)}&contentType=${encodeURIComponent(fileToUpload.type)}`
+      )
+
+      if (presigned?.uploadUrl) {
+        const r2Response = await fetch(presigned.uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': fileToUpload.type,
+          },
+          body: fileToUpload,
+        })
+
+        if (r2Response.ok) {
+          uploadedItem = {
+            fileId: presigned.key,
+            url: presigned.publicUrl,
+            fileName: file.name,
+          }
+        } else {
+          console.warn('R2 direct upload status:', r2Response.status)
+        }
+      }
+    } catch (r2Error) {
+      console.warn('Lỗi direct upload Cloudflare R2, chuyển sang fallback:', r2Error)
     }
 
-    const formData = new FormData()
-    formData.append('file', fileToUpload)
-    formData.append('originalSize', originalSize.toString())
+    // 2. Fallback an toàn: Nếu R2 lỗi (ví dụ chưa bật CORS), tự động tải qua Backend (Google Drive)
+    if (!uploadedItem) {
+      const formData = new FormData()
+      formData.append('file', fileToUpload)
+      formData.append('originalSize', file.size.toString())
 
-    const payload = await requestFormData('/upload', formData)
-
-    return {
-      fileId: payload?.fileId,
-      url: payload?.url,
-      fileName: payload?.fileName || file.name,
+      const payload = await requestFormData('/upload', formData)
+      uploadedItem = {
+        fileId: payload?.fileId,
+        url: payload?.url,
+        fileName: payload?.fileName || file.name,
+      }
     }
-  }))
+
+    results.push(uploadedItem)
+  }
+
+  return results
 }
 
 export async function deleteMatch(matchId) {
