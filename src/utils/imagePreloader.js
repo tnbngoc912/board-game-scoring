@@ -1,11 +1,17 @@
 const preloadedUrls = new Set()
 
 /**
- * Tối ưu hóa URL ảnh từ các CDN phổ biến (Google Usercontent, Cloudinary, v.v.)
+ * Tối ưu hóa URL ảnh từ các CDN phổ biến (Cloudflare R2, Google Usercontent, Cloudinary, v.v.)
  * để nén dung lượng và tải tức thì ở kích thước phù hợp thumbnail.
  */
 export function getOptimizedImageUrl(url, size = 160) {
   if (!url || typeof url !== 'string') return url
+
+  // Cloudflare R2: Đồng bộ định dạng với Next.js Image Optimizer để dùng chung cache, tránh duplicate request
+  if (url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com')) {
+    const width = size <= 96 ? 128 : size <= 160 ? 256 : 384
+    return `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=75`
+  }
 
   // Google Usercontent / Google Drive
   if (url.includes('googleusercontent.com')) {
