@@ -167,7 +167,6 @@ export async function syncUserByName(name) {
     body: JSON.stringify({
       email: emailForPlayer(name),
       name,
-      avatar_drive_id: '',
     }),
   })
   const user = unwrapEntity(payload, ['user'])
@@ -491,49 +490,6 @@ function uploadPutWithProgress(uploadUrl, file, onProgress) {
   })
 }
 
-function uploadFormDataWithProgress(path, formData, onProgress) {
-  return new Promise((resolve, reject) => {
-    const token = getAuthToken()
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${API_BASE_URL}${path}`)
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-    }
-
-    if (onProgress && xhr.upload) {
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.min(95, Math.round(25 + (event.loaded / event.total) * 70))
-          onProgress(percent)
-        }
-      }
-    }
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        if (onProgress) onProgress(100)
-        try {
-          const payload = JSON.parse(xhr.responseText)
-          resolve(payload?.data || payload)
-        } catch {
-          resolve(null)
-        }
-      } else {
-        if (xhr.status === 401) {
-          triggerTokenExpired()
-        }
-        reject(new Error(`Upload failed: ${xhr.status}`))
-      }
-    }
-
-    xhr.onerror = () => reject(new Error('Network error during upload'))
-    xhr.ontimeout = () => reject(new Error('Upload timeout'))
-    xhr.timeout = 35000
-
-    xhr.send(formData)
-  })
-}
-
 export async function uploadMatchImages(files = [], onProgress = null) {
   if (files.length === 0) return []
 
@@ -543,44 +499,31 @@ export async function uploadMatchImages(files = [], onProgress = null) {
     const fileToUpload = await compressImage(file, { maxSize: 1600, quality: 0.82 })
     if (onProgress) onProgress(20)
 
-    let uploadedItem = null
-
-    // 1. Ưu tiên Cloudflare R2: Lấy Presigned URL và tải thẳng từ Client lên R2 Edge tại VN (~150ms)
+    // Tải trực tiếp lên Cloudflare R2 qua Presigned URL
     try {
       const presigned = await request(
         `/upload/presigned-url?fileName=${encodeURIComponent(fileToUpload.name)}&contentType=${encodeURIComponent(fileToUpload.type)}&folder=matches`
       )
 
-      if (presigned?.uploadUrl) {
-        if (onProgress) onProgress(25)
-        await uploadPutWithProgress(presigned.uploadUrl, fileToUpload, onProgress)
-
-        uploadedItem = {
-          fileId: presigned.key,
-          url: presigned.publicUrl,
-          fileName: file.name,
-        }
+      if (!presigned?.uploadUrl) {
+        throw new Error('Máy chủ không cung cấp URL tải lên R2')
       }
+
+      if (onProgress) onProgress(25)
+      await uploadPutWithProgress(presigned.uploadUrl, fileToUpload, onProgress)
+
+      const uploadedItem = {
+        fileId: presigned.key,
+        url: presigned.publicUrl,
+        fileName: file.name,
+      }
+
+      if (onProgress) onProgress(100)
+      results.push(uploadedItem)
     } catch (r2Error) {
-      console.warn('Lỗi direct upload Cloudflare R2, chuyển sang fallback:', r2Error)
+      console.error('Lỗi upload Cloudflare R2:', r2Error)
+      throw new Error(`Tải ảnh ${file.name} lên Cloudflare R2 thất bại. Vui lòng thử lại.`)
     }
-
-    // 2. Fallback an toàn: Nếu R2 lỗi (ví dụ chưa bật CORS), tự động tải qua Backend (Google Drive)
-    if (!uploadedItem) {
-      const formData = new FormData()
-      formData.append('file', fileToUpload)
-      formData.append('originalSize', file.size.toString())
-
-      const payload = await uploadFormDataWithProgress('/upload', formData, onProgress).catch(() => requestFormData('/upload', formData))
-      uploadedItem = {
-        fileId: payload?.fileId,
-        url: payload?.url,
-        fileName: payload?.fileName || file.name,
-      }
-    }
-
-    if (onProgress) onProgress(100)
-    results.push(uploadedItem)
   }
 
   return results
