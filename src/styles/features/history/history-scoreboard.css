@@ -157,24 +157,3 @@
   justify-content: center;
 }
 
-.history-score-board .score-grid-cell-faction,
-.history-score-board .score-grid-label.faction-row {
-  min-height: 48px;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-}
-
-.history-score-board .score-grid-label.faction-row {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-strong);
-  padding: 0 16px;
-}
-
-.history-score-board .score-grid-cell-faction {
-  justify-content: center;
-  padding: 4px 6px;
-}
-

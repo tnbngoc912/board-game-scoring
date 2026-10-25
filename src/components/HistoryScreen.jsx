@@ -23,6 +23,7 @@ import { Button } from './ui/Button'
 import { GameScreen } from './GameScreen'
 import { MatchCommentsSection } from './MatchCommentsSection'
 import { MatchReceiptCard } from './score/MatchReceiptCard'
+import { MatchFactionsList } from './score/MatchFactionsList'
 import { useIsStandalone } from '../hooks/useIsStandalone'
 
 const GAME_IMAGE_THEMES = [
@@ -831,7 +832,6 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           <section className="score-board history-score-board">
             <ScoreGrid
               players={players}
-              factions={selectedMatch.factions}
               rows={displayedScoreRows}
               mode={isWinnerOnly ? 'WINNER_ONLY' : isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
               stickyHeader
@@ -841,6 +841,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               editable={false}
             />
           </section>
+
+          <MatchFactionsList
+            players={players}
+            factions={selectedMatch.factions}
+          />
 
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>
