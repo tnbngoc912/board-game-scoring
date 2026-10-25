@@ -115,6 +115,7 @@ export function normalizeMatch(match) {
         color: undefined,
         total: player.total_score ?? player.total ?? 0,
         rank: player.rank ?? index + 1,
+        faction_id: player.faction_id || player.factionId || null,
       }))
       .sort((a, b) => a.rank - b.rank),
     scoreRows: match.score_rows || match.scoreRows || [],
@@ -141,6 +142,7 @@ export function normalizeMatchDetail(payload) {
         seat_order: player.seat_order ?? index + 1,
         isWinner: Boolean(player.is_winner || winnerIds.has(id)),
         scores: player.scores || {},
+        faction_id: player.faction_id || player.factionId || null,
       }
     })
     .sort((a, b) => (a.seat_order ?? 0) - (b.seat_order ?? 0))
@@ -160,6 +162,7 @@ export function normalizeMatchDetail(payload) {
     id: getEntityId(match),
     gameName: boardGame.name || match.board_game_name || match.gameName || 'Khong ten',
     gameId: getEntityId(boardGame) || match.board_game_id,
+    factions: boardGame.factions || match.factions || [],
     scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: formatPlayedAt(match.play_date),

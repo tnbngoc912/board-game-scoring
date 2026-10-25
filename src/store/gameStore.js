@@ -258,7 +258,7 @@ export const useGameStore = create(
         return true
       },
 
-      async publishScores(scoreRows, description = '', memoryImagesInput = []) {
+      async publishScores(scoreRows, description = '', memoryImagesInput = [], playerFactions = {}) {
         const { boardGameId, gameName, scoringType, players, categories, playDateTime } = get()
         const publishedScores = scoringType === 'WINNER_ONLY'
           ? scoreRows
@@ -288,12 +288,24 @@ export const useGameStore = create(
             ? null
             : syncedUsers.map((user, index) => {
               const player = players[index]
+              const factionId = playerFactions[player.id] || null
               return {
                 user_id: user.id,
                 seat_order: index + 1,
                 scores: buildApiScoresForPlayer(player.id, publishedScores),
+                ...(factionId ? { faction_id: factionId } : {}),
               }
             })
+
+          const winnerOnlyPlayers = syncedUsers.map((user, index) => {
+            const player = players[index]
+            const factionId = playerFactions[player.id] || null
+            return {
+              user_id: user.id,
+              seat_order: index + 1,
+              ...(factionId ? { faction_id: factionId } : {}),
+            }
+          })
 
           const winnerIds = getWinnerIds(playersWithApiIds, publishedScores)
 
@@ -311,7 +323,7 @@ export const useGameStore = create(
           await createFullMatch({
             boardGameId: effectiveBoardGameId,
             players: scoringType === 'WINNER_ONLY'
-              ? syncedUsers.map((user, index) => ({ user_id: user.id, seat_order: index + 1 }))
+              ? winnerOnlyPlayers
               : playerScores,
             winnerIds: scoringType === 'WINNER_ONLY' ? winnerIds : null,
             description: description.trim() || '',

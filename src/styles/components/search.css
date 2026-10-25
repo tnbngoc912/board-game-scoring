@@ -371,6 +371,13 @@
   color: var(--color-brand);
 }
 
+.custom-select-option.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent !important;
+  color: var(--color-text-subtle, #9e9389);
+}
+
 /* History Filter Panel Styles */
 .history-filter-row {
   display: flex;
