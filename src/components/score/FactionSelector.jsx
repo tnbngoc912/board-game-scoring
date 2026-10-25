@@ -16,7 +16,6 @@ export function FactionSelector({
     <section className="faction-selector-card" aria-label="Chọn phe hoặc nhân vật">
       <div className="faction-selector-header">
         <div className="faction-selector-title-wrap">
-          <span className="faction-selector-icon">🛡️</span>
           <h3 className="faction-selector-title">Chọn phe / Nhân vật</h3>
           <span className="faction-selector-badge">Bắt buộc</span>
         </div>

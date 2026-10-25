@@ -20,12 +20,7 @@
 .faction-selector-title-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.faction-selector-icon {
-  font-size: 15px;
-  line-height: 1;
+  gap: 8px;
 }
 
 .faction-selector-title {

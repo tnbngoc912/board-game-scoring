@@ -14,12 +14,6 @@
 .match-factions-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.match-factions-icon {
-  font-size: 14px;
-  line-height: 1;
 }
 
 .match-factions-title {

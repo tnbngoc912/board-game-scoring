@@ -21,7 +21,6 @@ export function MatchFactionsList({ players = [], factions = [] }) {
   return (
     <section className="match-factions-card" aria-label="Phe hoặc nhân vật">
       <div className="match-factions-header">
-        <span className="match-factions-icon">🛡️</span>
         <h3 className="match-factions-title">Phe / Nhân vật</h3>
       </div>
       <div className="match-factions-grid">
