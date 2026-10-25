@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Select } from '../ui/Select'
-import { PlayerDot } from '../PlayerDot'
 import '../../styles/components/faction-selector.css'
 
 export function FactionSelector({
@@ -17,15 +16,13 @@ export function FactionSelector({
     <section className="faction-selector-card" aria-label="Chọn phe hoặc nhân vật">
       <div className="faction-selector-header">
         <div className="faction-selector-title-wrap">
-          <h3 className="faction-selector-title">
-            <span>🛡️</span>
-            <span>Chọn phe / Nhân vật</span>
-          </h3>
+          <span className="faction-selector-icon">🛡️</span>
+          <h3 className="faction-selector-title">Chọn phe / Nhân vật</h3>
           <span className="faction-selector-badge">Bắt buộc</span>
         </div>
       </div>
       <p className="faction-selector-desc">
-        Mỗi người chơi chọn 1 phe hoặc nhân vật riêng biệt cho ván đấu này.
+        Mỗi người chơi chọn 1 phe hoặc nhân vật riêng biệt cho ván đấu.
       </p>
 
       <div className="faction-selector-list">
@@ -40,7 +37,7 @@ export function FactionSelector({
           )
 
           const options = [
-            { value: '', label: 'Chưa chọn phe...' },
+            { value: '', label: 'Chọn phe...' },
             ...factions.map((f) => {
               const isTaken = takenFactionIds.has(f.id)
               return {
@@ -53,16 +50,9 @@ export function FactionSelector({
 
           return (
             <div key={player.id} className="faction-selector-item">
-              <div className="faction-selector-player-info">
-                {player.avatar ? (
-                  <div className="faction-selector-avatar">
-                    <img src={player.avatar} alt={player.name} />
-                  </div>
-                ) : (
-                  <PlayerDot player={player} size={32} />
-                )}
-                <span className="faction-selector-player-name">{player.name}</span>
-              </div>
+              <span className="faction-selector-player-name" title={player.name}>
+                {player.name}
+              </span>
 
               <div className="faction-selector-control">
                 <Select
