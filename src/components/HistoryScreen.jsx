@@ -124,6 +124,7 @@ function attachMatchThumbnail(match, boardGames) {
   const boardGame = findBoardGameForMatch(match, boardGames)
   return {
     ...match,
+    factions: match.factions?.length ? match.factions : (boardGame?.factions || []),
     thumbnailUrl: match.thumbnailUrl || boardGame?.thumbnail_url || '',
     scoringType: match.scoringType || boardGame?.scoringType || boardGame?.scoring_type || 'COLUMN_BASED',
   }
@@ -830,6 +831,7 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
           <section className="score-board history-score-board">
             <ScoreGrid
               players={players}
+              factions={selectedMatch.factions}
               rows={displayedScoreRows}
               mode={isWinnerOnly ? 'WINNER_ONLY' : isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
               stickyHeader

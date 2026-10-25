@@ -118,6 +118,7 @@ export const MatchReceiptCard = forwardRef(function MatchReceiptCard(
       <section className="score-board history-score-board">
         <ScoreGrid
           players={players}
+          factions={match.factions}
           rows={displayedScoreRows}
           mode={isWinnerOnly ? 'WINNER_ONLY' : isTotalScoreOnly ? 'TOTAL_SCORE_ONLY' : 'COLUMN_BASED'}
           stickyHeader={false}

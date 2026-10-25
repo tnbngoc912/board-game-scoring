@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   ScoreGridCheckboxCell,
   ScoreGridWinnerSelectCell,
@@ -15,6 +15,7 @@ import { Icon } from '../ui/Icon'
 
 export function ScoreGrid({
   players,
+  factions = [],
   rows = [],
   mode = 'COLUMN_BASED',
   stickyHeader = true,
@@ -37,6 +38,21 @@ export function ScoreGrid({
     ? [{ id: 'winner', name: 'Winner' }]
     : (rows || [])
 
+  const factionsMap = useMemo(() => {
+    const map = new Map()
+    ;(factions || []).forEach((f) => {
+      if (f && f.id) map.set(f.id, f.name || f.id)
+    })
+    return map
+  }, [factions])
+
+  const hasFactionsRow = useMemo(() => {
+    return (
+      (factions && factions.length > 0) ||
+      (players || []).some((p) => Boolean(p.faction_id))
+    )
+  }, [factions, players])
+
   return (
     <div className="score-grid-wrap score-board-scroll">
       <div
@@ -54,6 +70,26 @@ export function ScoreGrid({
           </ScoreGridHeaderCell>
         ))}
         <ScoreGridSpacer />
+
+        {!editable && hasFactionsRow && (
+          <React.Fragment key="faction-row">
+            <ScoreGridLabelCell sticky={stickyHeader} factionRow={true}>
+              Phe
+            </ScoreGridLabelCell>
+            <ScoreGridSpacer bordered />
+            {players.map((player) => {
+              const factionName = factionsMap.get(player.faction_id) || player.faction_id || '-'
+              return (
+                <div key={player.id} className="score-grid-cell score-grid-cell-faction">
+                  <span className="score-faction-badge" title={factionName}>
+                    {factionName}
+                  </span>
+                </div>
+              )
+            })}
+            <ScoreGridSpacer bordered />
+          </React.Fragment>
+        )}
 
         {isWinnerOnly ? (
           <React.Fragment key="winner">
