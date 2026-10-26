@@ -1,4 +1,4 @@
-import { normalizeScoreColumn } from './boardGameMapper'
+import { normalizeScoreColumn, normalizeFaction } from './boardGameMapper'
 import { getEntityId } from './entityMapper'
 
 function isPlainObject(value) {
@@ -97,7 +97,7 @@ export function normalizeMatch(match) {
     id: match.match_id || getEntityId(match),
     gameName: match.board_game_name || match.gameName || 'Khong ten',
     gameId: match.board_game_id,
-    factions: match.factions || boardGame.factions || [],
+    factions: (match.factions || boardGame.factions || []).map(normalizeFaction).filter(Boolean),
     scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: formatPlayedAt(match.play_date),
@@ -163,7 +163,7 @@ export function normalizeMatchDetail(payload) {
     id: getEntityId(match),
     gameName: boardGame.name || match.board_game_name || match.gameName || 'Khong ten',
     gameId: getEntityId(boardGame) || match.board_game_id,
-    factions: boardGame.factions || match.factions || payload.factions || payload.match?.factions || [],
+    factions: (boardGame.factions || match.factions || payload.factions || payload.match?.factions || []).map(normalizeFaction).filter(Boolean),
     scoringType: match.scoring_type || match.scoringType || boardGame.scoring_type || boardGame.scoringType || 'COLUMN_BASED',
     playedAtRaw: match.play_date || match.created_at || match.updated_at || '',
     playedAt: formatPlayedAt(match.play_date),
