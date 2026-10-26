@@ -318,6 +318,24 @@
   color: #70655C;
 }
 
+.custom-select-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.custom-select-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
 .custom-select-trigger.active {
   border-color: var(--color-brand);
 }
@@ -354,6 +372,9 @@
 }
 
 .custom-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: var(--space-3) 16px;
   font-size: 15px;
   color: #70655C;

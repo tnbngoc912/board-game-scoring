@@ -5,7 +5,7 @@ export function MatchFactionsList({ players = [], factions = [] }) {
   const factionsMap = useMemo(() => {
     const map = new Map()
     ;(factions || []).forEach((f) => {
-      if (f && f.id) map.set(f.id, f.name || f.id)
+      if (f && f.id) map.set(f.id, f)
     })
     return map
   }, [factions])
@@ -25,13 +25,35 @@ export function MatchFactionsList({ players = [], factions = [] }) {
       </div>
       <div className="match-factions-grid">
         {playersWithFaction.map((player) => {
-          const factionName = factionsMap.get(player.faction_id) || player.faction_id
+          const faction = factionsMap.get(player.faction_id)
+          const factionName = faction?.name || player.faction_id
+          const factionColor = faction?.color
+
           return (
             <div key={player.id} className="match-factions-item">
               <span className="match-factions-player-name" title={player.name}>
                 {player.name}
               </span>
-              <span className="match-factions-badge" title={factionName}>
+              <span
+                className="match-factions-badge"
+                title={factionName}
+                style={
+                  factionColor
+                    ? {
+                        color: factionColor,
+                        backgroundColor: `${factionColor}18`,
+                        borderColor: `${factionColor}35`,
+                      }
+                    : undefined
+                }
+              >
+                {factionColor && (
+                  <i
+                    className="match-factions-badge-dot"
+                    style={{ backgroundColor: factionColor }}
+                    aria-hidden="true"
+                  />
+                )}
                 {factionName}
               </span>
             </div>

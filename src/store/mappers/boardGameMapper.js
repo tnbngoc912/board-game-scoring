@@ -9,14 +9,20 @@ export function normalizeScoreColumn(column, index = 0) {
   }
 }
 
-export function normalizeBoardGame(game) {
-  const genres = game.genres || game.category_ids || []
-  const scoreColumns = game.score_columns || game.scoreColumns || []
-  const factions = (game.factions || []).map((f) => ({
+export function normalizeFaction(f) {
+  if (!f) return null
+  return {
     id: f.id || f._id || '',
     name: f.name || '',
     icon_url: f.icon_url || f.iconUrl || '',
-  }))
+    color: f.color || '',
+  }
+}
+
+export function normalizeBoardGame(game) {
+  const genres = game.genres || game.category_ids || []
+  const scoreColumns = game.score_columns || game.scoreColumns || []
+  const factions = (game.factions || []).map(normalizeFaction).filter(Boolean)
 
   return {
     ...game,
@@ -32,11 +38,7 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
   const source = raw || {}
   const scoreColumns = source.score_columns || source.scoreColumns || []
   const overviewStats = source.overview_stats || null
-  const factions = (source.factions || []).map((f) => ({
-    id: f.id || f._id || '',
-    name: f.name || '',
-    icon_url: f.icon_url || f.iconUrl || '',
-  }))
+  const factions = (source.factions || []).map(normalizeFaction).filter(Boolean)
 
   return {
     id: getEntityId(source) || fallbackBoardGameId,
