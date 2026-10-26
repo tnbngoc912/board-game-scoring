@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../store/gameStore'
 import { LoadingOverlay } from './LoadingOverlay'
 import { ScoreGrid } from './score/ScoreGrid'
+import { FactionSelector } from './score/FactionSelector'
 import { Header } from './Header'
 import Image from "next/image"
 import { useAppDataStore } from '../store/appDataStore'
@@ -113,6 +114,34 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
   const displayPlayedAt = isEditMode
     ? matchToEdit.playedAt
     : (formatPlayedAt(storePlayDateTime) || formatPlayedAt(new Date()))
+
+  const gameFactions = useMemo(() => {
+    return isEditMode
+      ? (matchToEdit?.factions || [])
+      : (storeBoardGameOverview?.factions || [])
+  }, [isEditMode, matchToEdit?.factions, storeBoardGameOverview?.factions])
+  const hasFactions = Boolean(gameFactions && gameFactions.length > 0)
+
+  const [playerFactions, setPlayerFactions] = useState(() => {
+    if (matchToEdit?.players) {
+      const initial = {}
+      matchToEdit.players.forEach((p) => {
+        const pId = p.id || p.userId || p._id
+        if (pId && p.faction_id) {
+          initial[pId] = p.faction_id
+        }
+      })
+      return initial
+    }
+    return {}
+  })
+
+  function handleFactionChange(playerId, factionId) {
+    setPlayerFactions((prev) => ({
+      ...prev,
+      [playerId]: factionId,
+    }))
+  }
 
 
   const [draftScores, setDraftScores] = useState(() => {
@@ -299,6 +328,20 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
       return
     }
 
+    if (hasFactions) {
+      const hasUnselectedFaction = players.some((p) => !playerFactions[p.id])
+      if (hasUnselectedFaction) {
+        toast('Vui lòng chọn phe cho tất cả người chơi')
+        return
+      }
+
+      const chosenFactions = players.map((p) => playerFactions[p.id]).filter(Boolean)
+      if (new Set(chosenFactions).size !== chosenFactions.length) {
+        toast('Mỗi người chơi phải chọn một phe khác nhau')
+        return
+      }
+    }
+
     setIsSaving(true)
     try {
       // Đợi nốt các ảnh đang upload dở (nếu đã xong từ trước thì 0ms)
@@ -309,11 +352,17 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         if (!isWinnerOnly) {
           playerScores = players.map((player) => ({
             user_id: player.id,
+            faction_id: playerFactions[player.id] || null,
             scores: draftScores.reduce((scores, row) => {
               if (row.type === 'text') return scores
               scores[row.id] = Number(row.scores?.[player.id] ?? 0)
               return scores
             }, {}),
+          }))
+        } else {
+          playerScores = players.map((player) => ({
+            user_id: player.id,
+            faction_id: playerFactions[player.id] || null,
           }))
         }
 
@@ -321,7 +370,7 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
 
         await updateMatchScores(matchToEdit.id, {
           description: matchDescription.trim(),
-          ...(isWinnerOnly ? { winnerIds } : { playerScores }),
+          ...(isWinnerOnly ? { winnerIds, playerScores } : { playerScores }),
           imageAttachments: finalImageAttachments,
         })
 
@@ -365,7 +414,8 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         const ok = await publishScores(
           isWinnerOnly ? winnerOnlyScores : draftScores,
           matchDescription,
-          finalImageAttachments
+          finalImageAttachments,
+          playerFactions
         )
         toast(ok ? 'Đã lưu kết quả' : 'Không thể lưu kết quả')
         if (ok) {
@@ -532,7 +582,14 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
           </section>
         </div>
 
-
+        {hasFactions && (
+          <FactionSelector
+            players={players}
+            factions={gameFactions}
+            playerFactions={playerFactions}
+            onFactionChange={handleFactionChange}
+          />
+        )}
 
         <textarea
           className="match-description"

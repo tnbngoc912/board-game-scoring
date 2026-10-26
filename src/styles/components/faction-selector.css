@@ -1,0 +1,112 @@
+.faction-selector-card {
+  margin: 0 var(--space-4, 16px);
+  padding: var(--space-4, 16px);
+  background: var(--color-card, #fbf7f2);
+  border: 1px solid var(--color-border-card, rgba(167, 125, 79, 0.2));
+  border-radius: var(--radius-md, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.faction-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faction-selector-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faction-selector-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-main, #3c2a1e);
+  margin: 0;
+}
+
+.faction-selector-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full, 999px);
+  background: rgba(193, 122, 60, 0.12);
+  color: var(--color-brand, #c17a3c);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faction-selector-desc {
+  font-size: 12px;
+  color: var(--color-subtext, #8c7a6b);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.faction-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.faction-selector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--color-card-soft, rgba(255, 255, 255, 0.65));
+  border: 1px solid var(--color-border-subtle, rgba(167, 125, 79, 0.12));
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.faction-selector-item:hover {
+  border-color: rgba(193, 122, 60, 0.35);
+}
+
+.faction-selector-player-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-main, #3c2a1e);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.faction-selector-control {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.faction-selector-control .custom-select-trigger {
+  height: 38px;
+  padding: 0 12px;
+  gap: 6px;
+  border-radius: 10px;
+}
+
+.faction-selector-control .custom-select-trigger span {
+  font-size: 13px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.faction-selector-control .custom-select-options {
+  font-size: 13px;
+}
+
+@media (max-width: 360px) {
+  .faction-selector-control {
+    width: 130px;
+  }
+}

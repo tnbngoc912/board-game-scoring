@@ -23,6 +23,7 @@ import { Button } from './ui/Button'
 import { GameScreen } from './GameScreen'
 import { MatchCommentsSection } from './MatchCommentsSection'
 import { MatchReceiptCard } from './score/MatchReceiptCard'
+import { MatchFactionsList } from './score/MatchFactionsList'
 import { useIsStandalone } from '../hooks/useIsStandalone'
 
 const GAME_IMAGE_THEMES = [
@@ -124,6 +125,7 @@ function attachMatchThumbnail(match, boardGames) {
   const boardGame = findBoardGameForMatch(match, boardGames)
   return {
     ...match,
+    factions: match.factions?.length ? match.factions : (boardGame?.factions || []),
     thumbnailUrl: match.thumbnailUrl || boardGame?.thumbnail_url || '',
     scoringType: match.scoringType || boardGame?.scoringType || boardGame?.scoring_type || 'COLUMN_BASED',
   }
@@ -839,6 +841,11 @@ export function HistoryScreen({ onNewGame, onShowSetup, toast }) {
               editable={false}
             />
           </section>
+
+          <MatchFactionsList
+            players={players}
+            factions={selectedMatch.factions}
+          />
 
           {selectedMatch.description ? (
             <div className="history-detail-note">{selectedMatch.description}</div>

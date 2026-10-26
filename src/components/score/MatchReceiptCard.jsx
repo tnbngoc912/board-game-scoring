@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react'
 import { ScoreGrid } from './ScoreGrid'
+import { MatchFactionsList } from './MatchFactionsList'
 
 const GAME_IMAGE_THEMES = [
   ['#b9d8d4', '#7fb0c8'],
@@ -127,6 +128,9 @@ export const MatchReceiptCard = forwardRef(function MatchReceiptCard(
           editable={false}
         />
       </section>
+
+      {/* 3.5 Danh sách Phe / Nhân vật */}
+      <MatchFactionsList players={players} factions={match.factions} />
 
       {/* 4. Note Ghi Chú */}
       {match.description ? (

@@ -1,0 +1,68 @@
+.match-factions-card {
+  margin: 16px 16px 0;
+  padding: 12px 14px;
+  background: var(--color-card, #fbf7f2);
+  border: 1px solid var(--color-border-card, rgba(167, 125, 79, 0.2));
+  border-radius: var(--radius-md, 16px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-factions-header {
+  display: flex;
+  align-items: center;
+}
+
+.match-factions-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-main, #3c2a1e);
+  margin: 0;
+}
+
+.match-factions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px 10px;
+}
+
+.match-factions-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--color-card-soft, rgba(255, 255, 255, 0.65));
+  border: 1px solid var(--color-border-subtle, rgba(167, 125, 79, 0.12));
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.match-factions-player-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-main, #3c2a1e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.match-factions-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-brand, #c17a3c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  min-width: 0;
+}
+
+@media (max-width: 360px) {
+  .match-factions-grid {
+    grid-template-columns: 1fr;
+  }
+}

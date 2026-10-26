@@ -83,8 +83,12 @@ export function Select({ value, onChange, options, placeholder = 'Chọn...', se
                 key={opt.value}
                 role="option"
                 aria-selected={opt.value === String(value)}
-                className={`custom-select-option ${opt.value === String(value) ? 'selected' : ''}`}
-                onClick={() => handleSelect(opt.value)}
+                aria-disabled={Boolean(opt.disabled)}
+                className={`custom-select-option ${opt.value === String(value) ? 'selected' : ''} ${opt.disabled ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (opt.disabled) return
+                  handleSelect(opt.value)
+                }}
               >
                 {opt.label}
               </li>

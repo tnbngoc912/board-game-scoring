@@ -12,6 +12,11 @@ export function normalizeScoreColumn(column, index = 0) {
 export function normalizeBoardGame(game) {
   const genres = game.genres || game.category_ids || []
   const scoreColumns = game.score_columns || game.scoreColumns || []
+  const factions = (game.factions || []).map((f) => ({
+    id: f.id || f._id || '',
+    name: f.name || '',
+    icon_url: f.icon_url || f.iconUrl || '',
+  }))
 
   return {
     ...game,
@@ -19,6 +24,7 @@ export function normalizeBoardGame(game) {
     genres,
     scoringType: game.scoring_type || game.scoringType || 'COLUMN_BASED',
     categories: scoreColumns.map(normalizeScoreColumn),
+    factions,
   }
 }
 
@@ -26,6 +32,11 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
   const source = raw || {}
   const scoreColumns = source.score_columns || source.scoreColumns || []
   const overviewStats = source.overview_stats || null
+  const factions = (source.factions || []).map((f) => ({
+    id: f.id || f._id || '',
+    name: f.name || '',
+    icon_url: f.icon_url || f.iconUrl || '',
+  }))
 
   return {
     id: getEntityId(source) || fallbackBoardGameId,
@@ -38,6 +49,7 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
     thumbnailUrl: source.thumbnail_url || source.thumbnailUrl || '',
     scoringType: source.scoring_type || source.scoringType || 'COLUMN_BASED',
     categories: scoreColumns.map(normalizeScoreColumn),
+    factions,
     stats: source.stats || (overviewStats ? {
       total_played: overviewStats.total_matches_count || 0,
       last_played_at: overviewStats.latest_match?.play_date || null,
