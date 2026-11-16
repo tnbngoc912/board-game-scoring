@@ -6,9 +6,12 @@ import {
   forgotPassword,
   getMyProfile,
   login as loginApi,
+  register as registerApi,
   registerTokenExpiredListener,
   setAuthToken,
 } from '../api/backendService'
+import { useGroupStore } from './groupStore'
+import { useAppDataStore } from './appDataStore'
 
 export const useAuthStore = create(
   persist(
@@ -59,6 +62,20 @@ export const useAuthStore = create(
         }
       },
 
+      async register({ name, email, password }) {
+        const { token, user: registeredUser } = await registerApi({ name, email, password })
+        if (!token) throw new Error('Không nhận được token sau khi đăng ký')
+        setAuthToken(token)
+        try {
+          const user = (await getMyProfile()) || registeredUser
+          set({ token, user })
+          return user
+        } catch {
+          set({ token, user: registeredUser })
+          return registeredUser
+        }
+      },
+
       async forgotPassword(email) {
         return forgotPassword(email)
       },
@@ -75,6 +92,8 @@ export const useAuthStore = create(
 
       logout() {
         clearAuthToken()
+        useGroupStore.getState().clearGroups()
+        useAppDataStore.getState().resetAllGroupData()
         set({ token: '', user: null, hasBootstrapped: true })
       },
     }),

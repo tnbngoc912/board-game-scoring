@@ -126,43 +126,52 @@ Mọi giao tiếp mạng đều đi qua [backendService.js](file:///Users/luanng
 
 ## 5. Luồng Nghiệp Vụ Chính (Core Business Flows)
 
-### 5.1. Xác thực người dùng (Auth)
+### 5.1. Xác thực người dùng (Auth) & Onboarding Nhóm
 Nếu client chưa có token hoặc chưa đăng nhập:
-1.  [App.jsx](file:///Users/luannguyen/BoardGameClient/board-game-scoring/src/App.jsx) chặn hiển thị giao diện chính và chuyển hướng sang `LoginScreen` hoặc `ForgotPasswordScreen`.
-2.  Sau khi đăng nhập thành công, token được lưu vào localStorage, trigger `bootstrap()` để tải thông tin tài khoản và mở khóa giao diện chính.
+1. [App.jsx](file:///Users/luannguyen/Working/boardgame/board-game-scoring/src/App.jsx) hiển thị màn hình Đăng nhập (`LoginScreen`) với tùy chọn chuyển đổi giữa **Đăng nhập** và **Đăng ký tài khoản mới**.
+2. Sau khi đăng nhập/đăng ký thành công:
+   - Hệ thống gọi `GET /api/v1/groups/my-groups` để kiểm tra các nhóm mà người dùng tham gia.
+   - **Nếu chưa có nhóm nào**: Hiển thị màn hình **Onboarding** với 2 tùy chọn:
+     * **Nhập mã mời nhóm**: Nhập mã mời để xin tham gia một nhóm có sẵn (trạng thái `PENDING` chờ Chủ nhóm duyệt).
+     * **Tạo nhóm mới**: Đặt tên nhóm, hệ thống tạo nhóm và gán người dùng làm Chủ nhóm (`OWNER`).
+   - **Nếu đã có nhóm**: Lưu `active_group_id` và đính kèm Header `X-Group-Id` vào toàn bộ các request tiếp theo.
 
-```mermaid
-graph TD
-    A[Khởi động ứng dụng] --> B{Đã có token lưu trữ?}
-    B -- Không --> C[Hiển thị LoginScreen]
-    B -- Có --> D[Gọi API /users/me]
-    D -- Thành công --> E[Vào trang chính /]
-    D -- Thất bại --> C
-```
-
-### 5.2. Luồng thiết lập ván đấu (`SetupScreen`)
-1.  **Chọn game (`setupStep === 'games'`)**: Hiển thị danh sách các board game có sẵn trên hệ thống. Hỗ trợ lọc theo số người chơi thích hợp, thể loại và tìm kiếm theo tên. Nhấp vào một game sẽ chọn game đó và chuyển bước sang `config`.
-2.  **Thiết lập thông tin (`setupStep === 'config'`)**:
-    *   Hiển thị danh sách người chơi đã tham gia.
-    *   Cho phép xóa hoặc thêm người chơi. Để thêm người chơi, nhấp "Thêm người chơi" để mở `player-picker` (chọn từ danh sách thành viên hệ thống).
-    *   Cho phép chọn ngày giờ chơi (`playDateTime`).
-3.  **Tạo bảng điểm**: Nhấp nút "Tạo bảng điểm" để chuyển luồng chơi (`gameFlow`) sang `'entry'` (hiển thị `GameScreen`).
+### 5.2. Luồng Tủ Game của Nhóm & Thiết lập ván đấu (`SetupScreen`)
+1. **Tủ game riêng của Nhóm**:
+   - Khi một nhóm mới được tạo, Tủ game ban đầu sẽ **để trống**.
+   - Chủ nhóm hoặc thành viên có quyền quản lý có thể:
+     * **Thêm từ thư viện mẫu**: Mở modal duyệt danh mục game chuẩn toàn hệ thống (Global Catalog) để thêm vào tủ nhóm chỉ với 1 chạm.
+     * **Tạo game nhanh**: Mở form đơn giản (Tên, Ảnh bìa, Số người chơi, Thời gian chơi). Hệ thống mặc định kiểu tính điểm là `TOTAL_SCORE_ONLY` (điểm tổng đơn giản, không cần cấu hình phe phái/cột phức tạp). Game tạo xong xuất hiện ngay trong Tủ game để nhóm chơi tức thì (đồng thời gửi yêu cầu duyệt lên System Admin để sau này được đưa vào Thư viện chung).
+2. **Chọn game và thiết lập ván (`config`)**:
+   - Chọn game từ Tủ game nhóm.
+   - Thêm người chơi tham gia (từ danh sách thành viên nhóm hoặc bạn chơi ảo).
+   - Chọn ngày giờ chơi và bấm "Tạo bảng điểm" để bắt đầu ghi điểm.
 
 ### 5.3. Luồng chấm điểm & Lưu kết quả (`GameScreen`)
 Giao diện hiển thị bảng nhập điểm dựa vào `scoringType` của game được chọn:
-*   **`WINNER_ONLY`**: Hiển thị danh sách người chơi kèm checkbox. Người dùng tích chọn duy nhất một người chiến thắng.
-*   **`TOTAL_SCORE_ONLY`**: Hiển thị grid điểm chỉ có duy nhất 1 hàng nhập điểm (thường là tổng điểm trực tiếp).
-*   **`COLUMN_BASED`**: Hiển thị grid điểm gồm nhiều cột đại diện người chơi, nhiều hàng đại diện cho các danh mục điểm (`categories`). Hệ thống tự động tính tổng điểm theo thời gian thực (real-time).
+* **`WINNER_ONLY`**: Hiển thị danh sách người chơi kèm checkbox người chiến thắng.
+* **`TOTAL_SCORE_ONLY`**: Hiển thị bảng nhập 1 ô điểm tổng trực tiếp cho mỗi người chơi (đây là kiểu mặc định cho mọi game tạo nhanh).
+* **`COLUMN_BASED`**: Hiển thị bảng nhiều cột điểm tương ứng với danh mục điểm của game. Tự động tính tổng điểm theo thời gian thực.
 
 Khi nhấn "Lưu kết quả":
-1.  Gửi dữ liệu điểm lên API thông qua `publishScores`.
-2.  Sau khi lưu thành công, hệ thống tự động reset danh sách người chơi cục bộ và chuyển hướng người dùng sang trang Lịch sử `/history`.
+1. Gửi dữ liệu điểm lên API thông qua `publishScores`.
+2. Hệ thống kiểm tra quyền `MATCH: CREATE` hoặc `MATCH: EDIT` của người dùng trong nhóm.
+3. Sau khi lưu thành công, hệ thống tự động reset bảng điểm và chuyển hướng người dùng sang trang Lịch sử `/history`.
 
 ### 5.4. Xem và quản lý lịch sử ván đấu (`HistoryScreen`)
-*   **Danh sách**: Hiển thị toàn bộ các ván chơi đã lưu từ trước đến nay, sắp xếp từ mới nhất đến cũ nhất. Hỗ trợ tìm kiếm theo mô tả ván chơi hoặc lọc theo tên board game.
-*   **Chi tiết ván chơi**: Khi click vào một ván chơi, ứng dụng chuyển hướng sang route `/history/[id]`, kích hoạt tải chi tiết ván đấu từ API `/matches/:id`.
-    *   Hệ thống dùng hàm `alignScoreRowsWithBoardGame` để ánh xạ chính xác điểm của từng người chơi vào các cột danh mục tương ứng của board game đó.
-    *   Hiển thị tùy chọn xóa ván đấu (gọi API `DELETE /matches/:id`).
+* Danh sách ván đấu được lọc cô lập theo nhóm hiện tại (`X-Group-Id`).
+* Xem chi tiết ván đấu, danh sách điểm số và bình luận.
+* Người dùng chỉ có thể xóa ván đấu nếu có quyền `MATCH: DELETE` được Chủ nhóm cấp.
+
+### 5.5. Quản lý Thành viên Nhóm & Phân quyền
+* **Lấy mã mời**: Hiển thị mã mời nhóm (`invite_code`) để Chủ nhóm gửi cho bạn bè.
+* **Duyệt thành viên**: Tab "Chờ phê duyệt" hiển thị các yêu cầu gia nhập (`PENDING`) từ mã mời; Chủ nhóm bấm Duyệt (`ACTIVE`) hoặc Từ chối.
+* **Phân quyền chi tiết**: Chủ nhóm có thể cấp/thu hồi quyền chi tiết cho từng thành viên: Xem (`READ`), Tạo trận (`CREATE`), Sửa điểm (`EDIT`), Xóa trận (`DELETE`). Thành viên mới vào nhóm mặc định chỉ có quyền Xem (`READ`).
+* **Bạn chơi ảo (Virtual Player)**: Tạo người chơi ảo cho khách chơi vãng lai chưa có tài khoản, và hỗ trợ liên kết tài khoản thật sau này.
+* **Xóa thành viên**: Xóa thành viên khỏi nhóm; nếu thành viên đã từng chơi ván đấu trong nhóm, hệ thống chuyển sang trạng thái `status: 'REMOVED'` để bảo toàn 100% dữ liệu lịch sử của nhóm.
+
+### 5.6. Chỉnh sửa Hồ sơ cá nhân (`AccountScreen`)
+* Người chơi có thể tự cập nhật **Tên hiển thị (`name`)** và tải lên **Ảnh đại diện (`avatar_url`)** mới thông qua Cloudflare R2 presigned URL và API `PATCH /api/v1/users/me`.
 
 ---
 

@@ -12,6 +12,13 @@ import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
 import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
+import { useGroupStore } from '../store/groupStore'
+import { getGroupMembers } from '../api/backendService'
+import { GroupHeaderBar } from './group/GroupHeaderBar'
+import { GroupCatalogModal } from './group/GroupCatalogModal'
+import { QuickCreateGameModal } from './group/QuickCreateGameModal'
+import { GroupMembersModal } from './group/GroupMembersModal'
+import { GroupOnboardingView } from './group/GroupOnboardingView'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
@@ -121,8 +128,44 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }))
   )
 
-  const { match } = usePermissions()
+  const { isAdmin, match, boardGame, activeGroup } = usePermissions()
   const { canCreate } = match
+  const canCreateBoardGame = boardGame?.canCreate
+
+  const { groups, activeGroupId, selectGroup, fetchMyGroups } = useGroupStore(
+    useShallow((state) => ({
+      groups: state.groups,
+      activeGroupId: state.activeGroupId,
+      selectGroup: state.selectGroup,
+      fetchMyGroups: state.fetchMyGroups,
+    }))
+  )
+
+  const activeGroups = useMemo(
+    () => (groups || []).filter((g) => (g.my_status || 'ACTIVE') === 'ACTIVE'),
+    [groups]
+  )
+
+  const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false)
+  const [isQuickCreateModalOpen, setIsQuickCreateModalOpen] = useState(false)
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
+  const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false)
+  const [pendingMemberCount, setPendingMemberCount] = useState(0)
+
+  const refreshPendingCount = useCallback(async () => {
+    const gid = activeGroup?.id || activeGroupId
+    if (!gid || !isAdmin) {
+      setPendingMemberCount(0)
+      return
+    }
+    try {
+      const members = await getGroupMembers(gid)
+      const count = (members || []).filter((m) => m.status === 'PENDING').length
+      setPendingMemberCount(count)
+    } catch {
+      setPendingMemberCount(0)
+    }
+  }, [activeGroup?.id, activeGroupId, isAdmin])
 
   useEffect(() => {
     async function loadSetupData() {
@@ -131,6 +174,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
         await Promise.all([
           fetchBoardGames({ force: shouldForce }),
           fetchUsers({ force: shouldForce }),
+          refreshPendingCount(),
         ])
       } catch {
         toast('Không tải được dữ liệu')
@@ -138,7 +182,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }
 
     loadSetupData()
-  }, [fetchBoardGames, fetchUsers, toast, homeResetToken])
+  }, [fetchBoardGames, fetchUsers, refreshPendingCount, toast, homeResetToken, activeGroupId])
 
   useEffect(() => {
     setSetupStep(initialStep)
@@ -359,6 +403,22 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
             <div className="screen-inner home-content">
               <NotificationPrompt toast={toast} activeStep={setupStep} />
 
+              <GroupHeaderBar
+                activeGroups={activeGroups}
+                activeGroup={activeGroup}
+                canManageGroup={isAdmin}
+                canCreateBoardGame={canCreateBoardGame}
+                pendingMemberCount={pendingMemberCount}
+                onSelectGroup={(nextId) => {
+                  selectGroup(nextId)
+                  toast('Đã chuyển không gian nhóm')
+                }}
+                onOpenOnboardingModal={() => setIsAddGroupModalOpen(true)}
+                onOpenMembersModal={() => setIsMembersModalOpen(true)}
+                onOpenCatalogModal={() => setIsCatalogModalOpen(true)}
+                onOpenQuickCreateModal={() => setIsQuickCreateModalOpen(true)}
+              />
+
               <section className="home-search-panel" aria-label="Tim va loc game">
                 <SearchBar
                   value={gameSearchTerm}
@@ -394,7 +454,30 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                 ) : null}
 
                 {!isLoadingGames && gameList.length === 0 ? (
-                  <div className="paper-card empty-state">Chua co game nao.</div>
+                  <div className="group-empty-cabinet">
+                    <h3>Tủ game của nhóm đang trống</h3>
+                    <p>
+                      Hãy thêm các tựa game từ Thư viện mẫu của hệ thống hoặc tạo nhanh game mới (mặc định tính Điểm tổng) để cả nhóm bắt đầu ghi điểm ngay!
+                    </p>
+                    {canCreateBoardGame ? (
+                      <div className="group-empty-actions">
+                        <button
+                          type="button"
+                          className="group-btn-secondary"
+                          onClick={() => setIsCatalogModalOpen(true)}
+                        >
+                          + Thêm từ thư viện mẫu
+                        </button>
+                        <button
+                          type="button"
+                          className="group-btn-primary"
+                          onClick={() => setIsQuickCreateModalOpen(true)}
+                        >
+                          + Tạo game mới (Điểm tổng)
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
@@ -451,6 +534,51 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               </section>
             </div>
           </PullToRefresh>
+
+          <GroupCatalogModal
+            isOpen={isCatalogModalOpen}
+            groupId={activeGroup?.id || activeGroupId}
+            existingGames={gameList}
+            onClose={() => setIsCatalogModalOpen(false)}
+            onAdded={() => {
+              fetchBoardGames({ force: true }).catch(() => {})
+            }}
+            toast={toast}
+          />
+
+          <QuickCreateGameModal
+            isOpen={isQuickCreateModalOpen}
+            groupId={activeGroup?.id || activeGroupId}
+            onClose={() => setIsQuickCreateModalOpen(false)}
+            onCreated={() => {
+              fetchBoardGames({ force: true }).catch(() => {})
+            }}
+            toast={toast}
+          />
+
+          <GroupMembersModal
+            isOpen={isMembersModalOpen}
+            group={activeGroup}
+            canManage={isAdmin}
+            onClose={() => setIsMembersModalOpen(false)}
+            onUpdated={() => {
+              fetchUsers({ force: true }).catch(() => {})
+              fetchMyGroups({ force: true }).catch(() => {})
+              refreshPendingCount()
+            }}
+            toast={toast}
+          />
+
+          {isAddGroupModalOpen ? (
+            <div className="group-modal-backdrop" onClick={() => setIsAddGroupModalOpen(false)}>
+              <div className="group-modal-sheet" onClick={(e) => e.stopPropagation()}>
+                <GroupOnboardingView
+                  toast={toast}
+                  onClose={() => setIsAddGroupModalOpen(false)}
+                />
+              </div>
+            </div>
+          ) : null}
         </>
       ) : setupStep === 'player-picker' ? (
         <>

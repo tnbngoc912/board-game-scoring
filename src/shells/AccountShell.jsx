@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useGroupStore } from '../store/groupStore'
+import { useAppDataStore } from '../store/appDataStore'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
+import { GroupMembersModal } from '../components/group/GroupMembersModal'
+import { GroupOnboardingView } from '../components/group/GroupOnboardingView'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
@@ -18,7 +23,12 @@ export function AccountShell() {
   const { message, visible, show: showToast } = useToast()
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
+  const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false)
   const isStandalone = useIsStandalone()
+  const { isAdmin, activeGroup } = usePermissions()
+  const fetchMyGroups = useGroupStore((state) => state.fetchMyGroups)
+  const fetchUsers = useAppDataStore((state) => state.fetchUsers)
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -105,6 +115,34 @@ export function AccountShell() {
             )}
 
             <div className="account-actions">
+              {activeGroup ? (
+                <button
+                  className="btn-account-action btn-account-action-with-meta"
+                  type="button"
+                  onClick={() => setIsMembersModalOpen(true)}
+                >
+                  <Icon src="/person-user.png" size={24} color="#38322E" />
+                  <span>
+                    <strong>Quản lý Nhóm & Thành viên ({activeGroup.name})</strong>
+                    <small>
+                      Mã mời: {activeGroup.invite_code || 'Đang tải'} • Duyệt thành viên, Phân quyền & Bạn chơi ảo
+                    </small>
+                  </span>
+                </button>
+              ) : null}
+
+              <button
+                className="btn-account-action btn-account-action-with-meta"
+                type="button"
+                onClick={() => setIsAddGroupModalOpen(true)}
+              >
+                <Icon src="/home.png" size={24} color="#38322E" />
+                <span>
+                  <strong>Nhập mã nhóm / Tạo nhóm mới</strong>
+                  <small>Tham gia thêm hội chơi khác hoặc tự lập nhóm mới</small>
+                </span>
+              </button>
+
               <button 
                 className="btn-account-action btn-account-action-with-meta" 
                 type="button"
@@ -144,6 +182,29 @@ export function AccountShell() {
           </div>
           </PullToRefresh>
         </div>
+
+        <GroupMembersModal
+          isOpen={isMembersModalOpen}
+          group={activeGroup}
+          canManage={isAdmin}
+          onClose={() => setIsMembersModalOpen(false)}
+          onUpdated={() => {
+            fetchUsers({ force: true }).catch(() => {})
+            fetchMyGroups({ force: true }).catch(() => {})
+          }}
+          toast={showToast}
+        />
+
+        {isAddGroupModalOpen ? (
+          <div className="group-modal-backdrop" onClick={() => setIsAddGroupModalOpen(false)}>
+            <div className="group-modal-sheet" onClick={(e) => e.stopPropagation()}>
+              <GroupOnboardingView
+                toast={showToast}
+                onClose={() => setIsAddGroupModalOpen(false)}
+              />
+            </div>
+          </div>
+        ) : null}
 
         <BottomNav />
         <Toast message={message} visible={visible} />

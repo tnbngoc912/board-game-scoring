@@ -6,9 +6,36 @@
 }
 
 .login-card {
-  padding: 18px 16px;
+  padding: var(--space-4);
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
+}
+
+.login-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-bg-strong);
+  border-radius: var(--radius-md);
+}
+
+.login-mode-tab {
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-subtext);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-mode-tab.active {
+  background: var(--color-brand);
+  color: var(--color-white);
+  box-shadow: var(--shadow-card);
 }
 
 .login-card.forgot {
