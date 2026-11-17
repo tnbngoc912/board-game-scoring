@@ -16,7 +16,7 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-1);
   padding: var(--space-1);
-  background: var(--color-bg-strong);
+  background: var(--color-border-control);
   border-radius: var(--radius-md);
 }
 
@@ -25,7 +25,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-subtext);
+  color: var(--color-text);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;

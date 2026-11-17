@@ -87,7 +87,7 @@ export function QuickCreateGameModal({
 
         <div className="group-modal-body">
           <div className="group-note-box">
-            Game tạo nhanh sẽ mặc định tính theo <strong>Điểm tổng (TOTAL_SCORE_ONLY)</strong> để nhóm chơi và ghi điểm ngay lập tức, đồng thời gửi yêu cầu duyệt lên Thư viện chung.
+            Game tạo nhanh sẽ mặc định tính theo <strong>Điểm tổng</strong> để nhóm chơi và ghi điểm ngay lập tức, đồng thời gửi yêu cầu duyệt lên Thư viện chung.
           </div>
 
           <form className="group-form" onSubmit={handleSubmit}>

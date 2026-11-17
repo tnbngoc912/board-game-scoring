@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useGroupStore } from '../store/groupStore'
 import { useAppDataStore } from '../store/appDataStore'
+import { getGroupMembers } from '../api/backendService'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { GroupMembersModal } from '../components/group/GroupMembersModal'
 import { GroupOnboardingView } from '../components/group/GroupOnboardingView'
@@ -25,10 +26,43 @@ export function AccountShell() {
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false)
+  const [pendingMemberCount, setPendingMemberCount] = useState(0)
   const isStandalone = useIsStandalone()
   const { isAdmin, activeGroup } = usePermissions()
+  const groups = useGroupStore((state) => state.groups)
+  const selectGroup = useGroupStore((state) => state.selectGroup)
   const fetchMyGroups = useGroupStore((state) => state.fetchMyGroups)
   const fetchUsers = useAppDataStore((state) => state.fetchUsers)
+
+  const activeGroups = useMemo(
+    () => (groups || []).filter((g) => (g.my_status || 'ACTIVE') === 'ACTIVE'),
+    [groups]
+  )
+
+  const roleLabel =
+    activeGroup?.my_role === 'OWNER'
+      ? 'Chủ nhóm'
+      : activeGroup?.my_role === 'ADMIN'
+        ? 'Quản trị'
+        : 'Thành viên'
+
+  const refreshPendingCount = useCallback(async () => {
+    if (!activeGroup?.id || !isAdmin) {
+      setPendingMemberCount(0)
+      return
+    }
+    try {
+      const members = await getGroupMembers(activeGroup.id)
+      const count = (members || []).filter((m) => m.status === 'PENDING').length
+      setPendingMemberCount(count)
+    } catch {
+      setPendingMemberCount(0)
+    }
+  }, [activeGroup?.id, isAdmin])
+
+  useEffect(() => {
+    refreshPendingCount()
+  }, [refreshPendingCount])
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -111,6 +145,39 @@ export function AccountShell() {
                     <span>{user?.email}</span>
                   </div>
                 </div>
+
+                <div className="account-email-section">
+                  <div className="account-email-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>CÂU LẠC BỘ / NHÓM CHƠI</span>
+                    {activeGroup ? (
+                      <span className="group-role-badge">{roleLabel}</span>
+                    ) : null}
+                  </div>
+                  <div className="account-email-box" style={{ padding: '8px 12px' }}>
+                    <Icon src="/home.png" size={24} color="#38322E" />
+                    {activeGroups.length > 1 ? (
+                      <select
+                        className="group-switcher-select"
+                        style={{ flex: 1, border: 'none', background: 'transparent', fontWeight: 600, fontSize: 15 }}
+                        value={activeGroup?.id || ''}
+                        onChange={(e) => {
+                          selectGroup(e.target.value)
+                          showToast('Đã chuyển nhóm chơi')
+                        }}
+                      >
+                        {activeGroups.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            🎲 {g.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{ fontWeight: 600 }}>
+                        {activeGroup?.name || 'Chưa tham gia nhóm'}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </>
             )}
 
@@ -122,8 +189,13 @@ export function AccountShell() {
                   onClick={() => setIsMembersModalOpen(true)}
                 >
                   <Icon src="/person-user.png" size={24} color="#38322E" />
-                  <span>
-                    <strong>Quản lý Nhóm & Thành viên ({activeGroup.name})</strong>
+                  <span style={{ flex: 1 }}>
+                    <strong style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>Quản lý Nhóm & Thành viên ({activeGroup.name})</span>
+                      {isAdmin && pendingMemberCount > 0 ? (
+                        <span className="group-badge-count">{pendingMemberCount}</span>
+                      ) : null}
+                    </strong>
                     <small>
                       Mã mời: {activeGroup.invite_code || 'Đang tải'} • Duyệt thành viên, Phân quyền & Bạn chơi ảo
                     </small>
@@ -191,6 +263,7 @@ export function AccountShell() {
           onUpdated={() => {
             fetchUsers({ force: true }).catch(() => {})
             fetchMyGroups({ force: true }).catch(() => {})
+            refreshPendingCount()
           }}
           toast={showToast}
         />
