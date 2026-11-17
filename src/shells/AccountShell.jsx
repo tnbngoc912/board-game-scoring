@@ -186,6 +186,25 @@ export function AccountShell() {
                 <button
                   className="btn-account-action btn-account-action-with-meta"
                   type="button"
+                  onClick={() => router.push('/group-games')}
+                >
+                  <Icon src="/plus-icon.svg" size={24} color="#38322E" />
+                  <span style={{ flex: 1 }}>
+                    <strong style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>Thêm & Quản lý Tủ Game Nhóm</span>
+                      <Icon src="/arrow-right.png" size={16} color="#70655c" />
+                    </strong>
+                    <small>
+                      Thêm từ thư viện mẫu hoặc tạo game mới cho {activeGroup.name}
+                    </small>
+                  </span>
+                </button>
+              ) : null}
+
+              {activeGroup ? (
+                <button
+                  className="btn-account-action btn-account-action-with-meta"
+                  type="button"
                   onClick={() => setIsMembersModalOpen(true)}
                 >
                   <Icon src="/person-user.png" size={24} color="#38322E" />

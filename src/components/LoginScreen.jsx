@@ -1,5 +1,6 @@
 import Image from "next/image"
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Eye, EyeOff, User as UserIcon } from 'lucide-react'
 import { Header } from './Header'
 
@@ -57,7 +58,14 @@ export function LoginScreen({
               className={`login-mode-tab${mode === 'login' ? ' active' : ''}`}
               onClick={() => setMode('login')}
             >
-              Đăng nhập
+              {mode === 'login' && (
+                <motion.span
+                  layoutId="auth-tab-pill"
+                  className="login-tab-pill"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="login-tab-label">Đăng nhập</span>
             </button>
             <button
               type="button"
@@ -66,7 +74,14 @@ export function LoginScreen({
               className={`login-mode-tab${mode === 'register' ? ' active' : ''}`}
               onClick={() => setMode('register')}
             >
-              Đăng ký
+              {mode === 'register' && (
+                <motion.span
+                  layoutId="auth-tab-pill"
+                  className="login-tab-pill"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="login-tab-label">Đăng ký</span>
             </button>
           </div>
 

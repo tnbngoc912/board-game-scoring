@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Header } from '../Header'
 import { useGroupStore } from '../../store/groupStore'
 import { useAuthStore } from '../../store/authStore'
@@ -134,7 +135,14 @@ export function GroupOnboardingView({ toast, onClose }) {
                 className={`group-tab-btn${activeTab === 'join' ? ' active' : ''}`}
                 onClick={() => setActiveTab('join')}
               >
-                Nhập mã nhóm
+                {activeTab === 'join' && (
+                  <motion.span
+                    layoutId="group-tab-pill"
+                    className="group-tab-pill"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="group-tab-label">Nhập mã nhóm</span>
               </button>
               <button
                 type="button"
@@ -143,7 +151,14 @@ export function GroupOnboardingView({ toast, onClose }) {
                 className={`group-tab-btn${activeTab === 'create' ? ' active' : ''}`}
                 onClick={() => setActiveTab('create')}
               >
-                Tạo nhóm mới
+                {activeTab === 'create' && (
+                  <motion.span
+                    layoutId="group-tab-pill"
+                    className="group-tab-pill"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="group-tab-label">Tạo nhóm mới</span>
               </button>
             </div>
 

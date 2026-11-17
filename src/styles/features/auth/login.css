@@ -12,6 +12,7 @@
 }
 
 .login-mode-tabs {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-1);
@@ -21,6 +22,7 @@
 }
 
 .login-mode-tab {
+  position: relative;
   min-height: 40px;
   border: 0;
   border-radius: var(--radius-sm);
@@ -29,13 +31,30 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .login-mode-tab.active {
-  background: var(--color-brand);
   color: var(--color-white);
+}
+
+.login-tab-pill {
+  position: absolute;
+  inset: 0;
+  background: var(--color-brand);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-card);
+  z-index: 1;
+}
+
+.login-tab-label {
+  position: relative;
+  z-index: 2;
+  transition: color 0.15s ease;
 }
 
 .login-card.forgot {
