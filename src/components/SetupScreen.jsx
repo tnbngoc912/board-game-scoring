@@ -147,7 +147,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }
 
     loadSetupData()
-  }, [fetchBoardGames, fetchUsers, refreshPendingCount, toast, homeResetToken, activeGroupId])
+  }, [fetchBoardGames, fetchUsers, toast, homeResetToken, activeGroupId])
 
   useEffect(() => {
     setSetupStep(initialStep)
