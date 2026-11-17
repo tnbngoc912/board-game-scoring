@@ -1,60 +1,16 @@
 .login-screen .login-content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: calc(100vh - 120px);
+  justify-content: flex-start;
+  padding-top: var(--space-4);
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  min-height: auto;
 }
 
 .login-card {
   padding: var(--space-4);
   display: grid;
   gap: var(--space-4);
-}
-
-.login-mode-tabs {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: var(--color-border-control);
-  border-radius: var(--radius-md);
-}
-
-.login-mode-tab {
-  position: relative;
-  min-height: 40px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.login-mode-tab.active {
-  color: var(--color-white);
-}
-
-.login-tab-pill {
-  position: absolute;
-  inset: 0;
-  background: var(--color-brand);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-card);
-  z-index: 1;
-}
-
-.login-tab-label {
-  position: relative;
-  z-index: 2;
-  transition: color 0.15s ease;
 }
 
 .login-card.forgot {
