@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding-top: var(--space-4);
+  padding-top: clamp(32px, 6vh, 56px);
   padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
   min-height: auto;
 }
