@@ -9,6 +9,7 @@ import { getGroupMembers } from '../api/backendService'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { GroupMembersModal } from '../components/group/GroupMembersModal'
 import { GroupOnboardingView } from '../components/group/GroupOnboardingView'
+import { GroupInfoCard } from '../components/group/GroupInfoCard'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
@@ -147,36 +148,16 @@ export function AccountShell() {
                 </div>
 
                 <div className="account-email-section">
-                  <div className="account-email-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>CÂU LẠC BỘ / NHÓM CHƠI</span>
-                    {activeGroup ? (
-                      <span className="group-role-badge">{roleLabel}</span>
-                    ) : null}
-                  </div>
-                  <div className="account-email-box" style={{ padding: '8px 12px' }}>
-                    <Icon src="/home.png" size={24} color="#38322E" />
-                    {activeGroups.length > 1 ? (
-                      <select
-                        className="group-switcher-select"
-                        style={{ flex: 1, border: 'none', background: 'transparent', fontWeight: 600, fontSize: 15 }}
-                        value={activeGroup?.id || ''}
-                        onChange={(e) => {
-                          selectGroup(e.target.value)
-                          showToast('Đã chuyển nhóm chơi')
-                        }}
-                      >
-                        {activeGroups.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            🎲 {g.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span style={{ fontWeight: 600 }}>
-                        {activeGroup?.name || 'Chưa tham gia nhóm'}
-                      </span>
-                    )}
-                  </div>
+                  <div className="account-email-label">CÂU LẠC BỘ / NHÓM CHƠI</div>
+                  <GroupInfoCard
+                    group={activeGroup}
+                    activeGroups={activeGroups}
+                    roleLabel={roleLabel}
+                    onSelectGroup={(nextId) => {
+                      selectGroup(nextId)
+                      showToast('Đã chuyển nhóm chơi')
+                    }}
+                  />
                 </div>
               </>
             )}

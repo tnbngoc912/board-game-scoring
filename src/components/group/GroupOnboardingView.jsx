@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Header } from '../Header'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
+import { SwitchTabs } from '../ui/SwitchTabs'
 import { useGroupStore } from '../../store/groupStore'
 import { useAuthStore } from '../../store/authStore'
 
@@ -108,14 +110,14 @@ export function GroupOnboardingView({ toast, onClose }) {
                 Bạn đã gửi yêu cầu tham gia nhóm:{' '}
                 <strong>{pendingGroups.map((g) => g.name).join(', ')}</strong>. Sau khi Chủ nhóm duyệt, bạn sẽ truy cập được Tủ game và Lịch sử của nhóm.
               </div>
-              <button
-                type="button"
-                className="group-btn-secondary"
+              <Button
+                variant="secondary"
                 onClick={handleRefreshStatus}
                 disabled={isRefreshing}
+                style={{ width: '100%', marginTop: 'var(--space-2)' }}
               >
                 {isRefreshing ? 'Đang kiểm tra...' : 'Kiểm tra lại trạng thái'}
-              </button>
+              </Button>
             </div>
           ) : null}
 
@@ -127,48 +129,23 @@ export function GroupOnboardingView({ toast, onClose }) {
               Nhập mã mời từ Chủ nhóm để tham gia hội chơi có sẵn, hoặc tự tạo nhóm mới cho hội bạn của mình.
             </p>
 
-            <div className="group-tabs" role="tablist">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'join'}
-                className={`group-tab-btn${activeTab === 'join' ? ' active' : ''}`}
-                onClick={() => setActiveTab('join')}
-              >
-                {activeTab === 'join' && (
-                  <motion.span
-                    layoutId="group-tab-pill"
-                    className="group-tab-pill"
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <span className="group-tab-label">Nhập mã nhóm</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'create'}
-                className={`group-tab-btn${activeTab === 'create' ? ' active' : ''}`}
-                onClick={() => setActiveTab('create')}
-              >
-                {activeTab === 'create' && (
-                  <motion.span
-                    layoutId="group-tab-pill"
-                    className="group-tab-pill"
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <span className="group-tab-label">Tạo nhóm mới</span>
-              </button>
-            </div>
+            <SwitchTabs
+              options={[
+                { value: 'join', label: 'Nhập mã nhóm' },
+                { value: 'create', label: 'Tạo nhóm mới' },
+              ]}
+              value={activeTab}
+              onChange={(nextTab) => setActiveTab(nextTab)}
+              layoutId="group-onboarding-pill"
+              ariaLabel="Chế độ tham gia nhóm"
+            />
 
             {activeTab === 'join' ? (
-              <form className="group-form" onSubmit={handleJoinByCode}>
+              <form className="group-form" onSubmit={handleJoinByCode} style={{ marginTop: 'var(--space-3)' }}>
                 <div className="group-field">
                   <label htmlFor="invite-code-input">Mã mời nhóm (Do Chủ nhóm cung cấp)</label>
-                  <input
+                  <Input
                     id="invite-code-input"
-                    type="text"
                     required
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
@@ -177,17 +154,21 @@ export function GroupOnboardingView({ toast, onClose }) {
                   />
                 </div>
 
-                <button type="submit" className="group-btn-primary" disabled={isSubmitting}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{ width: '100%', marginTop: 'var(--space-2)' }}
+                >
                   {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu tham gia'}
-                </button>
+                </Button>
               </form>
             ) : (
-              <form className="group-form" onSubmit={handleCreateGroup}>
+              <form className="group-form" onSubmit={handleCreateGroup} style={{ marginTop: 'var(--space-3)' }}>
                 <div className="group-field">
                   <label htmlFor="group-name-input">Tên nhóm / Câu lạc bộ *</label>
-                  <input
+                  <Input
                     id="group-name-input"
-                    type="text"
                     required
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
@@ -205,21 +186,26 @@ export function GroupOnboardingView({ toast, onClose }) {
                   />
                 </div>
 
-                <button type="submit" className="group-btn-primary" disabled={isSubmitting}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{ width: '100%', marginTop: 'var(--space-2)' }}
+                >
                   {isSubmitting ? 'Đang tạo nhóm...' : 'Tạo nhóm mới & Làm Chủ nhóm'}
-                </button>
+                </Button>
               </form>
             )}
           </section>
 
           {!onClose ? (
-            <button
-              type="button"
-              className="group-btn-secondary"
+            <Button
+              variant="secondary"
               onClick={() => logout()}
+              style={{ width: '100%' }}
             >
               Đăng xuất tài khoản
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

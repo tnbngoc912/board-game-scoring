@@ -1,8 +1,8 @@
 import Image from "next/image"
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Eye, EyeOff, User as UserIcon } from 'lucide-react'
 import { Header } from './Header'
+import { SwitchTabs } from './ui/SwitchTabs'
 
 export function LoginScreen({
   onLogin,
@@ -50,40 +50,16 @@ export function LoginScreen({
 
       <div className="screen-inner login-content">
         <section className="paper-card login-card">
-          <div className="login-mode-tabs" role="tablist" aria-label="Chế độ xác thực">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'login'}
-              className={`login-mode-tab${mode === 'login' ? ' active' : ''}`}
-              onClick={() => setMode('login')}
-            >
-              {mode === 'login' && (
-                <motion.span
-                  layoutId="auth-tab-pill"
-                  className="login-tab-pill"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
-              <span className="login-tab-label">Đăng nhập</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'register'}
-              className={`login-mode-tab${mode === 'register' ? ' active' : ''}`}
-              onClick={() => setMode('register')}
-            >
-              {mode === 'register' && (
-                <motion.span
-                  layoutId="auth-tab-pill"
-                  className="login-tab-pill"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
-              <span className="login-tab-label">Đăng ký</span>
-            </button>
-          </div>
+          <SwitchTabs
+            options={[
+              { value: 'login', label: 'Đăng nhập' },
+              { value: 'register', label: 'Đăng ký' },
+            ]}
+            value={mode}
+            onChange={(nextMode) => setMode(nextMode)}
+            layoutId="auth-tab-pill"
+            ariaLabel="Chế độ xác thực"
+          />
 
           <h1>{mode === 'register' ? 'Đăng ký tài khoản' : 'Đăng nhập'}</h1>
 

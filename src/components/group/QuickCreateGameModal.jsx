@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
 import { quickCreateGroupBoardGame, uploadMatchImages } from '../../api/backendService'
 
 export function QuickCreateGameModal({
@@ -93,9 +95,8 @@ export function QuickCreateGameModal({
           <form className="group-form" onSubmit={handleSubmit}>
             <div className="group-field">
               <label htmlFor="quick-game-name">Tên Board Game *</label>
-              <input
+              <Input
                 id="quick-game-name"
-                type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -105,7 +106,7 @@ export function QuickCreateGameModal({
 
             <div className="group-field">
               <label htmlFor="quick-game-thumb">Ảnh bìa (Link ảnh hoặc tải từ máy)</label>
-              <input
+              <Input
                 id="quick-game-thumb"
                 type="url"
                 value={thumbnailUrl}
@@ -117,6 +118,7 @@ export function QuickCreateGameModal({
                 accept="image/*"
                 onChange={handleFileChange}
                 disabled={isUploadingImage}
+                style={{ marginTop: 6 }}
               />
             </div>
 
@@ -180,13 +182,14 @@ export function QuickCreateGameModal({
               />
             </div>
 
-            <button
+            <Button
+              variant="primary"
               type="submit"
-              className="group-btn-primary"
               disabled={isSubmitting || isUploadingImage}
+              style={{ width: '100%', marginTop: 'var(--space-3)' }}
             >
               {isSubmitting ? 'Đang tạo game...' : 'Tạo game & Thêm vào Tủ nhóm'}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

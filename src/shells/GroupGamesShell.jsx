@@ -5,6 +5,9 @@ import { Header } from '../components/Header'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { GroupCatalogModal } from '../components/group/GroupCatalogModal'
 import { QuickCreateGameModal } from '../components/group/QuickCreateGameModal'
+import { GroupInfoCard } from '../components/group/GroupInfoCard'
+import { Button } from '../components/ui/Button'
+import { SearchBar } from '../components/ui/SearchBar'
 import { usePermissions } from '../hooks/usePermissions'
 import { useGroupStore } from '../store/groupStore'
 import { useAppDataStore } from '../store/appDataStore'
@@ -70,69 +73,34 @@ export function GroupGamesShell() {
             }}
           >
             <div className="account-content" style={{ paddingBottom: '32px' }}>
-              <div className="account-profile-card">
-                <div className="account-avatar-wrapper" style={{ background: 'var(--color-brand-100)' }}>
-                  <Icon src="/home.png" size={32} color="#93653f" />
-                </div>
-                <div className="account-user-info" style={{ flex: 1 }}>
-                  <div className="account-user-name" style={{ fontSize: 18 }}>
-                    {activeGroup?.name || 'Chưa chọn nhóm'}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span className="group-role-badge">{roleLabel}</span>
-                    <span style={{ fontSize: 13, color: 'var(--color-subtext)' }}>
-                      • {boardGames.length} trò chơi trong tủ
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <GroupInfoCard
+                group={activeGroup}
+                subtitle={`${boardGames.length} trò chơi trong tủ`}
+              />
 
               {canCreateBoardGame ? (
-                <div className="group-empty-actions" style={{ justifyContent: 'stretch', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <button
-                    type="button"
-                    className="group-btn-secondary"
-                    style={{ minHeight: '44px', justifyContent: 'center' }}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <Button
+                    variant="secondary"
                     onClick={() => setIsCatalogModalOpen(true)}
                   >
                     + Thư viện mẫu
-                  </button>
-                  <button
-                    type="button"
-                    className="group-btn-primary"
-                    style={{ minHeight: '44px', justifyContent: 'center' }}
+                  </Button>
+                  <Button
+                    variant="primary"
                     onClick={() => setIsQuickCreateModalOpen(true)}
                   >
                     + Tạo game mới
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
-              <div className="search-bar search-bar--plain" style={{ background: 'var(--color-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-control)' }}>
-                <span className="search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M16.5 16.5L21 21" />
-                  </svg>
-                </span>
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm game trong tủ nhóm..."
-                  aria-label="Tìm game trong tủ nhóm"
-                  style={{ minHeight: 44 }}
-                />
-                {searchTerm ? (
-                  <button
-                    className="search-clear-button"
-                    type="button"
-                    onClick={() => setSearchTerm('')}
-                    aria-label="Xóa từ khóa"
-                  >
-                    ✕
-                  </button>
-                ) : null}
-              </div>
+              <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClear={() => setSearchTerm('')}
+                placeholder="Tìm game trong tủ nhóm..."
+              />
 
               {isLoadingGames && boardGames.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-subtext)' }}>
@@ -150,20 +118,18 @@ export function GroupGamesShell() {
                   </p>
                   {canCreateBoardGame && !searchTerm ? (
                     <div className="group-empty-actions">
-                      <button
-                        type="button"
-                        className="group-btn-secondary"
+                      <Button
+                        variant="secondary"
                         onClick={() => setIsCatalogModalOpen(true)}
                       >
                         + Thêm từ thư viện mẫu
-                      </button>
-                      <button
-                        type="button"
-                        className="group-btn-primary"
+                      </Button>
+                      <Button
+                        variant="primary"
                         onClick={() => setIsQuickCreateModalOpen(true)}
                       >
                         + Tạo game mới (Điểm tổng)
-                      </button>
+                      </Button>
                     </div>
                   ) : null}
                 </div>
