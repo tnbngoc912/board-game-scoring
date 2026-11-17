@@ -1,5 +1,4 @@
 import React from 'react'
-import { Icon } from '../ui/Icon'
 
 /**
  * Component hiển thị thông tin nhóm hiện tại (GroupInfoCard).
@@ -29,12 +28,8 @@ export function GroupInfoCard({
         : 'Thành viên')
 
   return (
-    <div className="account-profile-card">
-      <div className="account-avatar-wrapper" style={{ background: 'var(--color-brand-100)' }}>
-        <Icon src="/home.png" size={32} color="#93653f" />
-      </div>
-
-      <div className="account-user-info" style={{ flex: 1, minWidth: 0 }}>
+    <div className="account-profile-card" style={{ padding: '16px' }}>
+      <div className="account-user-info" style={{ width: '100%', minWidth: 0, gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 8 }}>
           <div className="account-user-name" style={{ fontSize: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {group?.name || 'Chưa tham gia nhóm'}
@@ -52,7 +47,7 @@ export function GroupInfoCard({
         </div>
 
         {activeGroups.length > 1 && onSelectGroup ? (
-          <div style={{ width: '100%', marginTop: 6 }}>
+          <div style={{ width: '100%', marginTop: 4 }}>
             <select
               className="group-switcher-select"
               style={{
@@ -60,18 +55,18 @@ export function GroupInfoCard({
                 background: 'var(--color-bg)',
                 border: '1px solid var(--color-border-control)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '4px 8px',
-                fontSize: 13,
+                padding: '6px 10px',
+                fontSize: 14,
                 fontWeight: 600,
                 color: 'var(--color-text-strong)',
               }}
               value={group?.id || ''}
               onChange={(e) => onSelectGroup(e.target.value)}
-              aria-label="Chọn không gian nhóm hoạt động"
+              aria-label="Chọn nhóm chơi hoạt động"
             >
               {activeGroups.map((g) => (
                 <option key={g.id} value={g.id}>
-                  🎲 Chuyển sang: {g.name}
+                  🎲 {g.name}
                 </option>
               ))}
             </select>
