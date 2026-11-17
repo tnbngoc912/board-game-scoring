@@ -1,15 +1,14 @@
 import React from 'react'
-import { motion } from 'framer-motion'
 import clsx from 'clsx'
 
 /**
  * Component SwitchTabs tái sử dụng (Segmented Control).
- * Có hiệu ứng sliding pill indicator chạy trơn tru qua lại bằng framer-motion.
+ * Có hiệu ứng sliding pill indicator chạy trơn tru qua lại bằng CSS Transform.
+ * Không bị lỗi layout shift khi form bên dưới thay đổi kích thước.
  *
  * @param {Array<{ value: string, label: React.ReactNode, icon?: React.ReactNode }>} options Danh sách các tab
  * @param {string} value Giá trị tab đang chọn
  * @param {(val: string) => void} onChange Callback khi đổi tab
- * @param {string} layoutId Định danh layoutId cho Framer Motion (cần unique nếu có nhiều SwitchTabs)
  * @param {string} className Class tùy biến thêm
  * @param {string} ariaLabel Nhãn accessibility cho tablist
  */
@@ -17,16 +16,27 @@ export function SwitchTabs({
   options = [],
   value,
   onChange,
-  layoutId = 'switch-tabs-indicator',
   className,
   ariaLabel = 'Chuyển đổi chế độ',
 }) {
+  const activeIndex = Math.max(0, options.findIndex((opt) => opt.value === value))
+  const count = Math.max(1, options.length)
+
   return (
     <div
       className={clsx('switch-tabs-container', className)}
       role="tablist"
       aria-label={ariaLabel}
     >
+      <span
+        className="switch-tab-pill-track"
+        style={{
+          width: `calc((100% - 8px) / ${count})`,
+          transform: `translateX(calc(${activeIndex} * 100%))`,
+        }}
+        aria-hidden="true"
+      />
+
       {options.map((option) => {
         const isActive = option.value === value
 
@@ -43,13 +53,6 @@ export function SwitchTabs({
               }
             }}
           >
-            {isActive && (
-              <motion.span
-                layoutId={layoutId}
-                className="switch-tab-pill"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-              />
-            )}
             <span className="switch-tab-content">
               {option.icon && <span className="switch-tab-icon">{option.icon}</span>}
               <span className="switch-tab-label">{option.label}</span>
