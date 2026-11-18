@@ -512,7 +512,7 @@
   background: var(--color-white);
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
+  padding: 10px 14px;
   display: grid;
   gap: var(--space-2);
 }
@@ -528,6 +528,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .group-member-name {
@@ -536,8 +538,13 @@
   font-size: 15px;
 }
 
-.group-member-sub {
+.group-member-dot {
+  color: var(--color-subtext);
   font-size: 12px;
+}
+
+.group-member-sub {
+  font-size: 13px;
   color: var(--color-subtext);
 }
 

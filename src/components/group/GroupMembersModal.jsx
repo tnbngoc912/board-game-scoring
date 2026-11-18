@@ -297,32 +297,21 @@ export function GroupMembersModal({
                 const mid = String(member._id || member.id)
                 const isOwner = member.role === 'OWNER'
                 const played = member.stats?.played_count || 0
-                const matchPerms = member.permissions?.MATCH || ['READ']
-                const permSummary = isOwner
-                  ? 'Toàn quyền Chủ nhóm'
-                  : member.is_virtual
-                    ? 'Người chơi ảo (Không đăng nhập)'
-                    : matchPerms.length > 1
-                      ? `Trận đấu: ${matchPerms.join(', ')}`
-                      : 'Mặc định: Chỉ Xem (READ)'
 
                 return (
                   <div key={mid} className="group-member-card">
                     <div className="group-member-top">
-                      <div>
-                        <div className="group-member-name">
-                          {member.display_name}{' '}
-                          <span className="group-role-badge">
-                            {isOwner
-                              ? 'Chủ nhóm'
-                              : member.is_virtual
-                                ? 'Người chơi ảo'
-                                : 'Thành viên'}
-                          </span>
-                        </div>
-                        <div className="group-member-sub">
-                          {permSummary} • Đã chơi {played} trận
-                        </div>
+                      <div className="group-member-info">
+                        <span className="group-member-name">{member.display_name}</span>
+                        <span className="group-role-badge">
+                          {isOwner
+                            ? 'Chủ nhóm'
+                            : member.is_virtual
+                              ? 'Người chơi ảo'
+                              : 'Thành viên'}
+                        </span>
+                        <span className="group-member-dot">•</span>
+                        <span className="group-member-sub">Đã chơi {played} trận</span>
                       </div>
 
                       {canManage && !isOwner ? (
