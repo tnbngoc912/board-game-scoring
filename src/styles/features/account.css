@@ -146,8 +146,8 @@
   font-family: inherit;
 }
 
-.btn-account-action:hover {
-  background: #faf6f0;
+.btn-account-action:active {
+  opacity: 0.88;
 }
 
 .btn-account-action:disabled {
@@ -204,8 +204,8 @@
   box-shadow: 0 1px 3px rgba(56, 50, 46, 0.04);
 }
 
-.btn-account-quick-action:hover {
-  background: #faf6f0;
+.btn-account-quick-action:active {
+  opacity: 0.88;
 }
 
 .btn-account-quick-action:disabled {
