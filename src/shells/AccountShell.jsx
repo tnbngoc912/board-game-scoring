@@ -210,30 +210,44 @@ export function AccountShell() {
                 </button>
               ) : null}
 
-              <button
-                className="btn-account-action btn-account-action-with-meta"
-                type="button"
-                onClick={() => setIsAddGroupModalOpen(true)}
-              >
-                <Icon src="/home.png" size={24} color="#38322E" />
-                <span>
-                  <strong>Nhập mã nhóm / Tạo nhóm mới</strong>
-                  <small>Tham gia thêm hội chơi khác hoặc tự lập nhóm mới</small>
-                </span>
-              </button>
+              <div className="account-quick-actions-grid">
+                <button
+                  className="btn-account-quick-action"
+                  type="button"
+                  onClick={() => setIsAddGroupModalOpen(true)}
+                >
+                  <div className="account-quick-action-icon">
+                    <Icon src="/home.png" size={20} color="#38322E" />
+                  </div>
+                  <div className="account-quick-action-text">
+                    <strong>Gia nhập nhóm</strong>
+                    <small>Nhập mã mời</small>
+                  </div>
+                </button>
 
-              <button 
-                className="btn-account-action btn-account-action-with-meta" 
-                type="button"
-                onClick={handleTogglePush}
-                disabled={isUpdatingPush}
-              >
-                <Icon src="/send-icon.svg" size={24} color="#38322E" />
-                <span>
-                  <strong>{isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Tắt thông báo' : 'Bật thông báo'}</strong>
-                  <small>{isPushEnabled ? 'Bạn đang nhận thông báo bình luận mới' : 'Nhận thông báo khi có bình luận mới trong trận của bạn'}</small>
-                </span>
-              </button>
+                <button 
+                  className="btn-account-quick-action" 
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={isUpdatingPush}
+                >
+                  <div className="account-quick-action-icon">
+                    <Icon src="/notification.png" size={20} color={isPushEnabled ? "#93653F" : "#70655C"} />
+                  </div>
+                  <div className="account-quick-action-text">
+                    <strong>Thông báo</strong>
+                    <small>
+                      {isUpdatingPush ? (
+                        'Đang cập nhật...'
+                      ) : isPushEnabled ? (
+                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>● Đang bật</span>
+                      ) : (
+                        'Đang tắt'
+                      )}
+                    </small>
+                  </div>
+                </button>
+              </div>
 
               <button 
                 className="btn-account-action" 
