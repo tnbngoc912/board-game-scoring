@@ -79,7 +79,7 @@ export function GroupMembersModal({
     if (!group.invite_code) return
     try {
       await navigator.clipboard.writeText(group.invite_code)
-      toast?.(`Đã sao chép mã mời: ${group.invite_code}`)
+      toast?.('Đã sao chép mã mời')
     } catch {
       toast?.(`Mã mời nhóm: ${group.invite_code}`)
     }
