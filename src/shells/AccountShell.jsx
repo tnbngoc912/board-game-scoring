@@ -8,7 +8,7 @@ import { useAppDataStore } from '../store/appDataStore'
 import { getGroupMembers } from '../api/backendService'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
 import { GroupMembersModal } from '../components/group/GroupMembersModal'
-import { GroupOnboardingView } from '../components/group/GroupOnboardingView'
+import { AddGroupModal } from '../components/group/AddGroupModal'
 import { GroupInfoCard } from '../components/group/GroupInfoCard'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
@@ -275,16 +275,16 @@ export function AccountShell() {
           toast={showToast}
         />
 
-        {isAddGroupModalOpen ? (
-          <div className="group-modal-backdrop" onClick={() => setIsAddGroupModalOpen(false)}>
-            <div className="group-modal-sheet" onClick={(e) => e.stopPropagation()}>
-              <GroupOnboardingView
-                toast={showToast}
-                onClose={() => setIsAddGroupModalOpen(false)}
-              />
-            </div>
-          </div>
-        ) : null}
+        <AddGroupModal
+          isOpen={isAddGroupModalOpen}
+          onClose={() => setIsAddGroupModalOpen(false)}
+          toast={showToast}
+          onSuccess={() => {
+            fetchMyGroups({ force: true }).catch(() => {})
+            fetchUsers({ force: true }).catch(() => {})
+            refreshMemberData()
+          }}
+        />
 
         <BottomNav />
         <Toast message={message} visible={visible} />
