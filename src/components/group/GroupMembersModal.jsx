@@ -296,7 +296,6 @@ export function GroupMembersModal({
               {activeMembers.map((member) => {
                 const mid = String(member._id || member.id)
                 const isOwner = member.role === 'OWNER'
-                const played = member.stats?.played_count || 0
 
                 return (
                   <div key={mid} className="group-member-card">
@@ -310,8 +309,6 @@ export function GroupMembersModal({
                               ? 'Người chơi ảo'
                               : 'Thành viên'}
                         </span>
-                        <span className="group-member-dot">•</span>
-                        <span className="group-member-sub">Đã chơi {played} trận</span>
                       </div>
 
                       {canManage && !isOwner ? (
