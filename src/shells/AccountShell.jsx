@@ -198,7 +198,7 @@ export function AccountShell() {
                   <Icon src="/person-user.png" size={24} color="#38322E" />
                   <span style={{ flex: 1 }}>
                     <strong style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>Quản lý Nhóm & Thành viên ({activeGroup.name})</span>
+                      <span>Quản lý Nhóm & Thành viên</span>
                       {isAdmin && pendingMemberCount > 0 ? (
                         <span className="group-badge-count">{pendingMemberCount}</span>
                       ) : null}
