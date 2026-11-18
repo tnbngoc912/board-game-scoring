@@ -451,6 +451,7 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-filter-panel);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .group-modal-header {
