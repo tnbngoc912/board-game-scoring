@@ -182,7 +182,7 @@ export function AccountShell() {
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <strong>Thêm & Quản lý Tủ Game Nhóm</strong>
                     <small>
-                      Thêm từ thư viện mẫu hoặc tạo game mới cho {activeGroup.name}
+                      Thêm từ thư viện mẫu hoặc tạo game mới
                     </small>
                   </span>
                   <Icon src="/arrow-right.png" size={16} color="#70655c" style={{ alignSelf: 'center', marginLeft: 'auto', flexShrink: 0 }} />
@@ -196,7 +196,7 @@ export function AccountShell() {
                   onClick={() => setIsMembersModalOpen(true)}
                 >
                   <Icon src="/person-user.png" size={24} color="#38322E" />
-                  <span style={{ flex: 1 }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
                     <strong style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span>Quản lý Nhóm & Thành viên</span>
                       {isAdmin && pendingMemberCount > 0 ? (
@@ -204,7 +204,7 @@ export function AccountShell() {
                       ) : null}
                     </strong>
                     <small>
-                      Mã mời: {activeGroup.invite_code || 'Đang tải'} • Duyệt thành viên, Phân quyền & Bạn chơi ảo
+                      Mã mời: {activeGroup.invite_code || 'Đang tải'} • Duyệt & phân quyền
                     </small>
                   </span>
                 </button>
