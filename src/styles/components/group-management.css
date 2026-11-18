@@ -379,6 +379,68 @@
   justify-content: center;
 }
 
+.group-modal-backdrop.group-modal-centered {
+  align-items: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.52);
+}
+
+.group-modal-dialog-wrap {
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: modalPopupScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group-onboarding-card-modal {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.group-modal-header-inline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.group-modal-close-icon {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  color: var(--color-subtext);
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.group-modal-close-icon:hover {
+  background: var(--color-brand-100);
+  color: var(--color-brand-700);
+}
+
+@keyframes modalPopupScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .group-modal-sheet {
   background: var(--color-card);
   width: 100%;

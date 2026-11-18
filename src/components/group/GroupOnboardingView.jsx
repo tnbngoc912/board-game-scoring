@@ -6,7 +6,7 @@ import { SwitchTabs } from '../ui/SwitchTabs'
 import { useGroupStore } from '../../store/groupStore'
 import { useAuthStore } from '../../store/authStore'
 
-export function GroupOnboardingView({ toast, onClose }) {
+export function GroupOnboardingView({ toast, onClose, isModal = false, onSuccess }) {
   const [activeTab, setActiveTab] = useState('join')
   const [inviteCode, setInviteCode] = useState('')
   const [groupName, setGroupName] = useState('')
@@ -41,6 +41,7 @@ export function GroupOnboardingView({ toast, onClose }) {
             ? 'Đã gửi yêu cầu tham gia. Vui lòng chờ Chủ nhóm phê duyệt'
             : 'Tham gia nhóm thành công')
       )
+      onSuccess?.()
       if (!result?.pendingApproval && onClose) {
         onClose()
       }
@@ -66,6 +67,9 @@ export function GroupOnboardingView({ toast, onClose }) {
         description: groupDesc.trim(),
       })
       toast?.('Đã tạo nhóm mới thành công!')
+      setGroupName('')
+      setGroupDesc('')
+      onSuccess?.()
       onClose?.()
     } catch (error) {
       toast?.(error?.message || 'Không thể tạo nhóm mới')
@@ -81,6 +85,7 @@ export function GroupOnboardingView({ toast, onClose }) {
       const hasActive = updated.some((g) => g.my_status === 'ACTIVE')
       if (hasActive) {
         toast?.('Yêu cầu của bạn đã được phê duyệt!')
+        onSuccess?.()
         onClose?.()
       } else {
         toast?.('Yêu cầu vẫn đang chờ Chủ nhóm phê duyệt')
@@ -92,6 +97,151 @@ export function GroupOnboardingView({ toast, onClose }) {
     }
   }
 
+  const content = (
+    <>
+      {pendingGroups.length > 0 ? (
+        <div className="group-pending-banner" role="status" style={isModal ? { margin: 0 } : undefined}>
+          <div className="group-pending-banner-title">
+            ⏳ Đang chờ Chủ nhóm phê duyệt ({pendingGroups.length})
+          </div>
+          <div className="group-pending-banner-desc">
+            Bạn đã gửi yêu cầu tham gia nhóm:{' '}
+            <strong>{pendingGroups.map((g) => g.name).join(', ')}</strong>. Sau khi Chủ nhóm duyệt, bạn sẽ truy cập được Tủ game và Lịch sử của nhóm.
+          </div>
+          <Button
+            variant="secondary"
+            onClick={handleRefreshStatus}
+            disabled={isRefreshing}
+            style={{ width: '100%', marginTop: 'var(--space-2)' }}
+          >
+            {isRefreshing ? 'Đang kiểm tra...' : 'Kiểm tra lại trạng thái'}
+          </Button>
+        </div>
+      ) : null}
+
+      <section className={`group-onboarding-card ${isModal ? 'group-onboarding-card-modal' : ''}`}>
+        {isModal ? (
+          <div className="group-modal-header-inline">
+            <div>
+              <div className="group-onboarding-title">Tham Gia / Tạo Nhóm</div>
+              <p className="group-onboarding-subtitle">
+                Nhập mã mời từ Chủ nhóm hoặc tự lập nhóm mới cho hội bạn.
+              </p>
+            </div>
+            {onClose ? (
+              <button
+                type="button"
+                className="group-modal-close-icon"
+                onClick={onClose}
+                aria-label="Đóng popup"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <div className="group-onboarding-title">
+              Xin chào{user?.name ? `, ${user.name}` : ''}!
+            </div>
+            <p className="group-onboarding-subtitle">
+              Nhập mã mời từ Chủ nhóm để tham gia hội chơi có sẵn, hoặc tự tạo nhóm mới cho hội bạn của mình.
+            </p>
+          </>
+        )}
+
+        <SwitchTabs
+          options={[
+            { value: 'join', label: 'Nhập mã nhóm' },
+            { value: 'create', label: 'Tạo nhóm mới' },
+          ]}
+          value={activeTab}
+          onChange={(nextTab) => setActiveTab(nextTab)}
+          layoutId="group-onboarding-pill"
+          ariaLabel="Chế độ tham gia nhóm"
+        />
+
+        {activeTab === 'join' ? (
+          <form className="group-form" onSubmit={handleJoinByCode} style={{ marginTop: 'var(--space-3)' }}>
+            <div className="group-field">
+              <label htmlFor="invite-code-input">Mã mời nhóm (Do Chủ nhóm cung cấp)</label>
+              <Input
+                id="invite-code-input"
+                required
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="Nhập mã nhóm..."
+                autoCapitalize="characters"
+              />
+            </div>
+
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ width: '100%', marginTop: 'var(--space-2)' }}
+            >
+              {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu tham gia'}
+            </Button>
+          </form>
+        ) : (
+          <form className="group-form" onSubmit={handleCreateGroup} style={{ marginTop: 'var(--space-3)' }}>
+            <div className="group-field">
+              <label htmlFor="group-name-input">Tên nhóm / Câu lạc bộ *</label>
+              <Input
+                id="group-name-input"
+                required
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="Ví dụ: Hội Board Game Cuối Tuần"
+              />
+            </div>
+
+            <div className="group-field">
+              <label htmlFor="group-desc-input">Mô tả ngắn (Tùy chọn)</label>
+              <textarea
+                id="group-desc-input"
+                value={groupDesc}
+                onChange={(e) => setGroupDesc(e.target.value)}
+                placeholder="Ghi chú về nhóm chơi của bạn..."
+                rows={3}
+              />
+            </div>
+
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ width: '100%', marginTop: 'var(--space-2)' }}
+            >
+              {isSubmitting ? 'Đang tạo nhóm...' : 'Tạo nhóm mới & Làm Chủ nhóm'}
+            </Button>
+          </form>
+        )}
+      </section>
+
+      {!isModal && !onClose ? (
+        <Button
+          variant="secondary"
+          onClick={() => logout()}
+          style={{ width: '100%' }}
+        >
+          Đăng xuất tài khoản
+        </Button>
+      ) : null}
+    </>
+  )
+
+  if (isModal) {
+    return (
+      <div className="group-modal-backdrop group-modal-centered" onClick={onClose} role="dialog" aria-modal="true">
+        <div className="group-modal-dialog-wrap" onClick={(e) => e.stopPropagation()}>
+          {content}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="group-onboarding-shell">
       <Header
@@ -101,112 +251,7 @@ export function GroupOnboardingView({ toast, onClose }) {
 
       <div className="group-onboarding-body">
         <div className="group-onboarding-content">
-          {pendingGroups.length > 0 ? (
-            <div className="group-pending-banner" role="status">
-              <div className="group-pending-banner-title">
-                ⏳ Đang chờ Chủ nhóm phê duyệt ({pendingGroups.length})
-              </div>
-              <div className="group-pending-banner-desc">
-                Bạn đã gửi yêu cầu tham gia nhóm:{' '}
-                <strong>{pendingGroups.map((g) => g.name).join(', ')}</strong>. Sau khi Chủ nhóm duyệt, bạn sẽ truy cập được Tủ game và Lịch sử của nhóm.
-              </div>
-              <Button
-                variant="secondary"
-                onClick={handleRefreshStatus}
-                disabled={isRefreshing}
-                style={{ width: '100%', marginTop: 'var(--space-2)' }}
-              >
-                {isRefreshing ? 'Đang kiểm tra...' : 'Kiểm tra lại trạng thái'}
-              </Button>
-            </div>
-          ) : null}
-
-          <section className="group-onboarding-card">
-            <div className="group-onboarding-title">
-              Xin chào{user?.name ? `, ${user.name}` : ''}!
-            </div>
-            <p className="group-onboarding-subtitle">
-              Nhập mã mời từ Chủ nhóm để tham gia hội chơi có sẵn, hoặc tự tạo nhóm mới cho hội bạn của mình.
-            </p>
-
-            <SwitchTabs
-              options={[
-                { value: 'join', label: 'Nhập mã nhóm' },
-                { value: 'create', label: 'Tạo nhóm mới' },
-              ]}
-              value={activeTab}
-              onChange={(nextTab) => setActiveTab(nextTab)}
-              layoutId="group-onboarding-pill"
-              ariaLabel="Chế độ tham gia nhóm"
-            />
-
-            {activeTab === 'join' ? (
-              <form className="group-form" onSubmit={handleJoinByCode} style={{ marginTop: 'var(--space-3)' }}>
-                <div className="group-field">
-                  <label htmlFor="invite-code-input">Mã mời nhóm (Do Chủ nhóm cung cấp)</label>
-                  <Input
-                    id="invite-code-input"
-                    required
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                    placeholder="Nhập mã nhóm..."
-                    autoCapitalize="characters"
-                  />
-                </div>
-
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{ width: '100%', marginTop: 'var(--space-2)' }}
-                >
-                  {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu tham gia'}
-                </Button>
-              </form>
-            ) : (
-              <form className="group-form" onSubmit={handleCreateGroup} style={{ marginTop: 'var(--space-3)' }}>
-                <div className="group-field">
-                  <label htmlFor="group-name-input">Tên nhóm / Câu lạc bộ *</label>
-                  <Input
-                    id="group-name-input"
-                    required
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="Ví dụ: Hội Board Game Cuối Tuần"
-                  />
-                </div>
-
-                <div className="group-field">
-                  <label htmlFor="group-desc-input">Mô tả ngắn (Tùy chọn)</label>
-                  <textarea
-                    id="group-desc-input"
-                    value={groupDesc}
-                    onChange={(e) => setGroupDesc(e.target.value)}
-                    placeholder="Ghi chú về nhóm chơi của bạn..."
-                  />
-                </div>
-
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{ width: '100%', marginTop: 'var(--space-2)' }}
-                >
-                  {isSubmitting ? 'Đang tạo nhóm...' : 'Tạo nhóm mới & Làm Chủ nhóm'}
-                </Button>
-              </form>
-            )}
-          </section>
-
-          {!onClose ? (
-            <Button
-              variant="secondary"
-              onClick={() => logout()}
-              style={{ width: '100%' }}
-            >
-              Đăng xuất tài khoản
-            </Button>
-          ) : null}
+          {content}
         </div>
       </div>
     </div>
