@@ -231,19 +231,13 @@ export function AccountShell() {
                   onClick={handleTogglePush}
                   disabled={isUpdatingPush}
                 >
-                  <div className="account-quick-action-icon">
-                    <Icon src="/notification.png" size={20} color={isPushEnabled ? "#93653F" : "#70655C"} />
+                  <div className={`account-quick-action-icon ${isPushEnabled ? 'is-active' : ''}`}>
+                    <Icon src="/notification.png" size={20} color={isPushEnabled ? "#ffffff" : "#70655C"} />
                   </div>
                   <div className="account-quick-action-text">
                     <strong>Thông báo</strong>
                     <small>
-                      {isUpdatingPush ? (
-                        'Đang cập nhật...'
-                      ) : isPushEnabled ? (
-                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>● Đang bật</span>
-                      ) : (
-                        'Đang tắt'
-                      )}
+                      {isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Đang bật' : 'Đang tắt'}
                     </small>
                   </div>
                 </button>
