@@ -230,7 +230,7 @@ export function AccountShell() {
                   disabled={isUpdatingPush}
                 >
                   <Icon
-                    src="/notification.png"
+                    src={isPushEnabled ? "/notification-filled.png" : "/notification.png"}
                     size={24}
                     color={isPushEnabled ? "var(--color-brand)" : "#70655C"}
                   />
