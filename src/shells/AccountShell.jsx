@@ -216,9 +216,7 @@ export function AccountShell() {
                   type="button"
                   onClick={() => setIsAddGroupModalOpen(true)}
                 >
-                  <div className="account-quick-action-icon">
-                    <Icon src="/home.png" size={20} color="#38322E" />
-                  </div>
+                  <Icon src="/home.png" size={24} color="#38322E" />
                   <div className="account-quick-action-text">
                     <strong>Gia nhập nhóm</strong>
                     <small>Nhập mã mời</small>
@@ -231,9 +229,11 @@ export function AccountShell() {
                   onClick={handleTogglePush}
                   disabled={isUpdatingPush}
                 >
-                  <div className={`account-quick-action-icon ${isPushEnabled ? 'is-active' : ''}`}>
-                    <Icon src="/notification.png" size={20} color={isPushEnabled ? "#ffffff" : "#70655C"} />
-                  </div>
+                  <Icon
+                    src="/notification.png"
+                    size={24}
+                    color={isPushEnabled ? "var(--color-brand)" : "#70655C"}
+                  />
                   <div className="account-quick-action-text">
                     <strong>Thông báo</strong>
                     <small>
