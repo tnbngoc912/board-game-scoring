@@ -146,7 +146,7 @@ export function GroupGamesShell() {
                 <div className="group-member-list">
                   {filteredGames.map((game) => (
                     <div key={game.id || game._id} className="group-catalog-item" style={{ padding: '12px' }}>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0, flex: 1 }}>
                         <div
                           style={{
                             width: 48,
@@ -180,19 +180,6 @@ export function GroupGamesShell() {
                           </div>
                         </div>
                       </div>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: 'var(--color-success)',
-                          background: 'rgba(76, 175, 103, 0.12)',
-                          padding: '4px 8px',
-                          borderRadius: 'var(--radius-pill)',
-                          flexShrink: 0,
-                        }}
-                      >
-                        Trong tủ
-                      </span>
                     </div>
                   ))}
                 </div>
