@@ -12,7 +12,11 @@ const barlow = Barlow_Semi_Condensed({
   // variable: '--font-barlow',
 })
 
-const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
+const appUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? (process.env.NEXT_PUBLIC_VERCEL_URL.startsWith('http')
+        ? process.env.NEXT_PUBLIC_VERCEL_URL
+        : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`)
+    : 'http://localhost:3000';
 
 export const metadata = {
     metadataBase: new URL(appUrl),

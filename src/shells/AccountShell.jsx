@@ -27,6 +27,7 @@ export function AccountShell() {
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
   const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false)
+  const [memberCount, setMemberCount] = useState(null)
   const [pendingMemberCount, setPendingMemberCount] = useState(0)
   const isStandalone = useIsStandalone()
   const { isAdmin, activeGroup } = usePermissions()
@@ -47,23 +48,30 @@ export function AccountShell() {
         ? 'Quản trị'
         : 'Thành viên'
 
-  const refreshPendingCount = useCallback(async () => {
-    if (!activeGroup?.id || !isAdmin) {
+  const refreshMemberData = useCallback(async () => {
+    if (!activeGroup?.id) {
+      setMemberCount(null)
       setPendingMemberCount(0)
       return
     }
     try {
       const members = await getGroupMembers(activeGroup.id)
-      const count = (members || []).filter((m) => m.status === 'PENDING').length
-      setPendingMemberCount(count)
+      const activeMembers = (members || []).filter((m) => (m.status || 'ACTIVE') === 'ACTIVE')
+      setMemberCount(activeMembers.length)
+      if (isAdmin) {
+        const count = (members || []).filter((m) => m.status === 'PENDING').length
+        setPendingMemberCount(count)
+      } else {
+        setPendingMemberCount(0)
+      }
     } catch {
       setPendingMemberCount(0)
     }
   }, [activeGroup?.id, isAdmin])
 
   useEffect(() => {
-    refreshPendingCount()
-  }, [refreshPendingCount])
+    refreshMemberData()
+  }, [refreshMemberData])
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -107,7 +115,7 @@ export function AccountShell() {
 
           <PullToRefresh onRefresh={async () => {
             try {
-              await refreshProfile()
+              await Promise.all([refreshProfile(), refreshMemberData()])
               showToast('Đã làm mới thông tin tài khoản')
             } catch (err) {
               showToast('Không thể làm mới dữ liệu')
@@ -153,6 +161,7 @@ export function AccountShell() {
                     group={activeGroup}
                     activeGroups={activeGroups}
                     roleLabel={roleLabel}
+                    subtitle={memberCount !== null ? `${memberCount} thành viên` : undefined}
                     onSelectGroup={(nextId) => {
                       selectGroup(nextId)
                       showToast('Đã chuyển nhóm chơi')
@@ -261,7 +270,7 @@ export function AccountShell() {
           onUpdated={() => {
             fetchUsers({ force: true }).catch(() => {})
             fetchMyGroups({ force: true }).catch(() => {})
-            refreshPendingCount()
+            refreshMemberData()
           }}
           toast={showToast}
         />
