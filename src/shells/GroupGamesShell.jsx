@@ -16,6 +16,15 @@ import { Toast } from '../components/Toast'
 import { PullToRefresh } from '../components/ui/PullToRefresh'
 import { Icon } from '../components/ui/Icon'
 
+function formatGameGenres(game) {
+  const raw = game.genres || game.category_ids || game.categoryIds || []
+  const list = Array.isArray(raw) ? raw : [raw]
+  const labels = list
+    .map((item) => (typeof item === 'string' ? item : item?.name || item?.label || ''))
+    .filter(Boolean)
+  return labels.length > 0 ? ` • ${labels.slice(0, 2).join(', ')}` : ''
+}
+
 export function GroupGamesShell() {
   const router = useRouter()
   const { message, visible, show: showToast } = useToast()
@@ -167,7 +176,7 @@ export function GroupGamesShell() {
                           <div className="group-catalog-title">{game.name}</div>
                           <div className="group-catalog-sub">
                             {game.min_players || game.minPlayers || 2} - {game.max_players || game.maxPlayers || 6} người chơi
-                            {game.genres?.length ? ` • ${game.genres.slice(0, 2).join(', ')}` : ''}
+                            {formatGameGenres(game)}
                           </div>
                         </div>
                       </div>
