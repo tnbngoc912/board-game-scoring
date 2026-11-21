@@ -66,6 +66,14 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
           lastPlaces: source.user_record.last_places ?? 0,
         }
       : source.userRecord || null,
-    category: source.category_ids?.[0] || source.genres?.[0] || source.category || {},
+    category:
+      typeof source.category === 'object' && source.category !== null && source.category.name
+        ? source.category
+        : typeof (source.category_ids?.[0] || source.genres?.[0]) === 'object' &&
+            (source.category_ids?.[0] || source.genres?.[0]) !== null
+          ? source.category_ids?.[0] || source.genres?.[0]
+          : typeof (source.category_ids?.[0] || source.genres?.[0] || source.category) === 'string'
+            ? { name: source.category_ids?.[0] || source.genres?.[0] || source.category }
+            : null,
   }
 }
