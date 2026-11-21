@@ -110,11 +110,16 @@ export function QuickCreateGameModal({
             <div className="group-field">
               <label htmlFor="quick-game-file">Ảnh bìa</label>
               {thumbnailUrl ? (
-                <div className="quick-game-image-preview-wrap">
-                  <img src={thumbnailUrl} alt="Ảnh bìa xem trước" className="quick-game-image-preview" />
-                  <div className="quick-game-preview-actions">
-                    <label className="group-action-chip primary" style={{ cursor: 'pointer', margin: 0 }}>
-                      {isUploadingImage ? 'Đang tải...' : 'Đổi ảnh'}
+                <div className="quick-game-image-preview-group">
+                  <div className="quick-game-image-card">
+                    <img src={thumbnailUrl} alt="Ảnh bìa xem trước" className="quick-game-image-preview" />
+                  </div>
+                  <div className="quick-game-image-actions">
+                    <label
+                      className="quick-game-action-icon-btn"
+                      title="Đổi ảnh khác"
+                      aria-label="Đổi ảnh khác"
+                    >
                       <input
                         type="file"
                         accept="image/*"
@@ -122,16 +127,28 @@ export function QuickCreateGameModal({
                         disabled={isUploadingImage}
                         style={{ display: 'none' }}
                       />
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </svg>
                     </label>
                     <button
                       type="button"
-                      className="group-btn-danger"
+                      className="quick-game-action-icon-btn danger"
+                      title="Gỡ ảnh"
+                      aria-label="Gỡ ảnh"
                       onClick={() => setThumbnailUrl('')}
                       disabled={isUploadingImage}
                     >
-                      Gỡ ảnh
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
                     </button>
                   </div>
+                  {isUploadingImage ? (
+                    <span className="group-member-sub">Đang đổi ảnh...</span>
+                  ) : null}
                 </div>
               ) : (
                 <label className="quick-game-upload-btn" htmlFor="quick-game-file">
