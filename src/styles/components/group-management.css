@@ -665,22 +665,22 @@
   stroke: var(--color-brand);
 }
 
-.quick-game-image-preview-group {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: fit-content;
+.quick-game-image-box {
+  display: flex;
+  align-items: flex-start;
+  padding: 2px 0;
 }
 
 .quick-game-image-card {
-  width: 68px;
-  height: 68px;
+  position: relative;
+  width: 92px;
+  height: 92px;
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1.5px solid var(--color-border-focus);
   background: var(--color-card-soft);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .quick-game-image-preview {
@@ -690,42 +690,60 @@
   display: block;
 }
 
-.quick-game-image-actions {
+.quick-game-image-change-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 4px 5px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.42) 65%, transparent 100%);
+  color: #ffffff;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.quick-game-action-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-control);
-  background: var(--color-white);
-  color: var(--color-brand);
-  display: grid;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
-  padding: 0;
+  transition: opacity 0.15s ease;
+  user-select: none;
 }
 
-.quick-game-action-icon-btn:hover {
-  background: var(--color-brand-50);
-  border-color: var(--color-brand);
-}
-
-.quick-game-action-icon-btn:active {
-  transform: scale(0.94);
+.quick-game-image-change-overlay:active {
   opacity: 0.85;
 }
 
-.quick-game-action-icon-btn.danger {
-  color: #dc2626;
-  border-color: #fecaca;
+.quick-game-image-change-overlay svg {
+  stroke: #ffffff;
 }
 
-.quick-game-action-icon-btn.danger:hover {
-  background: #fee2e2;
+.quick-game-image-remove-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.15s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.quick-game-image-remove-badge:hover {
+  background: #dc2626;
   border-color: #dc2626;
+  transform: scale(1.08);
+}
+
+.quick-game-image-remove-badge:active {
+  transform: scale(0.92);
 }

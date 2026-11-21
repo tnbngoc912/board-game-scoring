@@ -110,14 +110,18 @@ export function QuickCreateGameModal({
             <div className="group-field">
               <label htmlFor="quick-game-file">Ảnh bìa</label>
               {thumbnailUrl ? (
-                <div className="quick-game-image-preview-group">
+                <div className="quick-game-image-box">
                   <div className="quick-game-image-card">
-                    <img src={thumbnailUrl} alt="Ảnh bìa xem trước" className="quick-game-image-preview" />
-                  </div>
-                  <div className="quick-game-image-actions">
+                    <img
+                      src={thumbnailUrl}
+                      alt="Ảnh bìa xem trước"
+                      className="quick-game-image-preview"
+                    />
+
+                    {/* Dải đổi ảnh ở dưới đáy card */}
                     <label
-                      className="quick-game-action-icon-btn"
-                      title="Đổi ảnh khác"
+                      className="quick-game-image-change-overlay"
+                      title="Chạm để đổi ảnh khác"
                       aria-label="Đổi ảnh khác"
                     >
                       <input
@@ -127,28 +131,38 @@ export function QuickCreateGameModal({
                         disabled={isUploadingImage}
                         style={{ display: 'none' }}
                       />
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
                       </svg>
+                      <span>{isUploadingImage ? 'Đang đổi...' : 'Đổi ảnh'}</span>
                     </label>
+
+                    {/* Nút gỡ ảnh ở góc trên phải */}
                     <button
                       type="button"
-                      className="quick-game-action-icon-btn danger"
+                      className="quick-game-image-remove-badge"
                       title="Gỡ ảnh"
                       aria-label="Gỡ ảnh"
-                      onClick={() => setThumbnailUrl('')}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setThumbnailUrl('')
+                      }}
                       disabled={isUploadingImage}
                     >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
+                      ✕
                     </button>
                   </div>
-                  {isUploadingImage ? (
-                    <span className="group-member-sub">Đang đổi ảnh...</span>
-                  ) : null}
                 </div>
               ) : (
                 <label className="quick-game-upload-btn" htmlFor="quick-game-file">
