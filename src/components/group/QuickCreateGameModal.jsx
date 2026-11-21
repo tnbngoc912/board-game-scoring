@@ -108,7 +108,7 @@ export function QuickCreateGameModal({
             </div>
 
             <div className="group-field">
-              <label htmlFor="quick-game-file">Ảnh bìa (Tải từ máy)</label>
+              <label htmlFor="quick-game-file">Ảnh bìa</label>
               {thumbnailUrl ? (
                 <div className="quick-game-image-preview-wrap">
                   <img src={thumbnailUrl} alt="Ảnh bìa xem trước" className="quick-game-image-preview" />
@@ -134,17 +134,23 @@ export function QuickCreateGameModal({
                   </div>
                 </div>
               ) : (
-                <input
-                  id="quick-game-file"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={isUploadingImage}
-                />
+                <label className="quick-game-upload-btn" htmlFor="quick-game-file">
+                  <input
+                    id="quick-game-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={isUploadingImage}
+                    style={{ display: 'none' }}
+                  />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <span>{isUploadingImage ? 'Đang tải ảnh lên...' : 'Chọn ảnh bìa từ máy'}</span>
+                </label>
               )}
-              {isUploadingImage && !thumbnailUrl ? (
-                <span className="group-member-sub">Đang tải ảnh lên...</span>
-              ) : null}
             </div>
 
             <div className="group-field-row">
