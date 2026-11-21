@@ -551,8 +551,46 @@
 .group-member-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-1.5, 6px);
   flex-wrap: wrap;
+}
+
+.group-member-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-50);
+  color: var(--color-brand-700);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.group-member-icon-btn:hover {
+  background: var(--color-brand-100);
+  border-color: var(--color-brand);
+}
+
+.group-member-icon-btn--active {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-white);
+}
+
+.group-member-icon-btn--danger {
+  border-color: var(--color-sys-danger);
+  background: var(--color-white);
+  color: var(--color-danger);
+}
+
+.group-member-icon-btn--danger:hover {
+  background: #fef2f2;
+  border-color: var(--color-danger);
 }
 
 .group-perm-box {

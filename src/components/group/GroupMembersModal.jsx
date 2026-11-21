@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { Shield, Trash2 } from 'lucide-react'
 import {
   approveGroupMember,
   createVirtualMember,
@@ -316,18 +317,26 @@ export function GroupMembersModal({
                           {!member.is_virtual ? (
                             <button
                               type="button"
-                              className="group-action-chip"
-                              onClick={() => openPermissionEditor(member)}
+                              className={`group-member-icon-btn ${editingMemberId === mid ? 'group-member-icon-btn--active' : ''}`}
+                              onClick={() =>
+                                editingMemberId === mid
+                                  ? setEditingMemberId(null)
+                                  : openPermissionEditor(member)
+                              }
+                              title="Phân quyền thành viên"
+                              aria-label="Phân quyền"
                             >
-                              Phân quyền
+                              <Shield size={16} />
                             </button>
                           ) : null}
                           <button
                             type="button"
-                            className="group-btn-danger"
+                            className="group-member-icon-btn group-member-icon-btn--danger"
                             onClick={() => setConfirmDeleteMember(member)}
+                            title="Xóa thành viên khỏi nhóm"
+                            aria-label="Xóa"
                           >
-                            Xóa
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       ) : null}
