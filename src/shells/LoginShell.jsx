@@ -15,13 +15,14 @@ export function LoginShell() {
   const { message, visible, show: showToast } = useToast()
   const [isLoginSubmitting, setIsLoginSubmitting] = useState(false)
 
-  const { token, user, isAuthLoading, bootstrap, login } = useAuthStore(
+  const { token, user, isAuthLoading, bootstrap, login, register } = useAuthStore(
     useShallow((state) => ({
       token: state.token,
       user: state.user,
       isAuthLoading: state.isAuthLoading,
       bootstrap: state.bootstrap,
       login: state.login,
+      register: state.register,
     }))
   )
 
@@ -64,6 +65,23 @@ export function LoginShell() {
     }
   }
 
+  async function handleRegister({ name, email, password }) {
+    try {
+      setIsLoginSubmitting(true)
+      await register({ name, email, password })
+      showToast('Đăng ký tài khoản thành công')
+      if (redirectUrl) {
+        router.replace(decodeURIComponent(redirectUrl))
+      } else {
+        router.replace('/')
+      }
+    } catch (error) {
+      showToast(error?.message || 'Đăng ký tài khoản thất bại')
+    } finally {
+      setIsLoginSubmitting(false)
+    }
+  }
+
   if (isAuthLoading) {
     return <LoadingState label="Đang tải..." />
   }
@@ -76,6 +94,8 @@ export function LoginShell() {
     <div className="app-shell screen-setup">
       <LoginScreen
         onLogin={handleLogin}
+        onRegister={handleRegister}
+        onValidationError={(msg) => showToast(msg)}
         onGoForgotPassword={() => router.push('/forgot-password')}
         isSubmitting={isLoginSubmitting}
       />

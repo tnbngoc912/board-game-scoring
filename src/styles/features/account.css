@@ -146,8 +146,8 @@
   font-family: inherit;
 }
 
-.btn-account-action:hover {
-  background: #faf6f0;
+.btn-account-action:active {
+  opacity: 0.88;
 }
 
 .btn-account-action:disabled {
@@ -177,6 +177,67 @@
   font-size: 13px;
   font-weight: 500;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-account-quick-action {
+  background: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(56, 50, 46, 0.04);
+}
+
+.btn-account-quick-action:active {
+  opacity: 0.88;
+}
+
+.btn-account-quick-action:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.account-quick-action-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-quick-action-text strong {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-quick-action-text small {
+  color: var(--color-subtext);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-footer {

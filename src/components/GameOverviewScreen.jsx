@@ -191,7 +191,10 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
             <p className="overview-game-meta">
               {overview.minPlayers}-{overview.maxPlayers} người chơi • {overview.maxPlayTime || '--'} phút
             </p>
-            <p className="overview-game-genre">{overview.category?.name || overview.category || 'Board game'}</p>
+            <p className="overview-game-genre">
+              {overview.category?.name ||
+                (typeof overview.category === 'string' ? overview.category : 'Board game')}
+            </p>
           </div>
         </section>
 

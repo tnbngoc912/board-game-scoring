@@ -1,0 +1,62 @@
+/* Component SwitchTabs / Segmented Control */
+.switch-tabs-container {
+  position: relative;
+  display: flex;
+  background: var(--color-border-control);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.switch-tab-pill-track {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  background: var(--color-brand);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.switch-tab-btn {
+  position: relative;
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease;
+  user-select: none;
+  z-index: 2;
+}
+
+.switch-tab-btn.active {
+  color: var(--color-white);
+}
+
+.switch-tab-content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.switch-tab-label {
+  display: inline-block;
+  line-height: 1.2;
+}
