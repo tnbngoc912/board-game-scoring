@@ -38,6 +38,8 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
     icon_url: f.icon_url || f.iconUrl || '',
   }))
 
+  const totalPlayed = source.stats?.total_played ?? overviewStats?.total_matches_count ?? 0
+
   return {
     id: getEntityId(source) || fallbackBoardGameId,
     name: source.name || '',
@@ -55,8 +57,12 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
       last_played_at: overviewStats.latest_match?.play_date || null,
     } : null),
     leaderboard: source.leaderboard || overviewStats?.leaderboard || [],
-    highestScore: overviewStats?.highest_score ?? null,
-    highestScorePlayer: overviewStats?.highest_score_player ?? null,
+    highestScore: totalPlayed === 0
+      ? null
+      : (source.highest_score ?? source.derived_stats?.highest_score ?? overviewStats?.highest_score ?? null),
+    highestScorePlayer: totalPlayed === 0
+      ? null
+      : (source.highest_score_player ?? source.derived_stats?.highest_score_player ?? overviewStats?.highest_score_player ?? null),
     userRecord: source.user_record
       ? {
           highestScore: source.user_record.highest_score ?? null,
