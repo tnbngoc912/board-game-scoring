@@ -37,6 +37,9 @@ export function QuickCreateGameModal({
       toast?.(error?.message || 'Không thể tải ảnh bìa lên')
     } finally {
       setIsUploadingImage(false)
+      if (event.target) {
+        event.target.value = ''
+      }
     }
   }
 
@@ -105,21 +108,43 @@ export function QuickCreateGameModal({
             </div>
 
             <div className="group-field">
-              <label htmlFor="quick-game-thumb">Ảnh bìa (Link ảnh hoặc tải từ máy)</label>
-              <Input
-                id="quick-game-thumb"
-                type="url"
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-                placeholder="https://..."
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={isUploadingImage}
-                style={{ marginTop: 6 }}
-              />
+              <label htmlFor="quick-game-file">Ảnh bìa (Tải từ máy)</label>
+              {thumbnailUrl ? (
+                <div className="quick-game-image-preview-wrap">
+                  <img src={thumbnailUrl} alt="Ảnh bìa xem trước" className="quick-game-image-preview" />
+                  <div className="quick-game-preview-actions">
+                    <label className="group-action-chip primary" style={{ cursor: 'pointer', margin: 0 }}>
+                      {isUploadingImage ? 'Đang tải...' : 'Đổi ảnh'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={isUploadingImage}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="group-btn-danger"
+                      onClick={() => setThumbnailUrl('')}
+                      disabled={isUploadingImage}
+                    >
+                      Gỡ ảnh
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <input
+                  id="quick-game-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={isUploadingImage}
+                />
+              )}
+              {isUploadingImage && !thumbnailUrl ? (
+                <span className="group-member-sub">Đang tải ảnh lên...</span>
+              ) : null}
             </div>
 
             <div className="group-field-row">
