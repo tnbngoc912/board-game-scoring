@@ -27,7 +27,7 @@ const withPWA = withPWAInit({
   ],
 })
 
-const BACKEND_TARGET = process.env.BACKEND_PROXY_TARGET || 'https://boardgame-scorer-backend.onrender.com'
+const BACKEND_TARGET = process.env.BACKEND_PROXY_TARGET || 'https://api.homeboard.fun'
 
 const nextConfig = {
   outputFileTracingRoot: __dirname,
@@ -56,6 +56,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.homeboard.fun',
+      },
+      {
+        protocol: 'https',
+        hostname: 'boardgamescoring.onrender.com',
       },
       {
         protocol: 'https',

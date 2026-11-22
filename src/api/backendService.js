@@ -6,8 +6,8 @@ import { compressImage } from '../utils/imageCompressor'
 
 function resolveApiBaseUrl() {
   const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-  // Nếu trỏ thẳng tới onrender.com hoặc để trống, dùng relative path /api/v1 để đi qua Vercel Proxy (chống nhà mạng VN chặn)
-  if (!envUrl || envUrl.includes('boardgame-scorer-backend.onrender.com')) {
+  // Nếu trỏ thẳng tới onrender.com / homeboard.fun hoặc để trống, dùng relative path /api/v1 để đi qua Vercel Proxy (chống nhà mạng VN chặn và tránh CORS)
+  if (!envUrl || envUrl.includes('onrender.com') || envUrl.includes('homeboard.fun')) {
     return '/api/v1'
   }
   return envUrl
