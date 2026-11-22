@@ -145,12 +145,14 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const allLeaders = (activeOverview.leaderboard || []).map((item, index) => ({
-    ...item,
-    rank: item.rank ?? index + 1,
-    wins: item.wins ?? item.win_count ?? 0,
-    win_count: item.win_count ?? item.wins ?? 0,
-  }))
+  const allLeaders = (activeOverview.leaderboard || [])
+    .filter((item) => (item.wins ?? item.win_count ?? 0) > 0)
+    .map((item, index) => ({
+      ...item,
+      rank: item.rank ?? index + 1,
+      wins: item.wins ?? item.win_count ?? 0,
+      win_count: item.win_count ?? item.wins ?? 0,
+    }))
   const leaders = allLeaders.slice(0, 3)
   const currentUserId = String(currentUser?._id || currentUser?.id || '')
   const userLeaderboardItem = allLeaders.find(

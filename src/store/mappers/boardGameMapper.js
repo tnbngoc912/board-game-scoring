@@ -56,12 +56,14 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
       total_played: overviewStats.total_matches_count || 0,
       last_played_at: overviewStats.latest_match?.play_date || null,
     } : null),
-    leaderboard: (source.leaderboard || overviewStats?.leaderboard || []).map((item, index) => ({
-      ...item,
-      rank: item.rank ?? index + 1,
-      wins: item.wins ?? item.win_count ?? 0,
-      win_count: item.win_count ?? item.wins ?? 0,
-    })),
+    leaderboard: (source.leaderboard || overviewStats?.leaderboard || [])
+      .filter((item) => (item.wins ?? item.win_count ?? 0) > 0)
+      .map((item, index) => ({
+        ...item,
+        rank: item.rank ?? index + 1,
+        wins: item.wins ?? item.win_count ?? 0,
+        win_count: item.win_count ?? item.wins ?? 0,
+      })),
     highestScore: totalPlayed === 0
       ? null
       : (source.highest_score ?? source.derived_stats?.highest_score ?? overviewStats?.highest_score ?? null),
