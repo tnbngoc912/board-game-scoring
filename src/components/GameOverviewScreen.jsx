@@ -145,7 +145,12 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
     )
   }
 
-  const allLeaders = activeOverview.leaderboard || []
+  const allLeaders = (activeOverview.leaderboard || []).map((item, index) => ({
+    ...item,
+    rank: item.rank ?? index + 1,
+    wins: item.wins ?? item.win_count ?? 0,
+    win_count: item.win_count ?? item.wins ?? 0,
+  }))
   const leaders = allLeaders.slice(0, 3)
   const currentUserId = String(currentUser?._id || currentUser?.id || '')
   const userLeaderboardItem = allLeaders.find(
@@ -153,7 +158,7 @@ export function GameOverviewScreen({ boardGameId, onBack, onCreateScore, toast }
   )
   const activeUserRecord = userRecord || activeOverview.userRecord || null
   const userRank = activeUserRecord?.rank ?? userLeaderboardItem?.rank ?? null
-  const userWins = activeUserRecord?.wins ?? userLeaderboardItem?.wins ?? 0
+  const userWins = activeUserRecord?.wins ?? activeUserRecord?.win_count ?? userLeaderboardItem?.wins ?? userLeaderboardItem?.win_count ?? 0
   const showUserRanking = Boolean(userRank && userRank > 3)
 
   const rightElement = canCreate ? (
