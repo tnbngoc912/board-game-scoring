@@ -54,7 +54,18 @@ export function Select({ value, onChange, options, placeholder = 'Chọn...', se
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span>{selectedOption ? selectedOption.label : placeholder}</span>
+        <span className="custom-select-label-wrap">
+          {selectedOption?.color ? (
+            <i
+              className="custom-select-color-dot"
+              style={{ backgroundColor: selectedOption.color }}
+              aria-hidden="true"
+            />
+          ) : null}
+          <span className="custom-select-text">
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        </span>
         <Icon
           src="/down.png"
           color="#70655C"
@@ -90,7 +101,14 @@ export function Select({ value, onChange, options, placeholder = 'Chọn...', se
                   handleSelect(opt.value)
                 }}
               >
-                {opt.label}
+                {opt.color ? (
+                  <i
+                    className="custom-select-color-dot"
+                    style={{ backgroundColor: opt.color }}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <span className="custom-select-text">{opt.label}</span>
               </li>
             ))
           ) : (

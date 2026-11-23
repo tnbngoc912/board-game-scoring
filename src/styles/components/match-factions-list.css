@@ -59,6 +59,22 @@
   text-overflow: ellipsis;
   text-align: right;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.match-factions-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 360px) {

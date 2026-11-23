@@ -43,6 +43,7 @@ export function FactionSelector({
                 value: f.id,
                 label: isTaken ? `${f.name} (Đã chọn)` : f.name,
                 disabled: isTaken,
+                color: f.color || '',
               }
             }),
           ]

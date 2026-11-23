@@ -88,12 +88,20 @@
 
 .faction-selector-control .custom-select-trigger {
   height: 38px;
-  padding: 0 12px;
+  padding: 0 10px;
   gap: 6px;
   border-radius: 10px;
 }
 
-.faction-selector-control .custom-select-trigger span {
+.faction-selector-control .custom-select-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.faction-selector-control .custom-select-trigger .custom-select-text {
   font-size: 13px;
   line-height: 16px;
   white-space: nowrap;
@@ -102,6 +110,12 @@
 }
 
 .faction-selector-control .custom-select-options {
+  font-size: 13px;
+}
+
+.faction-selector-control .custom-select-option {
+  padding: 8px 12px;
+  gap: 6px;
   font-size: 13px;
 }
 
