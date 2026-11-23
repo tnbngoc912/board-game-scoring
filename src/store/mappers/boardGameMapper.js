@@ -38,6 +38,8 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
     icon_url: f.icon_url || f.iconUrl || '',
   }))
 
+  const totalPlayed = source.stats?.total_played ?? overviewStats?.total_matches_count ?? 0
+
   return {
     id: getEntityId(source) || fallbackBoardGameId,
     name: source.name || '',
@@ -54,9 +56,20 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
       total_played: overviewStats.total_matches_count || 0,
       last_played_at: overviewStats.latest_match?.play_date || null,
     } : null),
-    leaderboard: source.leaderboard || overviewStats?.leaderboard || [],
-    highestScore: overviewStats?.highest_score ?? null,
-    highestScorePlayer: overviewStats?.highest_score_player ?? null,
+    leaderboard: (source.leaderboard || overviewStats?.leaderboard || [])
+      .filter((item) => (item.wins ?? item.win_count ?? 0) > 0)
+      .map((item, index) => ({
+        ...item,
+        rank: item.rank ?? index + 1,
+        wins: item.wins ?? item.win_count ?? 0,
+        win_count: item.win_count ?? item.wins ?? 0,
+      })),
+    highestScore: totalPlayed === 0
+      ? null
+      : (source.highest_score ?? source.derived_stats?.highest_score ?? overviewStats?.highest_score ?? null),
+    highestScorePlayer: totalPlayed === 0
+      ? null
+      : (source.highest_score_player ?? source.derived_stats?.highest_score_player ?? overviewStats?.highest_score_player ?? null),
     userRecord: source.user_record
       ? {
           highestScore: source.user_record.highest_score ?? null,
@@ -66,6 +79,14 @@ export function normalizeBoardGameOverview(raw, fallbackBoardGameId = '') {
           lastPlaces: source.user_record.last_places ?? 0,
         }
       : source.userRecord || null,
-    category: source.category_ids?.[0] || source.genres?.[0] || source.category || {},
+    category:
+      typeof source.category === 'object' && source.category !== null && source.category.name
+        ? source.category
+        : typeof (source.category_ids?.[0] || source.genres?.[0]) === 'object' &&
+            (source.category_ids?.[0] || source.genres?.[0]) !== null
+          ? source.category_ids?.[0] || source.genres?.[0]
+          : typeof (source.category_ids?.[0] || source.genres?.[0] || source.category) === 'string'
+            ? { name: source.category_ids?.[0] || source.genres?.[0] || source.category }
+            : null,
   }
 }

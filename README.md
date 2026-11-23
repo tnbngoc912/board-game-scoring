@@ -52,7 +52,7 @@ The app saves completed matches through the backend API.
 Default API base:
 
 ```bash
-https://boardgame-scorer-backend.onrender.com/api/v1
+https://api.homeboard.fun/api/v1
 ```
 
 Override it locally with:

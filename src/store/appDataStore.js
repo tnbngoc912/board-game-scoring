@@ -1,6 +1,53 @@
 import { create } from 'zustand'
-import { getBoardGames, getMatches, getUsers, getUserGameStats } from '../api/backendService'
+import {
+  getActiveGroupId,
+  getBoardGames,
+  getGroupBoardGames,
+  getGroupMembers,
+  getMatches,
+  getUsers,
+  getUserGameStats,
+} from '../api/backendService'
 import { preloadImages } from '../utils/imagePreloader'
+
+function normalizeGroupMemberAsUser(member) {
+  const userObj = member?.user_id && typeof member.user_id === 'object' ? member.user_id : null
+  const entityId = String(userObj?._id || userObj?.id || member?.user_id || member?._id || member?.id || '')
+  return {
+    id: entityId,
+    _id: entityId,
+    memberId: String(member?._id || member?.id || ''),
+    name: userObj?.name || member?.display_name || 'Người chơi',
+    email: userObj?.email || '',
+    avatar_url: userObj?.avatar_url || member?.avatar_url || '',
+    role: member?.role || 'MEMBER',
+    status: member?.status || 'ACTIVE',
+    is_virtual: Boolean(member?.is_virtual),
+    permissions: member?.permissions || null,
+    stats: member?.stats || null,
+  }
+}
+
+function filterGroupCabinetGames(items = [], filters = {}) {
+  let list = Array.isArray(items) ? [...items] : []
+  if (filters.search) {
+    const q = String(filters.search).trim().toLowerCase()
+    if (q) {
+      list = list.filter((g) => String(g.name || '').toLowerCase().includes(q))
+    }
+  }
+  if (filters.playerCount) {
+    const count = Number(filters.playerCount)
+    if (!Number.isNaN(count) && count > 0) {
+      list = list.filter((g) => {
+        const min = Number(g.min_players ?? g.minPlayers ?? 1)
+        const max = Number(g.max_players ?? g.maxPlayers ?? 12)
+        return count >= min && count <= max
+      })
+    }
+  }
+  return list
+}
 
 const BOARD_GAMES_TTL = 5 * 60 * 1000
 const USERS_TTL = 5 * 60 * 1000
@@ -94,7 +141,19 @@ export const useAppDataStore = create((set, get) => ({
     if (boardGamesRequest && !filterKeyChanged) return boardGamesRequest
 
     set({ isLoadingBoardGames: true, boardGamesFilters: filters })
-    boardGamesRequest = getBoardGames({ page, limit, ...filters })
+    const activeGroupId = getActiveGroupId()
+    const requestPromise = activeGroupId
+      ? getGroupBoardGames(activeGroupId).then((groupItems) => {
+          const filtered = filterGroupCabinetGames(groupItems, filters)
+          return {
+            items: filtered,
+            totalPages: 1,
+            totalResults: filtered.length,
+          }
+        })
+      : getBoardGames({ page, limit, ...filters })
+
+    boardGamesRequest = requestPromise
       .then((res) => {
         const items = res?.items || (Array.isArray(res) ? res : [])
         const totalPages = res?.totalPages || 1
@@ -165,7 +224,16 @@ export const useAppDataStore = create((set, get) => ({
     if (usersRequest) return usersRequest
 
     set({ isLoadingUsers: true })
-    usersRequest = getUsers()
+    const activeGroupId = getActiveGroupId()
+    const requestPromise = activeGroupId
+      ? getGroupMembers(activeGroupId).then((members) =>
+          (members || [])
+            .filter((m) => (m.status || 'ACTIVE') === 'ACTIVE')
+            .map(normalizeGroupMemberAsUser)
+        )
+      : getUsers()
+
+    usersRequest = requestPromise
       .then((items) => {
         set({
           users: items,
@@ -310,5 +378,26 @@ export const useAppDataStore = create((set, get) => ({
     set((state) => ({
       history: state.history.filter((entry) => entry.id !== matchId),
     }))
+  },
+
+  resetAllGroupData() {
+    set({
+      boardGames: [],
+      boardGamesPage: 1,
+      boardGamesTotalPages: 1,
+      boardGamesTotalResults: 0,
+      boardGamesHasMore: false,
+      boardGamesFetchedAt: 0,
+      users: [],
+      usersFetchedAt: 0,
+      history: [],
+      historyPage: 1,
+      historyTotalPages: 1,
+      historyTotalResults: 0,
+      historyHasMore: false,
+      historyFetchedAt: 0,
+      userGameStats: [],
+      userGameStatsFetchedAt: 0,
+    })
   },
 }))

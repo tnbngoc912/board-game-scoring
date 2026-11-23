@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuthStore } from '../store/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useGroupStore } from '../store/groupStore'
+import { useAppDataStore } from '../store/appDataStore'
+import { getGroupMembers } from '../api/backendService'
 import { ProtectedScreen } from '../components/auth/ProtectedScreen'
+import { GroupMembersModal } from '../components/group/GroupMembersModal'
+import { GroupOnboardingView } from '../components/group/GroupOnboardingView'
+import { GroupInfoCard } from '../components/group/GroupInfoCard'
 import { BottomNav } from '../components/navigation/BottomNav'
 import { useToast } from '../hooks/useToast'
 import { Toast } from '../components/Toast'
@@ -18,7 +25,53 @@ export function AccountShell() {
   const { message, visible, show: showToast } = useToast()
   const [isPushEnabled, setIsPushEnabled] = useState(false)
   const [isUpdatingPush, setIsUpdatingPush] = useState(false)
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
+  const [isAddGroupModalOpen, setIsAddGroupModalOpen] = useState(false)
+  const [memberCount, setMemberCount] = useState(null)
+  const [pendingMemberCount, setPendingMemberCount] = useState(0)
   const isStandalone = useIsStandalone()
+  const { isAdmin, activeGroup } = usePermissions()
+  const groups = useGroupStore((state) => state.groups)
+  const selectGroup = useGroupStore((state) => state.selectGroup)
+  const fetchMyGroups = useGroupStore((state) => state.fetchMyGroups)
+  const fetchUsers = useAppDataStore((state) => state.fetchUsers)
+
+  const activeGroups = useMemo(
+    () => (groups || []).filter((g) => (g.my_status || 'ACTIVE') === 'ACTIVE'),
+    [groups]
+  )
+
+  const roleLabel =
+    activeGroup?.my_role === 'OWNER'
+      ? 'Chủ nhóm'
+      : activeGroup?.my_role === 'ADMIN'
+        ? 'Quản trị'
+        : 'Thành viên'
+
+  const refreshMemberData = useCallback(async () => {
+    if (!activeGroup?.id) {
+      setMemberCount(null)
+      setPendingMemberCount(0)
+      return
+    }
+    try {
+      const members = await getGroupMembers(activeGroup.id)
+      const activeMembers = (members || []).filter((m) => (m.status || 'ACTIVE') === 'ACTIVE')
+      setMemberCount(activeMembers.length)
+      if (isAdmin) {
+        const count = (members || []).filter((m) => m.status === 'PENDING').length
+        setPendingMemberCount(count)
+      } else {
+        setPendingMemberCount(0)
+      }
+    } catch {
+      setPendingMemberCount(0)
+    }
+  }, [activeGroup?.id, isAdmin])
+
+  useEffect(() => {
+    refreshMemberData()
+  }, [refreshMemberData])
 
   useEffect(() => {
     setIsPushEnabled(hasEnabledFcmNotifications())
@@ -62,7 +115,7 @@ export function AccountShell() {
 
           <PullToRefresh onRefresh={async () => {
             try {
-              await refreshProfile()
+              await Promise.all([refreshProfile(), refreshMemberData()])
               showToast('Đã làm mới thông tin tài khoản')
             } catch (err) {
               showToast('Không thể làm mới dữ liệu')
@@ -101,22 +154,94 @@ export function AccountShell() {
                     <span>{user?.email}</span>
                   </div>
                 </div>
+
+                <div className="account-email-section">
+                  <div className="account-email-label">CÂU LẠC BỘ / NHÓM CHƠI</div>
+                  <GroupInfoCard
+                    group={activeGroup}
+                    activeGroups={activeGroups}
+                    roleLabel={roleLabel}
+                    subtitle={memberCount !== null ? `${memberCount} thành viên` : undefined}
+                    onSelectGroup={(nextId) => {
+                      selectGroup(nextId)
+                      showToast('Đã chuyển nhóm chơi')
+                    }}
+                  />
+                </div>
               </>
             )}
 
             <div className="account-actions">
-              <button 
-                className="btn-account-action btn-account-action-with-meta" 
-                type="button"
-                onClick={handleTogglePush}
-                disabled={isUpdatingPush}
-              >
-                <Icon src="/send-icon.svg" size={24} color="#38322E" />
-                <span>
-                  <strong>{isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Tắt thông báo' : 'Bật thông báo'}</strong>
-                  <small>{isPushEnabled ? 'Bạn đang nhận thông báo bình luận mới' : 'Nhận thông báo khi có bình luận mới trong trận của bạn'}</small>
-                </span>
-              </button>
+              {activeGroup ? (
+                <button
+                  className="btn-account-action btn-account-action-with-meta"
+                  type="button"
+                  onClick={() => router.push('/group-games')}
+                >
+                  <Icon src="/plus-icon.svg" size={24} color="#38322E" />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <strong>Thêm & Quản lý Tủ Game Nhóm</strong>
+                    <small>
+                      Thêm từ thư viện mẫu hoặc tạo game mới
+                    </small>
+                  </span>
+                  <Icon src="/arrow-right.png" size={16} color="#70655c" style={{ alignSelf: 'center', marginLeft: 'auto', flexShrink: 0 }} />
+                </button>
+              ) : null}
+
+              {activeGroup ? (
+                <button
+                  className="btn-account-action btn-account-action-with-meta"
+                  type="button"
+                  onClick={() => setIsMembersModalOpen(true)}
+                >
+                  <Icon src="/person-user.png" size={24} color="#38322E" />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>Quản lý Nhóm & Thành viên</span>
+                      {isAdmin && pendingMemberCount > 0 ? (
+                        <span className="group-badge-count">{pendingMemberCount}</span>
+                      ) : null}
+                    </strong>
+                    <small>
+                      Mã mời: {activeGroup.invite_code || 'Đang tải'} • Duyệt & phân quyền
+                    </small>
+                  </span>
+                </button>
+              ) : null}
+
+              <div className="account-quick-actions-grid">
+                <button
+                  className="btn-account-quick-action"
+                  type="button"
+                  onClick={() => setIsAddGroupModalOpen(true)}
+                >
+                  <Icon src="/home.png" size={24} color="#38322E" />
+                  <div className="account-quick-action-text">
+                    <strong>Gia nhập nhóm</strong>
+                    <small>Nhập mã mời</small>
+                  </div>
+                </button>
+
+                <button 
+                  className="btn-account-quick-action" 
+                  type="button"
+                  onClick={handleTogglePush}
+                  disabled={isUpdatingPush}
+                >
+                  <Icon
+                    src={isPushEnabled ? "/notification-filled.png" : "/notification.png"}
+                    size={24}
+                    color={isPushEnabled ? "var(--color-brand)" : "#70655C"}
+                  />
+                  <div className="account-quick-action-text">
+                    <strong>Thông báo</strong>
+                    <small>
+                      {isUpdatingPush ? 'Đang cập nhật...' : isPushEnabled ? 'Đang bật' : 'Đang tắt'}
+                    </small>
+                  </div>
+                </button>
+              </div>
 
               <button 
                 className="btn-account-action" 
@@ -144,6 +269,32 @@ export function AccountShell() {
           </div>
           </PullToRefresh>
         </div>
+
+        <GroupMembersModal
+          isOpen={isMembersModalOpen}
+          group={activeGroup}
+          canManage={isAdmin}
+          onClose={() => setIsMembersModalOpen(false)}
+          onUpdated={() => {
+            fetchUsers({ force: true }).catch(() => {})
+            fetchMyGroups({ force: true }).catch(() => {})
+            refreshMemberData()
+          }}
+          toast={showToast}
+        />
+
+        {isAddGroupModalOpen ? (
+          <GroupOnboardingView
+            isModal
+            toast={showToast}
+            onClose={() => setIsAddGroupModalOpen(false)}
+            onSuccess={() => {
+              fetchMyGroups({ force: true }).catch(() => {})
+              fetchUsers({ force: true }).catch(() => {})
+              refreshMemberData()
+            }}
+          />
+        ) : null}
 
         <BottomNav />
         <Toast message={message} visible={visible} />

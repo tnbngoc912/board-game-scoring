@@ -6,8 +6,8 @@ import { compressImage } from '../utils/imageCompressor'
 
 function resolveApiBaseUrl() {
   const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-  // Nếu trỏ thẳng tới onrender.com hoặc để trống, dùng relative path /api/v1 để đi qua Vercel Proxy (chống nhà mạng VN chặn)
-  if (!envUrl || envUrl.includes('boardgame-scorer-backend.onrender.com')) {
+  // Nếu trỏ thẳng tới onrender.com / homeboard.fun hoặc để trống, dùng relative path /api/v1 để đi qua Vercel Proxy (chống nhà mạng VN chặn và tránh CORS)
+  if (!envUrl || envUrl.includes('onrender.com') || envUrl.includes('homeboard.fun')) {
     return '/api/v1'
   }
   return envUrl
@@ -15,17 +15,44 @@ function resolveApiBaseUrl() {
 
 const API_BASE_URL = resolveApiBaseUrl()
 const AUTH_TOKEN_KEY = 'scorekeeper_auth_token'
+const ACTIVE_GROUP_KEY = 'active_group_id'
 let authToken = null
+let activeGroupId = null
 
 function readStoredToken() {
   if (typeof window === 'undefined') return null
   return window.localStorage.getItem(AUTH_TOKEN_KEY)
 }
 
+function readStoredGroupId() {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(ACTIVE_GROUP_KEY)
+}
+
 function getAuthToken() {
   if (authToken) return authToken
   authToken = readStoredToken()
   return authToken
+}
+
+export function getActiveGroupId() {
+  if (activeGroupId) return activeGroupId
+  activeGroupId = readStoredGroupId()
+  return activeGroupId
+}
+
+export function setActiveGroupId(groupId) {
+  activeGroupId = groupId ? String(groupId) : null
+  if (typeof window === 'undefined') return
+  if (activeGroupId) {
+    window.localStorage.setItem(ACTIVE_GROUP_KEY, activeGroupId)
+  } else {
+    window.localStorage.removeItem(ACTIVE_GROUP_KEY)
+  }
+}
+
+export function clearActiveGroupId() {
+  setActiveGroupId(null)
 }
 
 export function getCurrentAuthToken() {
@@ -53,6 +80,7 @@ export function setAuthToken(token) {
 
 export function clearAuthToken() {
   setAuthToken(null)
+  clearActiveGroupId()
 }
 
 let tokenExpiredListener = null
@@ -69,11 +97,13 @@ function triggerTokenExpired() {
 
 async function request(path, options = {}) {
   const token = getAuthToken()
+  const groupId = getActiveGroupId()
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(groupId ? { 'X-Group-Id': groupId } : {}),
       ...options.headers,
     },
   })
@@ -97,6 +127,7 @@ async function request(path, options = {}) {
 
 async function requestFormData(path, formData, options = {}, retries = 2) {
   const token = getAuthToken()
+  const groupId = getActiveGroupId()
   const timeoutMs = options.timeout || 25000
 
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -110,6 +141,7 @@ async function requestFormData(path, formData, options = {}, retries = 2) {
         method: options.method || 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(groupId ? { 'X-Group-Id': groupId } : {}),
           ...options.headers,
         },
         body: formData,
@@ -185,6 +217,112 @@ export async function login({ email, password }) {
   const token = payload?.token || ''
   const user = normalizeAuthUser(payload?.user || {})
   return { token, user }
+}
+
+export async function register({ name, email, password }) {
+  const payload = await request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password }),
+  })
+  const token = payload?.token || ''
+  const user = normalizeAuthUser(payload?.user || {})
+  return { token, user }
+}
+
+export async function updateMyProfile({ name, avatar_url }) {
+  const payload = await request('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ name, avatar_url }),
+  })
+  return normalizeAuthUser(payload || {})
+}
+
+export async function getMyGroups() {
+  const payload = await request('/groups/my-groups')
+  return unwrapList(payload)
+}
+
+export async function createGroup({ name, description, avatar_url, is_public = false }) {
+  return request('/groups', {
+    method: 'POST',
+    body: JSON.stringify({ name, description, avatar_url, is_public }),
+  })
+}
+
+export async function joinGroupByInviteCode(inviteCode) {
+  return request('/groups/join', {
+    method: 'POST',
+    body: JSON.stringify({ invite_code: inviteCode }),
+    raw: true,
+  })
+}
+
+export async function getGroupById(groupId) {
+  return request(`/groups/${groupId}`)
+}
+
+export async function getGroupMembers(groupId) {
+  const payload = await request(`/groups/${groupId}/members`)
+  return unwrapList(payload)
+}
+
+export async function createVirtualMember(groupId, { display_name, avatar_url }) {
+  return request(`/groups/${groupId}/members/virtual`, {
+    method: 'POST',
+    body: JSON.stringify({ display_name, avatar_url }),
+  })
+}
+
+export async function approveGroupMember(groupId, memberId) {
+  return request(`/groups/${groupId}/members/${memberId}/approve`, {
+    method: 'PATCH',
+  })
+}
+
+export async function rejectGroupMember(groupId, memberId) {
+  return request(`/groups/${groupId}/members/${memberId}/reject`, {
+    method: 'PATCH',
+  })
+}
+
+export async function updateGroupMemberPermissions(groupId, memberId, permissions) {
+  return request(`/groups/${groupId}/members/${memberId}/permissions`, {
+    method: 'PATCH',
+    body: JSON.stringify({ permissions }),
+  })
+}
+
+export async function deleteGroupMember(groupId, memberId) {
+  return request(`/groups/${groupId}/members/${memberId}`, {
+    method: 'DELETE',
+    raw: true,
+  })
+}
+
+export async function getGroupBoardGames(groupId) {
+  const payload = await request(`/groups/${groupId}/board-games`)
+  return unwrapList(payload).map(normalizeBoardGame)
+}
+
+export async function addBoardGameToGroup(groupId, boardGameId) {
+  return request(`/groups/${groupId}/board-games`, {
+    method: 'POST',
+    body: JSON.stringify({ board_game_id: boardGameId }),
+  })
+}
+
+export async function quickCreateGroupBoardGame(groupId, data) {
+  const payload = await request(`/groups/${groupId}/board-games/quick-create`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  return normalizeBoardGame(payload)
+}
+
+export async function removeBoardGameFromGroup(groupId, boardGameId) {
+  return request(`/groups/${groupId}/board-games/${boardGameId}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function forgotPassword(email) {

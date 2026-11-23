@@ -12,6 +12,9 @@ import { SearchBar } from './ui/SearchBar'
 import { EmptyState } from './ui/EmptyState'
 import { PullToRefresh } from './ui/PullToRefresh'
 import { usePermissions } from '../hooks/usePermissions'
+import { useGroupStore } from '../store/groupStore'
+import { GroupCatalogModal } from './group/GroupCatalogModal'
+import { QuickCreateGameModal } from './group/QuickCreateGameModal'
 import { Icon } from './ui/Icon'
 import { Button } from './ui/Button'
 import { NotificationPrompt } from './notifications/NotificationPrompt'
@@ -121,8 +124,14 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }))
   )
 
-  const { match } = usePermissions()
+  const { isAdmin, match, boardGame, activeGroup } = usePermissions()
   const { canCreate } = match
+  const canCreateBoardGame = boardGame?.canCreate
+
+  const activeGroupId = useGroupStore((state) => state.activeGroupId)
+
+  const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false)
+  const [isQuickCreateModalOpen, setIsQuickCreateModalOpen] = useState(false)
 
   useEffect(() => {
     async function loadSetupData() {
@@ -138,7 +147,7 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
     }
 
     loadSetupData()
-  }, [fetchBoardGames, fetchUsers, toast, homeResetToken])
+  }, [fetchBoardGames, fetchUsers, toast, homeResetToken, activeGroupId])
 
   useEffect(() => {
     setSetupStep(initialStep)
@@ -394,7 +403,30 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
                 ) : null}
 
                 {!isLoadingGames && gameList.length === 0 ? (
-                  <div className="paper-card empty-state">Chua co game nao.</div>
+                  <div className="group-empty-cabinet">
+                    <h3>Tủ game của nhóm đang trống</h3>
+                    <p>
+                      Hãy thêm các tựa game từ Thư viện mẫu của hệ thống hoặc tạo nhanh game mới (mặc định tính Điểm tổng) để cả nhóm bắt đầu ghi điểm ngay!
+                    </p>
+                    {canCreateBoardGame ? (
+                      <div className="group-empty-actions">
+                        <button
+                          type="button"
+                          className="group-btn-secondary"
+                          onClick={() => setIsCatalogModalOpen(true)}
+                        >
+                          + Thêm từ thư viện mẫu
+                        </button>
+                        <button
+                          type="button"
+                          className="group-btn-primary"
+                          onClick={() => setIsQuickCreateModalOpen(true)}
+                        >
+                          + Tạo game mới (Điểm tổng)
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {!isLoadingGames && gameList.length > 0 && filteredGames.length === 0 ? (
@@ -451,6 +483,27 @@ export function SetupScreen({ onStart, homeResetToken, toast, initialStep = 'gam
               </section>
             </div>
           </PullToRefresh>
+
+          <GroupCatalogModal
+            isOpen={isCatalogModalOpen}
+            groupId={activeGroup?.id || activeGroupId}
+            existingGames={gameList}
+            onClose={() => setIsCatalogModalOpen(false)}
+            onAdded={() => {
+              fetchBoardGames({ force: true }).catch(() => {})
+            }}
+            toast={toast}
+          />
+
+          <QuickCreateGameModal
+            isOpen={isQuickCreateModalOpen}
+            groupId={activeGroup?.id || activeGroupId}
+            onClose={() => setIsQuickCreateModalOpen(false)}
+            onCreated={() => {
+              fetchBoardGames({ force: true }).catch(() => {})
+            }}
+            toast={toast}
+          />
         </>
       ) : setupStep === 'player-picker' ? (
         <>
