@@ -331,7 +331,11 @@ export function GameScreen({ toast, onShowSetup, onShowHistory, matchToEdit, onC
         useAppDataStore.getState().invalidateBoardGames()
         useAppDataStore.getState().invalidateUsers()
         useAppDataStore.getState().invalidateUserGameStats()
-        const targetBoardGameId = matchToEdit?.board_game_id || matchToEdit?.boardGameId || boardGameId
+        const targetBoardGameId =
+          matchToEdit?.board_game_id ||
+          matchToEdit?.boardGameId ||
+          matchToEdit?.gameId ||
+          useGameStore.getState().boardGameId
         if (targetBoardGameId) {
           useGameSessionStore.getState().invalidateOverview(targetBoardGameId)
         } else {
